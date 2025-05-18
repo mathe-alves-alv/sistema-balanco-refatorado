@@ -1,850 +1,1112 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Balanço de Estoque - Dark Mode com Supabase</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root {
-            /* --- Cores do Tema Escuro --- */
-            --primary-color: #007bff; /* Azul vibrante para ações principais */
-            --primary-color-darker: #0069d9;
-            --secondary-color: #5a6268; /* Cinza para ações secundárias */
-            --secondary-color-darker: #495057;
-            --success-color: #28a745; /* Verde para sucesso */
-            --success-color-darker: #218838;
-            --danger-color: #dc3545; /* Vermelho para perigo/remoção */
-            --danger-color-darker: #c82333;
-            --warning-color: #ffc107; /* Amarelo para avisos */
-            --warning-color-darker: #e0a800;
-            --info-color: #17a2b8; /* Azul claro para informações */
+      :root {
+        /* --- Cores do Tema Escuro --- */
+        --primary-color: #007bff; /* Azul vibrante para ações principais */
+        --primary-color-darker: #0069d9;
+        --secondary-color: #5a6268; /* Cinza para ações secundárias */
+        --secondary-color-darker: #495057;
+        --success-color: #28a745; /* Verde para sucesso */
+        --success-color-darker: #218838;
+        --danger-color: #dc3545; /* Vermelho para perigo/remoção */
+        --danger-color-darker: #c82333;
+        --warning-color: #ffc107; /* Amarelo para avisos */
+        --warning-color-darker: #e0a800;
+        --info-color: #17a2b8; /* Azul claro para informações */
 
-            --background-color: #1e2022; /* Fundo principal bem escuro */
-            --container-bg-color: #2a2d30; /* Fundo de containers e cards */
-            --header-bg-color: #343a40;   /* Fundo de cabeçalhos (tabela, card) */
-            --input-bg-color: #3c4146;   /* Fundo de inputs */
-            
-            --text-color: #e8eaed; /* Cor principal do texto (claro) */
-            --text-muted-color: #a0a7b0; /* Cor para texto secundário/muted */
-            --text-on-warning-color: #212529; /* Texto escuro para botões warning */
-            
-            --border-color: #454a4e; /* Cor das bordas */
-            --hover-row-background: #3a3f43; /* Hover em linhas de tabela */
+        --background-color: #1e2022; /* Fundo principal bem escuro */
+        --container-bg-color: #2a2d30; /* Fundo de containers e cards */
+        --header-bg-color: #343a40; /* Fundo de cabeçalhos (tabela, card) */
+        --input-bg-color: #3c4146; /* Fundo de inputs */
 
-            /* --- Estilos Gerais --- */
-            --border-radius: 0.3rem;
-            --box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.3); /* Sombra mais escura */
-            --box-shadow-lg: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.4);
-        }
+        --text-color: #e8eaed; /* Cor principal do texto (claro) */
+        --text-muted-color: #a0a7b0; /* Cor para texto secundário/muted */
+        --text-on-warning-color: #212529; /* Texto escuro para botões warning */
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 25px 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
+        --border-color: #454a4e; /* Cor das bordas */
+        --hover-row-background: #3a3f43; /* Hover em linhas de tabela */
 
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            background-color: var(--container-bg-color);
-            padding: 30px 40px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow-lg);
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
+        /* --- Estilos Gerais --- */
+        --border-radius: 0.3rem;
+        --box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.3); /* Sombra mais escura */
+        --box-shadow-lg: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.4);
+      }
 
-        h1, h2 {
-            color: var(--text-color);
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 30px;
-            font-weight: 500;
-        }
-        h1 { font-size: 2.2rem; }
-        h2 { font-size: 1.8rem; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        padding: 25px 0;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        line-height: 1.6;
+      }
 
-        .screen { display: none; }
-        .screen.active { display: block; }
+      .container {
+        width: 90%;
+        max-width: 1200px;
+        background-color: var(--container-bg-color);
+        padding: 30px 40px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow-lg);
+        margin-top: 20px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+      }
 
-        button, .button-like {
-            border: none;
-            padding: 0.6rem 1.2rem;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 0.95rem;
-            font-weight: 500;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            box-shadow: var(--box-shadow);
-            margin: 5px;
-            color: white; 
-        }
-        button:hover, .button-like:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.3);
-        }
-        button:active, .button-like:active { transform: translateY(0); box-shadow: var(--box-shadow); }
-        
-        button { background-color: var(--primary-color); }
-        button:hover { background-color: var(--primary-color-darker); }
-        button.secondary { background-color: var(--secondary-color); }
-        button.secondary:hover { background-color: var(--secondary-color-darker); }
-        button.danger { background-color: var(--danger-color); }
-        button.danger:hover { background-color: var(--danger-color-darker); }
-        button.warning { background-color: var(--warning-color); color: var(--text-on-warning-color); }
-        button.warning:hover { background-color: var(--warning-color-darker); }
-        button.success { background-color: var(--success-color); }
-        button.success:hover { background-color: var(--success-color-darker); }
+      h1,
+      h2 {
+        color: var(--text-color);
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 30px;
+        font-weight: 500;
+      }
+      h1 {
+        font-size: 2.2rem;
+      }
+      h2 {
+        font-size: 1.8rem;
+      }
 
-        .initial-options { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 40px 0; }
-        .initial-options button { min-width: 300px; padding: 18px; font-size: 1.1rem; }
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
 
-        .card {
-            background-color: var(--container-bg-color); 
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            margin-bottom: 25px;
-            box-shadow: var(--box-shadow);
-        }
-        .card-header {
-            padding: 0.85rem 1.35rem;
-            margin-bottom: 0;
-            background-color: var(--header-bg-color);
-            border-bottom: 1px solid var(--border-color);
-            border-top-left-radius: calc(var(--border-radius) - 1px);
-            border-top-right-radius: calc(var(--border-radius) - 1px);
-        }
-        .card-header h3 { margin: 0; font-size: 1.2rem; font-weight: 500; color: var(--text-color); }
-        .card-body { padding: 1.5rem; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 12px 15px;
-            text-align: left;
-            vertical-align: middle;
-        }
-        th {
-            background-color: var(--header-bg-color);
-            color: var(--text-color);
-            font-weight: 600;
-            border-bottom-width: 2px; 
-        }
-        tr:nth-child(even) { background-color: rgba(0,0,0,0.05); }
-        tr:hover { background-color: var(--hover-row-background); }
+      button,
+      .button-like {
+        border: none;
+        padding: 0.6rem 1.2rem;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        box-shadow: var(--box-shadow);
+        margin: 5px;
+        color: white;
+      }
+      button:hover,
+      .button-like:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.3);
+      }
+      button:active,
+      .button-like:active {
+        transform: translateY(0);
+        box-shadow: var(--box-shadow);
+      }
 
-        input[type="text"], input[type="number"], input[type="password"], select, input[type="file"] {
-            width: 100%;
-            padding: 0.6rem 0.85rem;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            box-sizing: border-box;
-            font-size: 0.95rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            background-color: var(--input-bg-color);
-            color: var(--text-color);
-        }
-        input[type="text"]::placeholder, input[type="number"]::placeholder, input[type="password"]::placeholder {
-            color: var(--text-muted-color);
-            opacity: 0.7;
-        }
-        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus {
-            border-color: var(--primary-color);
-            outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35); 
-        }
-        input[type="file"] { padding: 0.45rem 0.85rem; }
-        select {
-            appearance: none; 
-             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%20fill%3D%22%23e8eaed%22/%3E%3C/svg%3E'); 
-            background-repeat: no-repeat;
-            background-position: right 0.7rem center;
-            background-size: 1.2em;
-        }
+      button {
+        background-color: var(--primary-color);
+      }
+      button:hover {
+        background-color: var(--primary-color-darker);
+      }
+      button.secondary {
+        background-color: var(--secondary-color);
+      }
+      button.secondary:hover {
+        background-color: var(--secondary-color-darker);
+      }
+      button.danger {
+        background-color: var(--danger-color);
+      }
+      button.danger:hover {
+        background-color: var(--danger-color-darker);
+      }
+      button.warning {
+        background-color: var(--warning-color);
+        color: var(--text-on-warning-color);
+      }
+      button.warning:hover {
+        background-color: var(--warning-color-darker);
+      }
+      button.success {
+        background-color: var(--success-color);
+      }
+      button.success:hover {
+        background-color: var(--success-color-darker);
+      }
 
+      .initial-options {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 40px 0;
+      }
+      .initial-options button {
+        min-width: 300px;
+        padding: 18px;
+        font-size: 1.1rem;
+      }
 
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; color: var(--text-muted-color); }
+      .card {
+        background-color: var(--container-bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        margin-bottom: 25px;
+        box-shadow: var(--box-shadow);
+      }
+      .card-header {
+        padding: 0.85rem 1.35rem;
+        margin-bottom: 0;
+        background-color: var(--header-bg-color);
+        border-bottom: 1px solid var(--border-color);
+        border-top-left-radius: calc(var(--border-radius) - 1px);
+        border-top-right-radius: calc(var(--border-radius) - 1px);
+      }
+      .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--text-color);
+      }
+      .card-body {
+        padding: 1.5rem;
+      }
 
-        .filter-controls { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: flex-end; }
-        .filter-controls > div { flex: 1; min-width: 220px; }
-        .filter-controls input[type="text"], .filter-controls select { width: 100%; margin-bottom: 0; }
-        
-        .product-management-form-fields { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; margin-bottom: 20px; }
-        .product-management-form-fields .form-group { flex: 1; min-width: 200px; margin-bottom: 0; }
-        .product-management-form-fields button { height: calc(1.2rem + 1.7rem + 2px); align-self: flex-end; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        border: 1px solid var(--border-color);
+        padding: 12px 15px;
+        text-align: left;
+        vertical-align: middle;
+      }
+      th {
+        background-color: var(--header-bg-color);
+        color: var(--text-color);
+        font-weight: 600;
+        border-bottom-width: 2px;
+      }
+      tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+      tr:hover {
+        background-color: var(--hover-row-background);
+      }
 
-        .xlsx-import-section input[type="file"] { width: auto; margin-right: 10px; display: inline-block; vertical-align: middle; }
-        .xlsx-import-section button { vertical-align: middle; }
-        .xlsx-import-section p { font-size: 0.85em; color: var(--text-muted-color); margin-top: 8px; }
-        
-        .actions-bar {
-            margin-bottom: 25px;
-            padding: 15px 0;
-            text-align: center;
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--header-bg-color); 
-        }
-        .actions-bar button { margin: 0 8px; }
+      input[type="text"],
+      input[type="number"],
+      input[type="password"],
+      select,
+      input[type="file"] {
+        width: 100%;
+        padding: 0.6rem 0.85rem;
+        margin-bottom: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-sizing: border-box;
+        font-size: 0.95rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        background-color: var(--input-bg-color);
+        color: var(--text-color);
+      }
+      input[type="text"]::placeholder,
+      input[type="number"]::placeholder,
+      input[type="password"]::placeholder {
+        color: var(--text-muted-color);
+        opacity: 0.7;
+      }
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="password"]:focus,
+      select:focus {
+        border-color: var(--primary-color);
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.35);
+      }
+      input[type="file"] {
+        padding: 0.45rem 0.85rem;
+      }
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%20fill%3D%22%23e8eaed%22/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1.2em;
+      }
 
-        #productManagementTable td:last-child, #inventoryTable td:last-child { text-align: center; }
-        #inventoryTable input[type="number"] { max-width: 100px; text-align: right; padding: 0.5rem; }
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: var(--text-muted-color);
+      }
 
-        .back-button { margin-bottom: 20px; display: inline-block; }
+      .filter-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .filter-controls > div {
+        flex: 1;
+        min-width: 220px;
+      }
+      .filter-controls input[type="text"],
+      .filter-controls select {
+        width: 100%;
+        margin-bottom: 0;
+      }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); 
-            display: flex; 
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0; 
-            visibility: hidden; 
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .modal-content {
-            background-color: var(--container-bg-color);
-            padding: 30px 35px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow-lg);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transform: scale(0.95); 
-            transition: transform 0.3s ease;
-        }
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-        .modal-content h4 {
-            color: var(--text-color);
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1.4rem;
-        }
-        .modal-content p {
-            color: var(--text-muted-color);
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-        .modal-content input[type="password"] {
-            width: 100%;
-            margin-bottom: 25px;
-        }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end; 
-            gap: 10px;
-        }
-        #passwordError {
-            color: var(--danger-color);
-            font-size: 0.85rem;
-            margin-top: -15px; 
-            margin-bottom: 15px;
-            display: none; 
-            text-align: left;
-        }
-        .loader { 
-            border: 5px solid var(--input-bg-color);
-            border-top: 5px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none; 
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      .product-management-form-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: flex-end;
+        margin-bottom: 20px;
+      }
+      .product-management-form-fields .form-group {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 0;
+      }
+      .product-management-form-fields button {
+        height: calc(1.2rem + 1.7rem + 2px);
+        align-self: flex-end;
+      }
 
+      .xlsx-import-section input[type="file"] {
+        width: auto;
+        margin-right: 10px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .xlsx-import-section button {
+        vertical-align: middle;
+      }
+      .xlsx-import-section p {
+        font-size: 0.85em;
+        color: var(--text-muted-color);
+        margin-top: 8px;
+      }
+
+      .actions-bar {
+        margin-bottom: 25px;
+        padding: 15px 0;
+        text-align: center;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--header-bg-color);
+      }
+      .actions-bar button {
+        margin: 0 8px;
+      }
+
+      #productManagementTable td:last-child,
+      #inventoryTable td:last-child {
+        text-align: center;
+      }
+      #inventoryTable input[type="number"] {
+        max-width: 100px;
+        text-align: right;
+        padding: 0.5rem;
+      }
+
+      .back-button {
+        margin-bottom: 20px;
+        display: inline-block;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal-content {
+        background-color: var(--container-bg-color);
+        padding: 30px 35px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow-lg);
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+      }
+      .modal-overlay.active .modal-content {
+        transform: scale(1);
+      }
+      .modal-content h4 {
+        color: var(--text-color);
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+      }
+      .modal-content p {
+        color: var(--text-muted-color);
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+      }
+      .modal-content input[type="password"] {
+        width: 100%;
+        margin-bottom: 25px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      #passwordError {
+        color: var(--danger-color);
+        font-size: 0.85rem;
+        margin-top: -15px;
+        margin-bottom: 15px;
+        display: none;
+        text-align: left;
+      }
+      .loader {
+        border: 5px solid var(--input-bg-color);
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+        display: none;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div id="loadingIndicator" class="loader"></div>
-        <div id="screenInitial" class="screen active">
-            <h1>Bem-vindo ao Sistema de Balanço</h1>
-            <div class="initial-options">
-                <button onclick="openPasswordModal()">INSERIR/GERENCIAR PRODUTOS</button>
-                <button onclick="showInventoryCountScreen()">INICIAR CONTAGEM DE ESTOQUE</button>
-            </div>
+      <div id="loadingIndicator" class="loader"></div>
+      <div id="screenInitial" class="screen active">
+        <h1>Bem-vindo ao Sistema de Balanço - versão teste</h1>
+        <div class="initial-options">
+          <button onclick="openPasswordModal()">
+            INSERIR/GERENCIAR PRODUTOS
+          </button>
+          <button onclick="showInventoryCountScreen()">
+            INICIAR CONTAGEM DE ESTOQUE
+          </button>
         </div>
-        <div id="screenProductManagement" class="screen">
-            <button class="secondary back-button" onclick="showInitialScreen()">&larr; Voltar ao Início</button>
-            <h2>Gerenciar Produtos</h2>
-            <div class="card">
-                <div class="card-header"><h3>Adicionar Novo Produto Manualmente</h3></div>
-                <div class="card-body">
-                    <div class="product-management-form-fields">
-                        <div class="form-group">
-                            <label for="prodCodigo">Código:</label>
-                            <input type="text" id="prodCodigo" placeholder="Ex: 1001">
-                        </div>
-                        <div class="form-group">
-                            <label for="prodNome">Produto:</label>
-                            <input type="text" id="prodNome" placeholder="Ex: Torta de Frango P">
-                        </div>
-                        <div class="form-group">
-                            <label for="prodCategoria">Categoria:</label>
-                            <input type="text" id="prodCategoria" placeholder="Ex: Tortas Salgadas">
-                        </div>
-                        <button class="success" onclick="handleAddProductManually()">Adicionar Produto</button>
-                    </div>
-                </div>
+      </div>
+      <div id="screenProductManagement" class="screen">
+        <button class="secondary back-button" onclick="showInitialScreen()">
+          &larr; Voltar ao Início
+        </button>
+        <h2>Gerenciar Produtos</h2>
+        <div class="card">
+          <div class="card-header">
+            <h3>Adicionar Novo Produto Manualmente</h3>
+          </div>
+          <div class="card-body">
+            <div class="product-management-form-fields">
+              <div class="form-group">
+                <label for="prodCodigo">Código:</label>
+                <input type="text" id="prodCodigo" placeholder="Ex: 1001" />
+              </div>
+              <div class="form-group">
+                <label for="prodNome">Produto:</label>
+                <input
+                  type="text"
+                  id="prodNome"
+                  placeholder="Ex: Torta de Frango P"
+                />
+              </div>
+              <div class="form-group">
+                <label for="prodCategoria">Categoria:</label>
+                <input
+                  type="text"
+                  id="prodCategoria"
+                  placeholder="Ex: Tortas Salgadas"
+                />
+              </div>
+              <button class="success" onclick="handleAddProductManually()">
+                Adicionar Produto
+              </button>
             </div>
-            <div class="card">
-                <div class="card-header"><h3>Importar Produtos via XLSX</h3></div>
-                <div class="card-body xlsx-import-section">
-                    <input type="file" id="xlsxFile" accept=".xlsx, .xls">
-                    <button onclick="handleXLSXImport()">Importar Arquivo</button>
-                    <p>O arquivo deve conter colunas: 'codigo', 'produto', 'categoria'.</p>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h3>Produtos Cadastrados</h3></div>
-                 <div class="card-body" style="padding:0;">
-                    <table id="productManagementTable">
-                        <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Ação</th></tr></thead>
-                        <tbody id="productManagementTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
+          </div>
         </div>
-        <div id="screenInventoryCount" class="screen">
-            <button class="secondary back-button" onclick="showInitialScreen()">&larr; Voltar ao Início</button>
-            <h2>Balanço de Estoque</h2>
-            <div class="actions-bar">
-                 <button class="success" onclick="gerarArquivoTXT()">Gerar Arquivo TXT</button>
-                 <button class="warning" id="btnClearQuantities" onclick="clearAllQuantities()">Limpar Contagens</button>
-            </div>
-            <div class="filter-controls card card-body" style="padding-bottom: 5px;">
-                <div>
-                    <label for="pesquisaProduto">Pesquisar Produto:</label>
-                    <input type="text" id="pesquisaProduto" placeholder="Nome do produto...">
-                </div>
-                <div>
-                    <label for="pesquisaCodigo">Pesquisar Código:</label>
-                    <input type="text" id="pesquisaCodigo" placeholder="Código...">
-                </div>
-                <div>
-                    <label for="filtroCategoria">Filtrar Categoria:</label>
-                    <select id="filtroCategoria"><option value="">Todas as Categorias</option></select>
-                </div>
-            </div>
-            <table>
-                <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead>
-                <tbody id="inventoryTableBody"></tbody>
+        <div class="card">
+          <div class="card-header"><h3>Importar Produtos via XLSX</h3></div>
+          <div class="card-body xlsx-import-section">
+            <input type="file" id="xlsxFile" accept=".xlsx, .xls" />
+            <button onclick="handleXLSXImport()">Importar Arquivo</button>
+            <p>
+              O arquivo deve conter colunas: 'codigo', 'produto', 'categoria'.
+            </p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Produtos Cadastrados</h3></div>
+          <div class="card-body" style="padding: 0">
+            <table id="productManagementTable">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Produto</th>
+                  <th>Categoria</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody id="productManagementTableBody"></tbody>
             </table>
+          </div>
         </div>
+      </div>
+      <div id="screenInventoryCount" class="screen">
+        <button class="secondary back-button" onclick="showInitialScreen()">
+          &larr; Voltar ao Início
+        </button>
+        <h2>Balanço de Estoque</h2>
+        <div class="actions-bar">
+          <button class="success" onclick="gerarArquivoTXT()">
+            Gerar Arquivo TXT
+          </button>
+          <button
+            class="warning"
+            id="btnClearQuantities"
+            onclick="clearAllQuantities()"
+          >
+            Limpar Contagens
+          </button>
+        </div>
+        <div class="filter-controls card card-body" style="padding-bottom: 5px">
+          <div>
+            <label for="pesquisaProduto">Pesquisar Produto:</label>
+            <input
+              type="text"
+              id="pesquisaProduto"
+              placeholder="Nome do produto..."
+            />
+          </div>
+          <div>
+            <label for="pesquisaCodigo">Pesquisar Código:</label>
+            <input type="text" id="pesquisaCodigo" placeholder="Código..." />
+          </div>
+          <div>
+            <label for="filtroCategoria">Filtrar Categoria:</label>
+            <select id="filtroCategoria">
+              <option value="">Todas as Categorias</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Quantidade</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody"></tbody>
+        </table>
+      </div>
     </div>
     <div id="passwordModal" class="modal-overlay">
-        <div class="modal-content">
-            <h4>Acesso Restrito</h4>
-            <p>Por favor, insira a senha de administrador:</p>
-            <input type="password" id="adminPasswordInput" placeholder="Senha">
-            <div id="passwordError">Senha incorreta. Tente novamente.</div>
-            <div class="modal-actions">
-                <button id="cancelPasswordBtn" class="secondary">Cancelar</button>
-                <button id="submitPasswordBtn" class="success">Entrar</button>
-            </div>
+      <div class="modal-content">
+        <h4>Acesso Restrito</h4>
+        <p>Por favor, insira a senha de administrador:</p>
+        <input type="password" id="adminPasswordInput" placeholder="Senha" />
+        <div id="passwordError">Senha incorreta. Tente novamente.</div>
+        <div class="modal-actions">
+          <button id="cancelPasswordBtn" class="secondary">Cancelar</button>
+          <button id="submitPasswordBtn" class="success">Entrar</button>
         </div>
+      </div>
     </div>
 
     <script>
-        // --- ORDEM DE DECLARAÇÃO CORRIGIDA ---
+      // --- ORDEM DE DECLARAÇÃO CORRIGIDA ---
 
-        // 1. Configuração do Supabase e Inicialização do Cliente
-        const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
-        
-        // O objeto 'supabase' global é fornecido pelo script CDN.
-        // Usamos desestruturação para obter a função 'createClient'.
-        const { createClient } = supabase; 
-        // Criamos nossa instância do cliente Supabase.
-        const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // 1. Configuração do Supabase e Inicialização do Cliente
+      const SUPABASE_URL = "https://daeocsintrbdfqclvteg.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4";
 
-        // 2. Variáveis Globais da Aplicação
-        let produtos = []; 
-        let quantidadesDigitadas = {}; 
-        const ADMIN_PASSWORD = "260195@@"; 
+      // O objeto 'supabase' global é fornecido pelo script CDN.
+      // Usamos desestruturação para obter a função 'createClient'.
+      const { createClient } = supabase;
+      // Criamos nossa instância do cliente Supabase.
+      const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 3. Seletores de Elementos DOM (TODOS AQUI, ANTES DAS FUNÇÕES)
-        const screens = {
-            initial: document.getElementById('screenInitial'),
-            productManagement: document.getElementById('screenProductManagement'),
-            inventoryCount: document.getElementById('screenInventoryCount')
-        };
-        const loadingIndicator = document.getElementById('loadingIndicator'); 
-        
-        const prodCodigoInput = document.getElementById('prodCodigo');
-        const prodNomeInput = document.getElementById('prodNome');
-        const prodCategoriaInput = document.getElementById('prodCategoria');
-        const productManagementTableBody = document.getElementById('productManagementTableBody');
-        const xlsxFileInput = document.getElementById('xlsxFile');
-        
-        const pesquisaProdutoInput = document.getElementById('pesquisaProduto');
-        const pesquisaCodigoInput = document.getElementById('pesquisaCodigo');
-        const filtroCategoriaSelect = document.getElementById('filtroCategoria');
-        const inventoryTableBody = document.getElementById('inventoryTableBody');
-        
-        const passwordModal = document.getElementById('passwordModal');
-        const adminPasswordInput = document.getElementById('adminPasswordInput');
-        const submitPasswordBtn = document.getElementById('submitPasswordBtn'); // Declarado antes de ser usado em window.onload
-        const cancelPasswordBtn = document.getElementById('cancelPasswordBtn'); // Declarado antes de ser usado em window.onload
-        const passwordErrorDiv = document.getElementById('passwordError');
+      // 2. Variáveis Globais da Aplicação
+      let produtos = [];
+      let quantidadesDigitadas = {};
+      const ADMIN_PASSWORD = "260195@@";
 
-        // 4. Definições de Funções
-        
-        /** @description Mostra o indicador de carregamento visual (spinner). */
-        function showLoader() { 
-            if (loadingIndicator) loadingIndicator.style.display = 'block'; 
+      // 3. Seletores de Elementos DOM (TODOS AQUI, ANTES DAS FUNÇÕES)
+      const screens = {
+        initial: document.getElementById("screenInitial"),
+        productManagement: document.getElementById("screenProductManagement"),
+        inventoryCount: document.getElementById("screenInventoryCount"),
+      };
+      const loadingIndicator = document.getElementById("loadingIndicator");
+
+      const prodCodigoInput = document.getElementById("prodCodigo");
+      const prodNomeInput = document.getElementById("prodNome");
+      const prodCategoriaInput = document.getElementById("prodCategoria");
+      const productManagementTableBody = document.getElementById(
+        "productManagementTableBody"
+      );
+      const xlsxFileInput = document.getElementById("xlsxFile");
+
+      const pesquisaProdutoInput = document.getElementById("pesquisaProduto");
+      const pesquisaCodigoInput = document.getElementById("pesquisaCodigo");
+      const filtroCategoriaSelect = document.getElementById("filtroCategoria");
+      const inventoryTableBody = document.getElementById("inventoryTableBody");
+
+      const passwordModal = document.getElementById("passwordModal");
+      const adminPasswordInput = document.getElementById("adminPasswordInput");
+      const submitPasswordBtn = document.getElementById("submitPasswordBtn"); // Declarado antes de ser usado em window.onload
+      const cancelPasswordBtn = document.getElementById("cancelPasswordBtn"); // Declarado antes de ser usado em window.onload
+      const passwordErrorDiv = document.getElementById("passwordError");
+
+      // 4. Definições de Funções
+
+      /** @description Mostra o indicador de carregamento visual (spinner). */
+      function showLoader() {
+        if (loadingIndicator) loadingIndicator.style.display = "block";
+      }
+      /** @description Esconde o indicador de carregamento visual. */
+      function hideLoader() {
+        if (loadingIndicator) loadingIndicator.style.display = "none";
+      }
+
+      /** @description Torna uma tela específica visível e esconde as outras. */
+      function showScreen(screenId) {
+        hideLoader();
+        for (const key in screens) {
+          if (screens[key]) screens[key].classList.remove("active");
         }
-        /** @description Esconde o indicador de carregamento visual. */
-        function hideLoader() { 
-            if (loadingIndicator) loadingIndicator.style.display = 'none'; 
+        if (screens[screenId]) screens[screenId].classList.add("active");
+        else console.error("Tentativa de mostrar tela inexistente:", screenId);
+        window.scrollTo(0, 0);
+      }
+      /** @description Exibe a tela inicial da aplicação. */
+      function showInitialScreen() {
+        showScreen("initial");
+      }
+
+      /** @description Abre a modal para inserção da senha de administrador. */
+      function openPasswordModal() {
+        if (adminPasswordInput) adminPasswordInput.value = "";
+        if (passwordErrorDiv) passwordErrorDiv.style.display = "none";
+        if (passwordModal) passwordModal.classList.add("active");
+        if (adminPasswordInput) adminPasswordInput.focus();
+      }
+      /** @description Fecha a modal de senha. */
+      function closePasswordModal() {
+        if (passwordModal) passwordModal.classList.remove("active");
+      }
+
+      /** @description Valida a senha e direciona para gerenciamento de produtos se correta. */
+      function handleSubmitPassword() {
+        if (adminPasswordInput && adminPasswordInput.value === ADMIN_PASSWORD) {
+          closePasswordModal();
+          showProductManagementScreen();
+        } else {
+          if (passwordErrorDiv) passwordErrorDiv.style.display = "block";
+          if (adminPasswordInput) {
+            adminPasswordInput.value = "";
+            adminPasswordInput.focus();
+          }
+        }
+      }
+
+      /** @description Prepara e exibe a tela de gerenciamento de produtos. */
+      async function showProductManagementScreen() {
+        showLoader();
+        await fetchProductsFromSupabase();
+        renderProductManagementTable();
+        showScreen("productManagement");
+      }
+
+      /** @description Prepara e exibe a tela de contagem de inventário. */
+      async function showInventoryCountScreen() {
+        showLoader();
+        if (produtos.length === 0) {
+          await fetchProductsFromSupabase();
+        }
+        if (produtos.length === 0) {
+          alert(
+            "Nenhum produto cadastrado. Por favor, adicione produtos primeiro na área de gerenciamento."
+          );
+          openPasswordModal();
+          hideLoader();
+          return;
+        }
+        populateCategoryFilter();
+        filterInventoryProducts();
+        showScreen("inventoryCount");
+      }
+
+      /** @description Busca todos os produtos da tabela 'produtos' no Supabase. */
+      async function fetchProductsFromSupabase() {
+        showLoader();
+        try {
+          const { data, error } = await _supabaseClient
+            .from("produtos")
+            .select("*");
+          if (error) {
+            console.error("Erro ao buscar produtos do Supabase:", error);
+            alert("Falha ao carregar produtos: " + error.message);
+            produtos = [];
+          } else {
+            produtos = data || [];
+          }
+        } catch (e) {
+          console.error("Erro inesperado em fetchProductsFromSupabase:", e);
+          alert("Erro inesperado ao buscar produtos.");
+          produtos = [];
+        } finally {
+          hideLoader();
+        }
+      }
+
+      /** @description Salva 'quantidadesDigitadas' no localStorage. */
+      function saveQuantities() {
+        localStorage.setItem(
+          "storedQuantities",
+          JSON.stringify(quantidadesDigitadas)
+        );
+      }
+      /** @description Carrega 'quantidadesDigitadas' do localStorage. */
+      function loadQuantities() {
+        const stored = localStorage.getItem("storedQuantities");
+        quantidadesDigitadas = stored ? JSON.parse(stored) : {};
+      }
+
+      /** @description Renderiza a tabela de produtos na tela de gerenciamento. */
+      function renderProductManagementTable() {
+        productManagementTableBody.innerHTML = "";
+        if (produtos.length === 0) {
+          productManagementTableBody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto cadastrado.</td></tr>';
+          return;
+        }
+        const sortedProdutos = [...produtos].sort((a, b) =>
+          String(a.codigo).localeCompare(String(b.codigo))
+        );
+
+        sortedProdutos.forEach((produto) => {
+          const row = productManagementTableBody.insertRow();
+          row.insertCell().textContent = produto.codigo;
+          row.insertCell().textContent = produto.produto;
+          row.insertCell().textContent = produto.categoria;
+          const actionCell = row.insertCell();
+          const removeButton = document.createElement("button");
+          removeButton.textContent = "Remover";
+          removeButton.classList.add("danger");
+          removeButton.onclick = () => removeProduct(produto.codigo);
+          actionCell.appendChild(removeButton);
+        });
+      }
+
+      /** @description Adiciona um novo produto ao Supabase. */
+      async function handleAddProductManually() {
+        const codigo = prodCodigoInput.value.trim();
+        const nome = prodNomeInput.value.trim();
+        const categoria = prodCategoriaInput.value.trim();
+
+        if (!codigo || !nome || !categoria) {
+          alert(
+            "Por favor, preencha todos os campos (Código, Produto, Categoria)."
+          );
+          return;
         }
 
-        /** @description Torna uma tela específica visível e esconde as outras. */
-        function showScreen(screenId) {
-            hideLoader(); 
-            for (const key in screens) { 
-                if (screens[key]) screens[key].classList.remove('active'); 
-            }
-            if (screens[screenId]) screens[screenId].classList.add('active');
-            else console.error("Tentativa de mostrar tela inexistente:", screenId);
-            window.scrollTo(0,0); 
-        }
-        /** @description Exibe a tela inicial da aplicação. */
-        function showInitialScreen() { showScreen('initial'); }
-        
-        /** @description Abre a modal para inserção da senha de administrador. */
-        function openPasswordModal() {
-            if (adminPasswordInput) adminPasswordInput.value = ""; 
-            if (passwordErrorDiv) passwordErrorDiv.style.display = 'none'; 
-            if (passwordModal) passwordModal.classList.add('active'); 
-            if (adminPasswordInput) adminPasswordInput.focus(); 
-        }
-        /** @description Fecha a modal de senha. */
-        function closePasswordModal() { 
-            if (passwordModal) passwordModal.classList.remove('active'); 
-        }
+        showLoader();
+        try {
+          const { data, error } = await _supabaseClient
+            .from("produtos")
+            .insert([{ codigo, produto: nome, categoria }])
+            .select();
 
-        /** @description Valida a senha e direciona para gerenciamento de produtos se correta. */
-        function handleSubmitPassword() {
-            if (adminPasswordInput && adminPasswordInput.value === ADMIN_PASSWORD) {
-                closePasswordModal();
-                showProductManagementScreen(); 
+          if (error) {
+            console.error("Erro ao adicionar produto ao Supabase:", error);
+            if (error.code === "23505") {
+              alert(
+                "Erro: Já existe um produto com este código no banco de dados."
+              );
             } else {
-                if (passwordErrorDiv) passwordErrorDiv.style.display = 'block'; 
-                if (adminPasswordInput) {
-                    adminPasswordInput.value = ""; 
-                    adminPasswordInput.focus(); 
-                }
+              alert("Falha ao adicionar produto: " + error.message);
             }
+          } else if (data && data.length > 0) {
+            produtos.push(data[0]);
+            renderProductManagementTable();
+            prodCodigoInput.value = "";
+            prodNomeInput.value = "";
+            prodCategoriaInput.value = "";
+            prodCodigoInput.focus();
+            alert("Produto adicionado com sucesso!");
+          }
+        } catch (e) {
+          console.error("Erro inesperado em handleAddProductManually:", e);
+          alert("Erro inesperado ao adicionar produto.");
+        } finally {
+          hideLoader();
+        }
+      }
+
+      /** @description Remove um produto do Supabase. */
+      async function removeProduct(codigoToRemove) {
+        const productName =
+          produtos.find((p) => p.codigo === codigoToRemove)?.produto ||
+          "este produto";
+        if (
+          confirm(
+            `Tem certeza que deseja remover "${productName}" (código: ${codigoToRemove})?`
+          )
+        ) {
+          showLoader();
+          try {
+            const { error } = await _supabaseClient
+              .from("produtos")
+              .delete()
+              .eq("codigo", codigoToRemove);
+
+            if (error) {
+              console.error("Erro ao remover produto do Supabase:", error);
+              alert("Falha ao remover produto: " + error.message);
+            } else {
+              produtos = produtos.filter((p) => p.codigo !== codigoToRemove);
+              if (quantidadesDigitadas[codigoToRemove]) {
+                delete quantidadesDigitadas[codigoToRemove];
+                saveQuantities();
+              }
+              renderProductManagementTable();
+              alert("Produto removido com sucesso!");
+            }
+          } catch (e) {
+            console.error("Erro inesperado em removeProduct:", e);
+            alert("Erro inesperado ao remover produto.");
+          } finally {
+            hideLoader();
+          }
+        }
+      }
+
+      /** @description Processa um arquivo XLSX para importar/atualizar produtos. */
+      async function handleXLSXImport() {
+        const file = xlsxFileInput.files[0];
+        if (!file) {
+          alert("Por favor, selecione um arquivo XLSX.");
+          return;
         }
 
-        /** @description Prepara e exibe a tela de gerenciamento de produtos. */
-        async function showProductManagementScreen() {
-            showLoader(); 
-            await fetchProductsFromSupabase(); 
-            renderProductManagementTable(); 
-            showScreen('productManagement'); 
-        }
+        showLoader();
+        const reader = new FileReader();
+        reader.onload = async function (event) {
+          try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        /** @description Prepara e exibe a tela de contagem de inventário. */
-        async function showInventoryCountScreen() {
-            showLoader();
-            if (produtos.length === 0) { 
-                await fetchProductsFromSupabase();
+            if (jsonData.length === 0) {
+              alert("O arquivo XLSX está vazio ou não contém dados.");
+              hideLoader();
+              return;
             }
-            if (produtos.length === 0) { 
-                alert("Nenhum produto cadastrado. Por favor, adicione produtos primeiro na área de gerenciamento.");
-                openPasswordModal(); 
-                hideLoader(); 
-                return;
-            }
-            populateCategoryFilter(); 
-            filterInventoryProducts(); 
-            showScreen('inventoryCount'); 
-        }
 
-        /** @description Busca todos os produtos da tabela 'produtos' no Supabase. */
-        async function fetchProductsFromSupabase() {
-            showLoader();
-            try {
-                const { data, error } = await _supabaseClient.from('produtos').select('*');
-                if (error) {
-                    console.error('Erro ao buscar produtos do Supabase:', error);
-                    alert('Falha ao carregar produtos: ' + error.message);
-                    produtos = []; 
-                } else {
-                    produtos = data || []; 
-                }
-            } catch (e) {
-                console.error('Erro inesperado em fetchProductsFromSupabase:', e);
-                alert('Erro inesperado ao buscar produtos.');
-                produtos = [];
-            } finally {
-                hideLoader(); 
-            }
-        }
-        
-        /** @description Salva 'quantidadesDigitadas' no localStorage. */
-        function saveQuantities() { localStorage.setItem('storedQuantities', JSON.stringify(quantidadesDigitadas)); }
-        /** @description Carrega 'quantidadesDigitadas' do localStorage. */
-        function loadQuantities() {
-            const stored = localStorage.getItem('storedQuantities');
-            quantidadesDigitadas = stored ? JSON.parse(stored) : {};
-        }
+            const productsToUpsert = [];
+            jsonData.forEach((item) => {
+              const codigo = item.codigo || item.Código || item.CODIGO;
+              const produtoNome = item.produto || item.Produto || item.PRODUTO;
+              const categoria =
+                item.categoria || item.Categoria || item.CATEGORIA;
 
-        /** @description Renderiza a tabela de produtos na tela de gerenciamento. */
-        function renderProductManagementTable() {
-            productManagementTableBody.innerHTML = ""; 
-            if (produtos.length === 0) {
-                productManagementTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto cadastrado.</td></tr>';
-                return;
-            }
-            const sortedProdutos = [...produtos].sort((a, b) => String(a.codigo).localeCompare(String(b.codigo)));
-            
-            sortedProdutos.forEach((produto) => {
-                const row = productManagementTableBody.insertRow();
-                row.insertCell().textContent = produto.codigo;
-                row.insertCell().textContent = produto.produto;
-                row.insertCell().textContent = produto.categoria;
-                const actionCell = row.insertCell();
-                const removeButton = document.createElement('button');
-                removeButton.textContent = "Remover";
-                removeButton.classList.add('danger');
-                removeButton.onclick = () => removeProduct(produto.codigo); 
-                actionCell.appendChild(removeButton);
+              if (codigo && produtoNome && categoria) {
+                productsToUpsert.push({
+                  codigo: String(codigo).trim(),
+                  produto: String(produtoNome).trim(),
+                  categoria: String(categoria).trim(),
+                });
+              }
             });
-        }
 
-        /** @description Adiciona um novo produto ao Supabase. */
-        async function handleAddProductManually() {
-            const codigo = prodCodigoInput.value.trim();
-            const nome = prodNomeInput.value.trim();
-            const categoria = prodCategoriaInput.value.trim();
+            if (productsToUpsert.length > 0) {
+              const { error: upsertError } = await _supabaseClient
+                .from("produtos")
+                .upsert(productsToUpsert, { onConflict: "codigo" });
 
-            if (!codigo || !nome || !categoria) {
-                alert("Por favor, preencha todos os campos (Código, Produto, Categoria).");
-                return;
-            }
-            
-            showLoader();
-            try {
-                const { data, error } = await _supabaseClient 
-                    .from('produtos')
-                    .insert([{ codigo, produto: nome, categoria }])
-                    .select(); 
-
-                if (error) {
-                    console.error('Erro ao adicionar produto ao Supabase:', error);
-                    if (error.code === '23505') { 
-                        alert('Erro: Já existe um produto com este código no banco de dados.');
-                    } else {
-                        alert('Falha ao adicionar produto: ' + error.message);
-                    }
-                } else if (data && data.length > 0) {
-                    produtos.push(data[0]); 
-                    renderProductManagementTable(); 
-                    prodCodigoInput.value = ""; prodNomeInput.value = ""; prodCategoriaInput.value = "";
-                    prodCodigoInput.focus(); 
-                    alert('Produto adicionado com sucesso!');
-                }
-            } catch (e) {
-                console.error('Erro inesperado em handleAddProductManually:', e);
-                alert('Erro inesperado ao adicionar produto.');
-            } finally {
+              if (upsertError) {
+                console.error(
+                  "Erro no upsert de produtos via XLSX:",
+                  upsertError
+                );
+                alert(
+                  "Falha ao importar/atualizar produtos: " + upsertError.message
+                );
                 hideLoader();
-            }
-        }
-
-        /** @description Remove um produto do Supabase. */
-        async function removeProduct(codigoToRemove) { 
-            const productName = produtos.find(p => p.codigo === codigoToRemove)?.produto || "este produto";
-            if (confirm(`Tem certeza que deseja remover "${productName}" (código: ${codigoToRemove})?`)) {
-                showLoader();
-                try {
-                    const { error } = await _supabaseClient 
-                        .from('produtos')
-                        .delete()
-                        .eq('codigo', codigoToRemove); 
-
-                    if (error) {
-                        console.error('Erro ao remover produto do Supabase:', error);
-                        alert('Falha ao remover produto: ' + error.message);
-                    } else {
-                        produtos = produtos.filter(p => p.codigo !== codigoToRemove);
-                        if (quantidadesDigitadas[codigoToRemove]) {
-                            delete quantidadesDigitadas[codigoToRemove];
-                            saveQuantities();
-                        }
-                        renderProductManagementTable();
-                        alert('Produto removido com sucesso!');
-                    }
-                } catch (e) {
-                    console.error('Erro inesperado em removeProduct:', e);
-                    alert('Erro inesperado ao remover produto.');
-                } finally {
-                    hideLoader();
-                }
-            }
-        }
-
-        /** @description Processa um arquivo XLSX para importar/atualizar produtos. */
-        async function handleXLSXImport() {
-            const file = xlsxFileInput.files[0];
-            if (!file) { alert("Por favor, selecione um arquivo XLSX."); return; }
-
-            showLoader();
-            const reader = new FileReader(); 
-            reader.onload = async function(event) { 
-                try {
-                    const data = new Uint8Array(event.target.result); 
-                    const workbook = XLSX.read(data, { type: 'array' }); 
-                    const firstSheetName = workbook.SheetNames[0]; 
-                    const worksheet = workbook.Sheets[firstSheetName]; 
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet); 
-
-                    if (jsonData.length === 0) {
-                        alert("O arquivo XLSX está vazio ou não contém dados."); 
-                        hideLoader(); 
-                        return;
-                    }
-                    
-                    const productsToUpsert = [];
-                    jsonData.forEach(item => {
-                        const codigo = item.codigo || item.Código || item.CODIGO;
-                        const produtoNome = item.produto || item.Produto || item.PRODUTO;
-                        const categoria = item.categoria || item.Categoria || item.CATEGORIA;
-
-                        if (codigo && produtoNome && categoria) { 
-                            productsToUpsert.push({ 
-                                codigo: String(codigo).trim(), 
-                                produto: String(produtoNome).trim(), 
-                                categoria: String(categoria).trim()
-                            });
-                        }
-                    });
-
-                    if (productsToUpsert.length > 0) {
-                        const { error: upsertError } = await _supabaseClient 
-                            .from('produtos')
-                            .upsert(productsToUpsert, { onConflict: 'codigo' });
-
-                        if (upsertError) {
-                            console.error('Erro no upsert de produtos via XLSX:', upsertError);
-                            alert('Falha ao importar/atualizar produtos: ' + upsertError.message);
-                            hideLoader();
-                            return;
-                        }
-                    }
-                    
-                    await fetchProductsFromSupabase(); 
-                    renderProductManagementTable(); 
-                    alert(`${productsToUpsert.length} produto(s) processado(s) com sucesso.`);
-                    xlsxFileInput.value = ""; 
-                } catch (e) {
-                    console.error("Erro crítico ao processar XLSX:", e);
-                    alert("Ocorreu um erro crítico ao processar o arquivo XLSX.");
-                } finally {
-                    hideLoader();
-                }
-            };
-            reader.readAsArrayBuffer(file); 
-        }
-
-        /** @description Popula o dropdown de filtro de categorias. */
-        function populateCategoryFilter() {
-            const currentCategoryValue = filtroCategoriaSelect.value; 
-            filtroCategoriaSelect.innerHTML = '<option value="">Todas as Categorias</option>'; 
-            const categorias = [...new Set(produtos.map(p => p.categoria))].sort((a,b) => a.localeCompare(b));
-            categorias.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat; option.textContent = cat;
-                filtroCategoriaSelect.appendChild(option);
-            });
-            if (categorias.includes(currentCategoryValue)) { 
-                filtroCategoriaSelect.value = currentCategoryValue;
-            }
-        }
-
-        /** @description Exibe os produtos na tabela da tela de contagem. */
-        function displayInventoryProducts(listaProdutos) {
-            inventoryTableBody.innerHTML = "";
-            if (listaProdutos.length === 0) {
-                inventoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto para exibir.</td></tr>';
                 return;
+              }
             }
-            loadQuantities(); 
-            const sortedListaProdutos = [...listaProdutos].sort((a,b) => String(a.codigo).localeCompare(String(b.codigo)));
 
-            sortedListaProdutos.forEach((produto) => {
-                const novaLinha = inventoryTableBody.insertRow();
-                novaLinha.insertCell().textContent = produto.codigo;
-                novaLinha.insertCell().textContent = produto.produto;
-                novaLinha.insertCell().textContent = produto.categoria;
-                
-                const celulaQuantidade = novaLinha.insertCell();
-                const inputQuantidade = document.createElement('input');
-                inputQuantidade.type = "number"; inputQuantidade.className = "quantidade";
-                inputQuantidade.min = "0"; inputQuantidade.placeholder = "0";
-                inputQuantidade.value = quantidadesDigitadas[produto.codigo] || ""; 
-
-                inputQuantidade.addEventListener("input", function() { 
-                    quantidadesDigitadas[produto.codigo] = this.value;
-                    saveQuantities();
-                });
-                inputQuantidade.addEventListener("keydown", function(event) { 
-                    if (event.key === "Enter") {
-                        event.preventDefault();
-                        const allQuantityInputs = Array.from(inventoryTableBody.querySelectorAll(".quantidade"));
-                        const currentIndex = allQuantityInputs.indexOf(this);
-                        if (currentIndex > -1 && currentIndex < allQuantityInputs.length - 1) {
-                            allQuantityInputs[currentIndex + 1].focus(); 
-                            allQuantityInputs[currentIndex + 1].select(); 
-                        } else if (currentIndex === allQuantityInputs.length - 1) { 
-                            document.querySelector('#screenInventoryCount .actions-bar button.success').focus(); 
-                        }
-                    }
-                });
-                celulaQuantidade.appendChild(inputQuantidade);
-            });
-        }
-        
-        /** @description Filtra a lista de produtos e atualiza a tabela. */
-        function filterInventoryProducts() {
-            const termoProduto = pesquisaProdutoInput.value.toLowerCase();
-            const termoCodigo = pesquisaCodigoInput.value.toLowerCase();
-            const categoriaSelecionada = filtroCategoriaSelect.value;
-
-            const produtosFiltrados = produtos.filter(produto => 
-                produto.produto.toLowerCase().includes(termoProduto) &&
-                produto.codigo.toLowerCase().includes(termoCodigo) &&
-                (categoriaSelecionada ? produto.categoria === categoriaSelecionada : true)
-            );
-            displayInventoryProducts(produtosFiltrados); 
-        }
-        
-        /** @description Limpa todas as quantidades digitadas na tela de contagem. */
-        function clearAllQuantities() {
-            if (confirm("Tem certeza que deseja limpar todas as quantidades digitadas?")) {
-                quantidadesDigitadas = {}; 
-                saveQuantities(); 
-                const quantityInputs = inventoryTableBody.querySelectorAll(".quantidade");
-                quantityInputs.forEach(input => input.value = "");
-                alert("Todas as quantidades foram limpas.");
-                if(quantityInputs.length > 0) { quantityInputs[0].focus(); quantityInputs[0].select(); }
-            }
-        }
-
-        /** @description Gera um arquivo TXT com os códigos e quantidades. */
-        function gerarArquivoTXT() {
-            let conteudoArquivo = "";
-            let hasInvalidQuantity = false; 
-            let foundData = false; 
-            const rows = inventoryTableBody.querySelectorAll("tr"); 
-
-            rows.forEach(row => {
-                if (hasInvalidQuantity) return; 
-                const codigoCell = row.cells[0];
-                if (!codigoCell || !row.querySelector(".quantidade")) return; 
-                
-                const codigo = codigoCell.textContent;
-                const inputQuantidade = row.querySelector(".quantidade");
-                const quantidade = inputQuantidade.value;
-
-                if (quantidade && quantidade.trim() !== "") { 
-                    foundData = true; 
-                    const numQuantidade = parseFloat(quantidade);
-                    if (!isNaN(numQuantidade) && numQuantidade >= 0) { 
-                        conteudoArquivo += `${codigo};${numQuantidade}\n`; 
-                    } else {
-                        alert(`Quantidade inválida para o produto de código ${codigo}.`);
-                        inputQuantidade.focus(); inputQuantidade.select();
-                        hasInvalidQuantity = true; 
-                    }
-                }
-            });
-
-            if (hasInvalidQuantity) return; 
-            if (!foundData) { alert("Nenhuma quantidade foi inserida."); return; }
-
-            const dataAtual = new Date();
-            const dia = String(dataAtual.getDate()).padStart(2, '0');
-            const mes = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
-            const ano = dataAtual.getFullYear();
-            const nomeArquivo = `balanco_${dia}-${mes}-${ano}.txt`;
-
-            const elementoLink = document.createElement('a');
-            elementoLink.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(conteudoArquivo));
-            elementoLink.setAttribute('download', nomeArquivo);
-            elementoLink.style.display = 'none'; 
-            document.body.appendChild(elementoLink);
-            elementoLink.click(); 
-            document.body.removeChild(elementoLink); 
-            alert(`Arquivo "${nomeArquivo}" gerado com sucesso!`);
-        }
-
-        // 5. Event Listeners e Inicialização da Aplicação 
-        window.onload = async () => { 
-            showLoader(); 
-            // Apenas adiciona listeners aqui. As chamadas de fetch e renderização
-            // serão feitas pelas funções de navegação quando necessário.
-            // No entanto, uma carga inicial de produtos pode ser útil para popular 'produtos'
-            // e evitar chamadas repetidas se o usuário navegar rapidamente.
             await fetchProductsFromSupabase();
-            loadQuantities(); 
-            
-            // Adiciona listeners de evento APÓS garantir que os elementos DOM existem.
-            pesquisaProdutoInput.addEventListener("input", filterInventoryProducts);
-            pesquisaCodigoInput.addEventListener("input", filterInventoryProducts);
-            filtroCategoriaSelect.addEventListener("change", filterInventoryProducts);
-
-            submitPasswordBtn.addEventListener('click', handleSubmitPassword);
-            cancelPasswordBtn.addEventListener('click', closePasswordModal);
-            adminPasswordInput.addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') { handleSubmitPassword(); }
-            });
-            passwordModal.addEventListener('click', function(event) {
-                if (event.target === passwordModal) { closePasswordModal(); }
-            });
-            
-            showInitialScreen(); 
+            renderProductManagementTable();
+            alert(
+              `${productsToUpsert.length} produto(s) processado(s) com sucesso.`
+            );
+            xlsxFileInput.value = "";
+          } catch (e) {
+            console.error("Erro crítico ao processar XLSX:", e);
+            alert("Ocorreu um erro crítico ao processar o arquivo XLSX.");
+          } finally {
+            hideLoader();
+          }
         };
+        reader.readAsArrayBuffer(file);
+      }
+
+      /** @description Popula o dropdown de filtro de categorias. */
+      function populateCategoryFilter() {
+        const currentCategoryValue = filtroCategoriaSelect.value;
+        filtroCategoriaSelect.innerHTML =
+          '<option value="">Todas as Categorias</option>';
+        const categorias = [...new Set(produtos.map((p) => p.categoria))].sort(
+          (a, b) => a.localeCompare(b)
+        );
+        categorias.forEach((cat) => {
+          const option = document.createElement("option");
+          option.value = cat;
+          option.textContent = cat;
+          filtroCategoriaSelect.appendChild(option);
+        });
+        if (categorias.includes(currentCategoryValue)) {
+          filtroCategoriaSelect.value = currentCategoryValue;
+        }
+      }
+
+      /** @description Exibe os produtos na tabela da tela de contagem. */
+      function displayInventoryProducts(listaProdutos) {
+        inventoryTableBody.innerHTML = "";
+        if (listaProdutos.length === 0) {
+          inventoryTableBody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; padding: 20px;">Nenhum produto para exibir.</td></tr>';
+          return;
+        }
+        loadQuantities();
+        const sortedListaProdutos = [...listaProdutos].sort((a, b) =>
+          String(a.codigo).localeCompare(String(b.codigo))
+        );
+
+        sortedListaProdutos.forEach((produto) => {
+          const novaLinha = inventoryTableBody.insertRow();
+          novaLinha.insertCell().textContent = produto.codigo;
+          novaLinha.insertCell().textContent = produto.produto;
+          novaLinha.insertCell().textContent = produto.categoria;
+
+          const celulaQuantidade = novaLinha.insertCell();
+          const inputQuantidade = document.createElement("input");
+          inputQuantidade.type = "number";
+          inputQuantidade.className = "quantidade";
+          inputQuantidade.min = "0";
+          inputQuantidade.placeholder = "0";
+          inputQuantidade.value = quantidadesDigitadas[produto.codigo] || "";
+
+          inputQuantidade.addEventListener("input", function () {
+            quantidadesDigitadas[produto.codigo] = this.value;
+            saveQuantities();
+          });
+          inputQuantidade.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              const allQuantityInputs = Array.from(
+                inventoryTableBody.querySelectorAll(".quantidade")
+              );
+              const currentIndex = allQuantityInputs.indexOf(this);
+              if (
+                currentIndex > -1 &&
+                currentIndex < allQuantityInputs.length - 1
+              ) {
+                allQuantityInputs[currentIndex + 1].focus();
+                allQuantityInputs[currentIndex + 1].select();
+              } else if (currentIndex === allQuantityInputs.length - 1) {
+                document
+                  .querySelector(
+                    "#screenInventoryCount .actions-bar button.success"
+                  )
+                  .focus();
+              }
+            }
+          });
+          celulaQuantidade.appendChild(inputQuantidade);
+        });
+      }
+
+      /** @description Filtra a lista de produtos e atualiza a tabela. */
+      function filterInventoryProducts() {
+        const termoProduto = pesquisaProdutoInput.value.toLowerCase();
+        const termoCodigo = pesquisaCodigoInput.value.toLowerCase();
+        const categoriaSelecionada = filtroCategoriaSelect.value;
+
+        const produtosFiltrados = produtos.filter(
+          (produto) =>
+            produto.produto.toLowerCase().includes(termoProduto) &&
+            produto.codigo.toLowerCase().includes(termoCodigo) &&
+            (categoriaSelecionada
+              ? produto.categoria === categoriaSelecionada
+              : true)
+        );
+        displayInventoryProducts(produtosFiltrados);
+      }
+
+      /** @description Limpa todas as quantidades digitadas na tela de contagem. */
+      function clearAllQuantities() {
+        if (
+          confirm(
+            "Tem certeza que deseja limpar todas as quantidades digitadas?"
+          )
+        ) {
+          quantidadesDigitadas = {};
+          saveQuantities();
+          const quantityInputs =
+            inventoryTableBody.querySelectorAll(".quantidade");
+          quantityInputs.forEach((input) => (input.value = ""));
+          alert("Todas as quantidades foram limpas.");
+          if (quantityInputs.length > 0) {
+            quantityInputs[0].focus();
+            quantityInputs[0].select();
+          }
+        }
+      }
+
+      /** @description Gera um arquivo TXT com os códigos e quantidades. */
+      function gerarArquivoTXT() {
+        let conteudoArquivo = "";
+        let hasInvalidQuantity = false;
+        let foundData = false;
+        const rows = inventoryTableBody.querySelectorAll("tr");
+
+        rows.forEach((row) => {
+          if (hasInvalidQuantity) return;
+          const codigoCell = row.cells[0];
+          if (!codigoCell || !row.querySelector(".quantidade")) return;
+
+          const codigo = codigoCell.textContent;
+          const inputQuantidade = row.querySelector(".quantidade");
+          const quantidade = inputQuantidade.value;
+
+          if (quantidade && quantidade.trim() !== "") {
+            foundData = true;
+            const numQuantidade = parseFloat(quantidade);
+            if (!isNaN(numQuantidade) && numQuantidade >= 0) {
+              conteudoArquivo += `${codigo};${numQuantidade}\n`;
+            } else {
+              alert(`Quantidade inválida para o produto de código ${codigo}.`);
+              inputQuantidade.focus();
+              inputQuantidade.select();
+              hasInvalidQuantity = true;
+            }
+          }
+        });
+
+        if (hasInvalidQuantity) return;
+        if (!foundData) {
+          alert("Nenhuma quantidade foi inserida.");
+          return;
+        }
+
+        const dataAtual = new Date();
+        const dia = String(dataAtual.getDate()).padStart(2, "0");
+        const mes = String(dataAtual.getMonth() + 1).padStart(2, "0");
+        const ano = dataAtual.getFullYear();
+        const nomeArquivo = `balanco_${dia}-${mes}-${ano}.txt`;
+
+        const elementoLink = document.createElement("a");
+        elementoLink.setAttribute(
+          "href",
+          "data:text/plain;charset=utf-8," + encodeURIComponent(conteudoArquivo)
+        );
+        elementoLink.setAttribute("download", nomeArquivo);
+        elementoLink.style.display = "none";
+        document.body.appendChild(elementoLink);
+        elementoLink.click();
+        document.body.removeChild(elementoLink);
+        alert(`Arquivo "${nomeArquivo}" gerado com sucesso!`);
+      }
+
+      // 5. Event Listeners e Inicialização da Aplicação
+      window.onload = async () => {
+        showLoader();
+        // Apenas adiciona listeners aqui. As chamadas de fetch e renderização
+        // serão feitas pelas funções de navegação quando necessário.
+        // No entanto, uma carga inicial de produtos pode ser útil para popular 'produtos'
+        // e evitar chamadas repetidas se o usuário navegar rapidamente.
+        await fetchProductsFromSupabase();
+        loadQuantities();
+
+        // Adiciona listeners de evento APÓS garantir que os elementos DOM existem.
+        pesquisaProdutoInput.addEventListener("input", filterInventoryProducts);
+        pesquisaCodigoInput.addEventListener("input", filterInventoryProducts);
+        filtroCategoriaSelect.addEventListener(
+          "change",
+          filterInventoryProducts
+        );
+
+        submitPasswordBtn.addEventListener("click", handleSubmitPassword);
+        cancelPasswordBtn.addEventListener("click", closePasswordModal);
+        adminPasswordInput.addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            handleSubmitPassword();
+          }
+        });
+        passwordModal.addEventListener("click", function (event) {
+          if (event.target === passwordModal) {
+            closePasswordModal();
+          }
+        });
+
+        showInitialScreen();
+      };
     </script>
-</body>
+  </body>
 </html>
