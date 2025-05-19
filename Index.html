@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Balanço de Estoque - Multiempresa v2.4</title>
+    <title>Sistema de Balanço de Estoque - Multiempresa v2.5</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* CSS da versão anterior (v2.4) mantido. Cole o CSS completo aqui. */
+        /* Para economizar espaço na resposta, estou omitindo a repetição do CSS, 
+           mas ele deve ser o mesmo da versão anterior que inclui os estilos para .btn, .table-actions, etc. */
         :root {
             --primary-color: #0d6efd; --primary-color-darker: #0b5ed7;
             --secondary-color: #6c757d; --secondary-color-darker: #5c636a;
@@ -40,7 +43,7 @@
         .btn-success{background-color:var(--success-color);border-color:var(--success-color);color:var(--text-on-success-color)}.btn-success:hover{background-color:var(--success-color-darker);border-color:var(--success-color-darker)}
         .btn-danger{background-color:var(--danger-color);border-color:var(--danger-color);color:var(--text-on-danger-color)}.btn-danger:hover{background-color:var(--danger-color-darker);border-color:var(--danger-color-darker)}
         .btn-warning{background-color:var(--warning-color);border-color:var(--warning-color);color:var(--text-on-warning-color)}.btn-warning:hover{background-color:var(--warning-color-darker);border-color:var(--warning-color-darker)}
-        .btn-info{background-color:var(--info-color);border-color:var(--info-color);color:var(--text-on-primary-color);}.btn-info:hover{background-color:var(--info-color-darker);border-color:var(--info-color-darker);} /* Estilo para btn-info */
+        .btn-info{background-color:var(--info-color);border-color:var(--info-color);color:var(--text-on-primary-color);}.btn-info:hover{background-color:var(--info-color-darker);border-color:var(--info-color-darker);}
         .dashboard-options{display:flex;flex-direction:column;align-items:stretch;gap:1rem;padding:1rem 0}
         .dashboard-options .btn{padding:.75rem 1rem;font-size:1.05rem;width:100%}
         .card{border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:1.5rem;box-shadow:none;background-color:var(--container-bg-color)}
@@ -78,12 +81,13 @@
         .table-actions button,.table-actions .btn{margin:0 2px;padding:.25rem .5rem;font-size:.85rem}
         .generated-password-display { margin-top: 10px; padding: 10px; background-color: var(--input-bg-color); border: 1px dashed var(--border-color); border-radius: var(--border-radius); word-break: break-all; color: var(--text-color); font-family: monospace; text-align: center;}
         .company-users-list { list-style-type: none; padding-left: 0; font-size: 0.9em; }
-        .company-users-list li { padding: 8px 5px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .company-users-list li { padding: 8px 5px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; /* Para quebrar em telas menores */ }
         .company-users-list li:last-child { border-bottom: none; }
+        .company-users-list li .user-info { margin-right: 10px; /* Espaço antes dos botões */ }
         .company-users-list li .user-info .user-email { font-weight: bold; }
         .company-users-list li .user-info .user-details { font-style: italic; color: var(--text-muted-color); font-size: 0.9em; display: block; }
-        .company-users-list li .user-actions .btn { margin-left: 5px; }
-
+        .company-users-list li .user-actions { display: flex; gap: 5px; /* Espaço entre botões de ação */ }
+        .password-change-form { max-width: 450px; margin: 1.5rem auto; }
     </style>
 </head>
 <body>
@@ -123,6 +127,7 @@
             <div class="dashboard-options">
                 <button class="btn btn-primary" onclick="showProductManagementScreen_Empresa()">Gerenciar Produtos da Empresa</button>
                 <button class="btn btn-primary" onclick="showInventoryCountScreen_Empresa()">Iniciar Contagem da Empresa</button>
+                <button class="btn btn-info" onclick="showChangePasswordScreen()">Alterar Minha Senha</button> 
                 <button class="btn btn-secondary" onclick="handleLogout()">Logout</button>
             </div>
         </div>
@@ -144,7 +149,7 @@
                 <div class="card-header"><h3>Empresas Cadastradas</h3></div>
                 <div class="card-body">
                     <table id="adminEmpresasTable">
-                        <thead><tr><th>Nome da Empresa</th><th>Data Criação</th><th style="width: 200px;">Ações</th></tr></thead>
+                        <thead><tr><th>Nome da Empresa</th><th>Data Criação</th><th style="width: 220px;">Ações</th></tr></thead>
                         <tbody id="adminEmpresasTableBody"></tbody>
                     </table>
                 </div>
@@ -168,12 +173,34 @@
                         <label for="adminNewUserFullName">Nome Completo (Opcional):</label>
                         <input type="text" id="adminNewUserFullName" placeholder="Nome Sobrenome">
                     </div>
-                    <button class="btn btn-success" onclick="handleAdminCreateUserForCompany()">Criar Usuário (Gerar Senha Numérica)</button>
+                    <button class="btn btn-success" onclick="handleAdminCreateUserForCompany()">Criar Usuário (Senha Numérica 6 Dígitos)</button>
                     <div id="generatedPasswordMessage" class="generated-password-display" style="display:none;"></div>
                 </div>
                  <button class="btn btn-secondary" onclick="closeManageCompanyUsersSection()" style="margin: 0 1.25rem 1.25rem;">Fechar Gerenciamento de Usuários</button>
             </div>
         </div>
+
+        <div id="screenChangePassword" class="screen">
+            <button class="btn btn-secondary back-button" onclick="showEmpresaDashboardScreen()">&larr; Voltar ao Painel da Empresa</button>
+            <h2>Alterar Minha Senha</h2>
+            <div class="password-change-form card card-body">
+                <div class="form-group">
+                    <label for="currentPasswordInput">Senha Atual (se aplicável, para segurança extra):</label>
+                    <input type="password" id="currentPasswordInput" placeholder="Deixe em branco se for o primeiro login">
+                </div>
+                <div class="form-group">
+                    <label for="newPasswordInput">Nova Senha (mín. 6 caracteres):</label>
+                    <input type="password" id="newPasswordInput" placeholder="Digite a nova senha">
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPasswordInput">Confirmar Nova Senha:</label>
+                    <input type="password" id="confirmNewPasswordInput" placeholder="Confirme a nova senha">
+                </div>
+                <button class="btn btn-primary" onclick="handleChangeOwnPassword()">Salvar Nova Senha</button>
+                <div id="changePasswordMessage" style="margin-top:1rem; text-align:center;"></div>
+            </div>
+        </div>
+
 
         <div id="screenProductManagement" class="screen">
             <button class="btn btn-secondary back-button" id="productManagementBackButton">&larr; Voltar</button>
@@ -214,6 +241,7 @@
             adminMasterDashboard: document.getElementById('screenAdminMasterDashboard'),
             empresaDashboard: document.getElementById('screenEmpresaDashboard'),
             adminEmpresas: document.getElementById('screenAdminEmpresas'),
+            changePassword: document.getElementById('screenChangePassword'), // Nova tela
             productManagement: document.getElementById('screenProductManagement'),
             inventoryCount: document.getElementById('screenInventoryCount')
         };
@@ -234,6 +262,13 @@
         const adminNewUserFullNameInput = document.getElementById('adminNewUserFullName');
         const generatedPasswordMessage = document.getElementById('generatedPasswordMessage');
 
+        // Tela Change Password
+        const currentPasswordInput = document.getElementById('currentPasswordInput');
+        const newPasswordInput = document.getElementById('newPasswordInput');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
+        const changePasswordMessage = document.getElementById('changePasswordMessage');
+
+        // ... (outros seletores DOM mantidos da v2.4) ...
         const productManagementBackButton = document.getElementById('productManagementBackButton');
         const productManagementTitle = document.getElementById('productManagementTitle');
         const productManagementContext = document.getElementById('productManagementContext');
@@ -242,7 +277,6 @@
         const prodCategoriaInput = document.getElementById('prodCategoria');
         const productManagementTableBody = document.getElementById('productManagementTableBody');
         const xlsxFileInput = document.getElementById('xlsxFile');
-
         const inventoryCountBackButton = document.getElementById('inventoryCountBackButton');
         const inventoryCountTitle = document.getElementById('inventoryCountTitle');
         const inventoryCountContext = document.getElementById('inventoryCountContext');
@@ -250,7 +284,6 @@
         const pesquisaCodigoInput = document.getElementById('pesquisaCodigo');
         const filtroCategoriaSelect = document.getElementById('filtroCategoria');
         const inventoryTableBody = document.getElementById('inventoryTableBody');
-
         const empresaDashboardTitle = document.getElementById('empresaDashboardTitle');
         const empresaUserNameSpan = document.getElementById('empresaUserName');
 
@@ -259,7 +292,7 @@
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
 
-        function generateNumericPassword(length = 8) { // Modificada para senha numérica
+        function generateNumericPassword(length = 6) { // Alterado para 6 dígitos
             let password = '';
             for (let i = 0; i < length; i++) {
                 password += Math.floor(Math.random() * 10).toString();
@@ -267,7 +300,7 @@
             return password;
         }
 
-        function showScreen(screenId, screenConfig = {}) { /* ... (Mantida da v2.3) ... */
+        function showScreen(screenId, screenConfig = {}) { /* ... (Mantida da v2.4) ... */
             hideLoader();
             Object.values(screens).forEach(screen => screen && screen.classList.remove('active'));
             
@@ -301,7 +334,7 @@
         }
         
         // --- LÓGICA DE LOGIN E LOGOUT ---
-        async function handleLogin() { /* ... (Mantida da v2.3, com lowercase no email do admin) ... */
+        async function handleLogin() { /* ... (Mantida da v2.4) ... */
             const email = loginEmailInput.value.trim();
             const password = loginPasswordInput.value.trim();
             loginErrorMessage.textContent = ""; loginErrorMessage.style.display = "none";
@@ -323,7 +356,7 @@
                         .eq('id', data.user.id)
                         .single();
 
-                    if (profileError && profileError.code !== 'PGRST116') throw profileError; // PGRST116 = No rows found, mas queremos erro se não for esse
+                    if (profileError && profileError.code !== 'PGRST116') throw profileError; 
 
                     if (profile && profile.role === 'empresa_user' && profile.empresa_id && profile.empresas) {
                         currentUser = { 
@@ -346,7 +379,7 @@
             hideLoader();
         }
 
-        async function handleLogout() { /* ... (Mantida da v2.3) ... */
+        async function handleLogout() { /* ... (Mantida da v2.4) ... */
             showLoader();
             if (currentUser && currentUser.role !== 'admin_master') {
                 await _supabaseClient.auth.signOut();
@@ -363,7 +396,7 @@
         async function showEmpresaDashboardScreen() { showScreen('empresaDashboard');}
         
         // --- ADMIN: GERENCIAR EMPRESAS E USUÁRIOS ---
-        async function showAdminEmpresasScreen() { /* ... (Mantida da v2.3) ... */
+        async function showAdminEmpresasScreen() { /* ... (Mantida da v2.4) ... */
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             showLoader();
             if(manageCompanyUsersSection) manageCompanyUsersSection.style.display = 'none';
@@ -371,7 +404,7 @@
             showScreen('adminEmpresas'); 
         }
 
-        async function fetchAndRenderEmpresas() { /* ... (Modificada para ter botão 'Gerenciar Usuários') ... */
+        async function fetchAndRenderEmpresas() { /* ... (Mantida da v2.4) ... */
             if (!adminEmpresasTableBody) return;
             adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando...</td></tr>';
             try {
@@ -389,7 +422,7 @@
                         btnManageUsers.className = 'btn btn-info table-actions';
                         btnManageUsers.onclick = () => openManageCompanyUsers(empresa.id, empresa.nome_empresa);
                         actionsCell.appendChild(btnManageUsers);
-                        // TODO: Adicionar botões Editar/Excluir empresa
+                        // TODO: Adicionar botões Editar/Excluir empresa no futuro
                     });
                 } else {
                     adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Nenhuma empresa cadastrada.</td></tr>';
@@ -399,7 +432,7 @@
             }
         }
 
-        async function handleAdminAddEmpresa() { /* ... (Mantida da v2.3) ... */
+        async function handleAdminAddEmpresa() { /* ... (Mantida da v2.4) ... */
             const nomeEmpresa = adminNomeEmpresaInput.value.trim();
             if (!nomeEmpresa) { alert('Digite o nome da empresa.'); adminNomeEmpresaInput.focus(); return; }
             showLoader();
@@ -414,26 +447,23 @@
             } finally { hideLoader(); }
         }
         
-        async function openManageCompanyUsers(empresaId, nomeEmpresa) { /* ... (Modificada para listar usuários e incluir botão de gerar nova senha) ... */
+        async function openManageCompanyUsers(empresaId, nomeEmpresa) { /* Modificada para adicionar botão Deletar Usuário e Gerar Nova Senha */
             if(!manageCompanyUsersSection || !manageCompanyUsersTitle || !selectedEmpresaIdForNewUserInput || 
                !selectedEmpresaNameForNewUserSpan || !companyUsersListContainer || !adminNewUserEmailInput || !adminNewUserFullNameInput || !generatedPasswordMessage) {
-                console.error("Um ou mais elementos da UI para gerenciar usuários não foram encontrados.");
-                return;
+                console.error("Elementos da UI para gerenciar usuários não encontrados."); return;
             }
             manageCompanyUsersTitle.textContent = `Usuários da Empresa: ${nomeEmpresa}`;
             selectedEmpresaIdForNewUserInput.value = empresaId;
             selectedEmpresaNameForNewUserSpan.textContent = nomeEmpresa;
-            adminNewUserEmailInput.value = "";
-            adminNewUserFullNameInput.value = "";
-            generatedPasswordMessage.style.display = 'none';
-            generatedPasswordMessage.textContent = '';
-            generatedPasswordMessage.style.color = 'var(--text-color)';
+            adminNewUserEmailInput.value = ""; adminNewUserFullNameInput.value = "";
+            generatedPasswordMessage.style.display = 'none'; generatedPasswordMessage.textContent = '';
+            generatedPasswordMessage.style.color = 'var(--text-color)'; 
             
             companyUsersListContainer.innerHTML = '<p>Carregando usuários...</p>';
             try {
                 const { data: users, error } = await _supabaseClient
                     .from('user_profiles')
-                    .select('id, email, full_name, role, created_at')
+                    .select('id, email, full_name, role') // Não precisa de created_at aqui
                     .eq('empresa_id', empresaId)
                     .order('email');
                 if (error) throw error;
@@ -444,11 +474,11 @@
                         usersHtml += `<li>
                                         <div class="user-info">
                                             <span class="user-email">${user.email}</span>
-                                            <span class="user-details">${user.full_name || 'Nome não informado'} (${user.role || 'usuário'})</span>
+                                            <span class="user-details">${user.full_name || 'Nome não informado'}</span>
                                         </div>
                                         <div class="user-actions">
-                                            <button class="btn btn-warning table-actions" onclick="handleAdminGenerateNewPasswordForUser('${user.email}', '${user.full_name || user.email}')">Sugerir Nova Senha</button>
-                                            {/* Futuro: Botão Deletar Usuário */}
+                                            <button class="btn btn-warning table-actions" onclick="handleAdminSuggestNewPassword('${user.id}', '${user.email}', '${user.full_name || user.email}')">Sugerir Nova Senha</button>
+                                            <button class="btn btn-danger table-actions" onclick="handleAdminDeleteCompanyUser('${user.id}', '${user.email}', '${empresaId}', '${nomeEmpresa}')">Deletar Usuário</button>
                                         </div>
                                       </li>`;
                     });
@@ -465,11 +495,11 @@
             adminNewUserEmailInput.focus();
         }
 
-        function closeManageCompanyUsersSection() { /* ... (Mantida da v2.3) ... */
+        function closeManageCompanyUsersSection() { /* ... (Mantida da v2.4) ... */
             if(manageCompanyUsersSection) manageCompanyUsersSection.style.display = 'none';
         }
         
-        async function handleAdminCreateUserForCompany() { /* ... (Modificada para usar senha numérica e inserir em user_profiles) ... */
+        async function handleAdminCreateUserForCompany() { /* Modificada para senha numérica e inserção em user_profiles */
             const empresaId = selectedEmpresaIdForNewUserInput.value;
             const nomeEmpresa = selectedEmpresaNameForNewUserSpan.textContent; 
             const email = adminNewUserEmailInput.value.trim();
@@ -477,7 +507,7 @@
 
             if (!empresaId || !email ) { alert("Preencha o email do novo usuário."); return; }
             
-            const password = generateNumericPassword(8); // Gera senha numérica de 8 dígitos
+            const password = generateNumericPassword(6); // Gera senha numérica de 6 dígitos
 
             showLoader();
             generatedPasswordMessage.style.display = 'none';
@@ -485,6 +515,7 @@
             generatedPasswordMessage.style.color = 'var(--text-color)'; 
 
             try {
+                // 1. Cria o usuário no Supabase Auth
                 const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
                     email, password,
                     options: { 
@@ -494,46 +525,45 @@
                             role: 'empresa_user',
                             full_name: fullName || null 
                         } 
+                        // Lembre-se de desabilitar "Confirm email" no Supabase para emails fictícios logarem direto.
                     }
                 });
                 if (signUpError) throw signUpError;
 
-                let successMessage = "";
-                if (authData.user) { 
-                    // Inserir no user_profiles (alternativa ao trigger)
-                    const { error: profileError } = await _supabaseClient
+                // 2. Insere no user_profiles (alternativa ao trigger)
+                if (authData.user) {
+                     const { error: profileError } = await _supabaseClient
                         .from('user_profiles')
                         .insert({
-                            id: authData.user.id, // ID do auth.users
-                            email: email,
+                            id: authData.user.id, 
+                            email: email, // authData.user.email pode ser usado também
                             empresa_id: empresaId,
                             role: 'empresa_user',
                             full_name: fullName || null
                         });
-
                     if (profileError) {
                         console.error("Usuário criado no Auth, mas erro ao criar perfil:", profileError);
-                        // Tentar deletar o usuário do Auth para consistência? Ou apenas alertar?
-                        // await _supabaseClient.auth.admin.deleteUser(authData.user.id) // REQUER CHAVE ADMIN - NÃO FAZER NO CLIENTE
                         throw new Error(`Usuário ${email} criado na autenticação, mas falha ao salvar perfil: ${profileError.message}. Delete o usuário manualmente no Supabase Auth e tente novamente.`);
                     }
-                    
-                    successMessage = `Usuário ${email} criado para ${nomeEmpresa}!\nSenha Gerada: ${password}\nInforme esta senha ao usuário.`;
-                    if (document.querySelector('#supabase-auth-confirm-email-true')) { // Supõe que você tenha um jeito de saber se a confirmação está ativa
-                         successMessage += `\nO usuário pode precisar confirmar o email.`
-                    }
-                    await openManageCompanyUsers(empresaId, nomeEmpresa); 
-                } else if (authData && !authData.user && authData.session === null) { 
-                    successMessage = `Registro de ${email} iniciado para ${nomeEmpresa}.\nSenha Gerada: ${password}\nO usuário precisa confirmar o email (se habilitado no Supabase).`;
-                } else { 
-                    throw new Error("Resposta inesperada do Supabase Auth ao criar usuário."); 
+                } else if (!authData.user && authData.session === null && !(_supabaseClient.auth.settings?.mailer?.autoconfirm ?? true) ) { 
+                     // Caso "Confirm Email" esteja DESABILITADO e mesmo assim user não é retornado (raro, mas precaução)
+                     // Ou se Confirm Email está HABILITADO.
+                } else if (!authData.user) {
+                     throw new Error("Usuário não foi criado no Supabase Auth, resposta inesperada.");
+                }
+
+                let successMessage = `Usuário ${email} criado para ${nomeEmpresa}!\nSenha Gerada: ${password}\nInforme esta senha ao usuário.`;
+                // Verifica se a confirmação de email está desativada (true se desativada, false ou undefined se ativa)
+                const autoConfirmEnabled = _supabaseClient.auth.settings?.mailer?.autoconfirm ?? false; 
+                if (!autoConfirmEnabled) {
+                    successMessage += `\nO usuário pode precisar confirmar o email (verifique as configurações do Supabase Auth).`;
                 }
                 
                 generatedPasswordMessage.textContent = successMessage;
                 generatedPasswordMessage.style.display = 'block';
                 adminNewUserEmailInput.value = ""; 
                 adminNewUserFullNameInput.value = "";
-
+                await openManageCompanyUsers(empresaId, nomeEmpresa); // Atualiza a lista
             } catch (e) {
                 console.error("Erro ao criar usuário para empresa:", e); 
                 generatedPasswordMessage.textContent = `Erro ao criar usuário: ${e.message}`;
@@ -544,35 +574,115 @@
             }
         }
 
-        function handleAdminGenerateNewPasswordForUser(userEmail, userName) { // Nova função
+        function handleAdminSuggestNewPassword(userId, userEmail, userName) { // Nova função
             if (!userEmail) return;
-            const newPassword = generateNumericPassword(8);
-            generatedPasswordMessage.innerHTML = `Nova senha sugerida para <strong>${userName || userEmail}</strong>:<br>${newPassword}<br><small>(Esta senha NÃO foi alterada no sistema. Apenas anotada para você informar ao usuário. O usuário deve usar esta senha para logar e, idealmente, alterá-la depois.)</small>`;
-            generatedPasswordMessage.style.color = 'var(--info-color)'; // Usar cor de informação
+            const newPassword = generateNumericPassword(6); // Senha numérica de 6 dígitos
+            generatedPasswordMessage.innerHTML = `Nova senha sugerida para <strong>${userName || userEmail}</strong>:<br><strong style="font-size: 1.2em;">${newPassword}</strong><br><small style="color: var(--warning-color);">(AVISO: Esta senha é apenas uma sugestão e NÃO foi alterada no sistema. Para que o usuário use esta senha, ele mesmo precisará alterá-la na tela "Alterar Minha Senha" após logar com a senha antiga, ou você precisaria deletar e recriar este usuário com esta nova senha.)</small>`;
+            generatedPasswordMessage.style.color = 'var(--text-color)'; // Cor padrão para o texto principal
             generatedPasswordMessage.style.display = 'block';
-            // Foco para o usuário ver a mensagem, talvez rolar a tela
-             if(manageCompanyUsersSection) manageCompanyUsersSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            if(manageCompanyUsersSection) manageCompanyUsersSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        async function handleAdminDeleteCompanyUser(userId, userEmail, currentEmpresaId, currentEmpresaNome) {
+            if (!userId || !userEmail) return;
+            if (!confirm(`Tem certeza que deseja deletar o usuário ${userEmail} do sistema de perfis? \n\nAVISO IMPORTANTE: Esta ação removerá o vínculo do usuário com a empresa e seu perfil em nosso sistema. No entanto, o usuário AINDA EXISTIRÁ no sistema de autenticação do Supabase. Para uma remoção completa, você precisará deletá-lo manualmente no painel do Supabase Auth.\n\nContinuar com a remoção do perfil e vínculo da empresa?`)) {
+                return;
+            }
+            showLoader();
+            try {
+                // Deleta da tabela user_profiles
+                const { error: profileError } = await _supabaseClient
+                    .from('user_profiles')
+                    .delete()
+                    .eq('id', userId);
+                
+                if (profileError) throw profileError;
+
+                alert(`Perfil do usuário ${userEmail} removido e desvinculado da empresa com sucesso. Lembre-se de verificar o Supabase Auth se desejar remover o login completamente.`);
+                await openManageCompanyUsers(currentEmpresaId, currentEmpresaNome); // Atualiza a lista de usuários
+            } catch (e) {
+                console.error("Erro ao deletar perfil do usuário da empresa:", e);
+                alert("Erro ao deletar perfil do usuário: " + e.message);
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // --- USUÁRIO DA EMPRESA: ALTERAR PRÓPRIA SENHA ---
+        function showChangePasswordScreen() {
+            if (!currentUser || currentUser.role !== 'empresa_user') { handleLogout(); return; }
+            if(currentPasswordInput) currentPasswordInput.value = ""; // Limpa campo de senha atual
+            if(newPasswordInput) newPasswordInput.value = "";
+            if(confirmNewPasswordInput) confirmNewPasswordInput.value = "";
+            if(changePasswordMessage) {
+                changePasswordMessage.textContent = "";
+                changePasswordMessage.style.color = 'var(--text-color)'; // Reseta cor
+            }
+            showScreen('changePassword');
+        }
+
+        async function handleChangeOwnPassword() {
+            if (!currentUser || currentUser.role !== 'empresa_user') {
+                alert("Apenas usuários de empresa logados podem alterar a própria senha.");
+                handleLogout();
+                return;
+            }
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmNewPasswordInput.value;
+
+            if (!newPassword || newPassword.length < 6) {
+                changePasswordMessage.textContent = "Nova senha deve ter no mínimo 6 caracteres.";
+                changePasswordMessage.style.color = 'var(--danger-color)';
+                newPasswordInput.focus();
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                changePasswordMessage.textContent = "As novas senhas não coincidem.";
+                changePasswordMessage.style.color = 'var(--danger-color)';
+                confirmNewPasswordInput.focus();
+                return;
+            }
+
+            showLoader();
+            try {
+                const { data, error } = await _supabaseClient.auth.updateUser({
+                    password: newPassword
+                });
+
+                if (error) throw error;
+
+                changePasswordMessage.textContent = "Senha alterada com sucesso!";
+                changePasswordMessage.style.color = 'var(--success-color)';
+                if(newPasswordInput) newPasswordInput.value = "";
+                if(confirmNewPasswordInput) confirmNewPasswordInput.value = "";
+                // Opcional: deslogar o usuário para ele testar a nova senha
+                // await handleLogout();
+                // alert("Senha alterada! Por favor, faça login novamente com sua nova senha.");
+            } catch (e) {
+                console.error("Erro ao alterar senha:", e);
+                changePasswordMessage.textContent = "Erro ao alterar senha: " + e.message;
+                changePasswordMessage.style.color = 'var(--danger-color)';
+            } finally {
+                hideLoader();
+            }
         }
 
         // --- GERENCIAMENTO DE PRODUTOS (Adaptado) ---
-        // Funções showProductManagementScreen_AdminGlobal, showProductManagementScreen_Empresa, 
-        // fetchProductsFromSupabase, renderProductManagementTable, handleAddProduct, 
-        // handleRemoveProduct, handleXLSXImport
-        // (Mantidas como na v2.3 - já adaptadas para produtosCache e contexto)
-        async function showProductManagementScreen_AdminGlobal() { 
+        // (Funções mantidas como na v2.4, já usam produtosCache e contexto currentUser)
+        async function showProductManagementScreen_AdminGlobal() { /* ... */ 
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             await fetchProductsFromSupabase(); 
             showScreen('productManagement', { title: 'Produtos (Admin Global)', context: 'Todos produtos do sistema.', backAction: showAdminMasterDashboardScreen });
         }
-        async function showProductManagementScreen_Empresa() { 
+        async function showProductManagementScreen_Empresa() { /* ... */ 
             if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
             await fetchProductsFromSupabase(currentUser.empresa_id); 
             showScreen('productManagement', { title: `Produtos: ${currentUser.empresa_nome}`, context: 'Produtos da sua empresa.', backAction: showEmpresaDashboardScreen });
         }
-        async function fetchProductsFromSupabase(empresaId = null) { 
+        async function fetchProductsFromSupabase(empresaId = null) { /* ... */ 
             showLoader();
             try {
-                let query = _supabaseClient.from('produtos').select('*').order('produto');
+                let query = _supabaseClient.from('produtos').select('*, empresas (nome_empresa)').order('produto'); // Adicionado join para nome da empresa
                 if (empresaId) {
                     query = query.eq('empresa_id', empresaId);
                 } else if (currentUser?.role !== 'admin_master') {
@@ -587,7 +697,7 @@
                 renderProductManagementTable(); hideLoader(); 
             }
         }
-        function renderProductManagementTable() { 
+        function renderProductManagementTable() { /* ... */ 
             if (!productManagementTableBody) return;
             productManagementTableBody.innerHTML = ""; 
             if (produtosCache.length === 0) {
@@ -597,38 +707,52 @@
             [...produtosCache].sort((a,b) => String(a.codigo).localeCompare(String(b.codigo))).forEach(p => {
                 const r = productManagementTableBody.insertRow();
                 r.insertCell().textContent = p.codigo; r.insertCell().textContent = p.produto; r.insertCell().textContent = p.categoria;
+                // Se for admin global e o produto tiver empresa_id, mostrar nome da empresa
+                // if (currentUser?.role === 'admin_master' && p.empresas) {
+                //    r.insertCell().textContent = p.empresas.nome_empresa; 
+                // } else if (currentUser?.role === 'admin_master') {
+                //    r.insertCell().textContent = 'Global'; // Ou deixar em branco
+                // }
                 const ac = r.insertCell(); const btn = document.createElement('button');
                 btn.textContent = "Remover"; btn.className = 'btn btn-danger table-actions';
                 btn.onclick = () => handleRemoveProduct(p.id || p.codigo); ac.appendChild(btn);
             });
         }
-        async function handleAddProduct() { 
+        async function handleAddProduct() { /* ... (Mantida da v2.4 com pequena correção na lógica de empresaIdParaProduto para admin) ... */ 
             const codigo = prodCodigoInput.value.trim(); const nome = prodNomeInput.value.trim();
             const categoria = prodCategoriaInput.value.trim();
             if (!codigo || !nome || !categoria) { alert("Preencha Código, Produto e Categoria."); return; }
             
             let empresaIdParaProduto = null;
+            let isGlobalProductForAdmin = false;
+
             if (currentUser?.role === 'empresa_user' && currentUser.empresa_id) {
                 empresaIdParaProduto = currentUser.empresa_id;
             } else if (currentUser?.role === 'admin_master') {
-                const { data: empresas } = await _supabaseClient.from('empresas').select('id');
-                if ((!empresas || empresas.length === 0) && !confirm("Admin: Nenhuma empresa cadastrada. Adicionar produto como global (sem empresa)? (Requer que 'empresa_id' seja anulável no BD)")) return;
-                if (empresas && empresas.length > 0 && !confirm("Admin: Adicionar produto sem empresa específica (global)? (Requer que 'empresa_id' seja anulável no BD e não haja um contexto de empresa já selecionado)")) { return; }
+                // Para o admin master, verificamos se ele está no contexto de uma empresa (não implementado neste formulário ainda)
+                // ou se ele quer adicionar um produto global (empresa_id = null)
+                // Se a coluna 'empresa_id' no BD for NOT NULL, esta lógica precisa mudar ou o admin não poderá adicionar produtos aqui.
+                if (!confirm("Admin: Adicionar este produto como GLOBAL (sem vínculo com empresa específica)?\n(Isto requer que a coluna 'empresa_id' na tabela 'produtos' permita valores nulos).")) {
+                     // Aqui, futuramente, você poderia ter um <select> para o admin escolher a empresa
+                     alert("Adição cancelada. Para adicionar a uma empresa, gerencie produtos no contexto da empresa (funcionalidade futura).");
+                     return;
+                }
+                isGlobalProductForAdmin = true; // empresaIdParaProduto permanece null
             } else { alert("Usuário não autorizado para adicionar produto."); return; }
 
             showLoader();
             try {
                 const { data, error } = await _supabaseClient.from('produtos')
-                    .insert([{ codigo, produto: nome, categoria, empresa_id: empresaIdParaProduto }]).select(); 
+                    .insert([{ codigo, produto: nome, categoria, empresa_id: empresaIdParaProduto }]).select('*, empresas (nome_empresa)'); // Pega nome da empresa para o cache
                 if (error) throw error;
                 if (data && data[0]) {
-                    // Atualiza cache local corretamente
-                    if (empresaIdParaProduto === (currentUser?.empresa_id || null) || (currentUser?.role === 'admin_master' && !empresaIdParaProduto) ) {
-                         produtosCache.push(data[0]);
+                    // Atualiza cache local
+                    if (isGlobalProductForAdmin || (empresaIdParaProduto && empresaIdParaProduto === currentUser?.empresa_id)) {
+                        produtosCache.push(data[0]);
                     } else {
-                        // Produto foi para um contexto diferente do cache atual, apenas alerta.
-                        // Ou recarrega o cache se a intenção era adicionar a um contexto não exibido
-                        // await fetchProductsFromSupabase(empresaIdParaProduto); // Se o admin pudesse escolher empresa
+                        // Se admin adicionou para uma empresa (via futuro seletor) e o cache atual é global ou de outra empresa
+                        // A melhor forma é recarregar o cache do contexto atual.
+                        await fetchProductsFromSupabase(currentUser?.empresa_id); // Recarrega o cache do contexto do usuário
                     }
                 }
                 renderProductManagementTable(); 
@@ -639,13 +763,13 @@
                 if (e.message.includes('violates unique constraint') && e.message.includes('idx_produtos_empresa_id_codigo')) {
                     alert('Erro: Produto com este código já existe para este contexto/empresa.');
                 } else if (e.message.includes('null value in column "empresa_id" violates not-null constraint')) {
-                    alert('Erro: Produto precisa ser associado a uma empresa.');
+                    alert('Erro: Produto precisa ser associado a uma empresa (contate o Admin Master).');
                 } else { alert('Falha ao adicionar produto: ' + e.message); }
             } finally { hideLoader(); }
         }
-        async function handleRemoveProduct(idOuCodigo) { 
-            const idParaRemover = idOuCodigo; // Assume que idOuCodigo é o ID primário uuid se disponível
-            const pIndex = produtosCache.findIndex(p => p.id === idParaRemover || (p.codigo === idOuCodigo && p.empresa_id === (currentUser?.empresa_id || null)));
+        async function handleRemoveProduct(idOuCodigo) { /* ... (Mantida da v2.4) ... */ 
+            const idParaRemover = idOuCodigo; 
+            const pIndex = produtosCache.findIndex(p => p.id === idParaRemover || (p.codigo === idOuCodigo && p.empresa_id === (currentUser?.empresa_id || null)) );
             if (pIndex === -1) { alert("Produto não encontrado no contexto atual para remoção."); return; }
             
             const prod = produtosCache[pIndex];
@@ -653,11 +777,10 @@
             
             showLoader();
             try {
-                // Constrói a query de delete. Prioriza ID se o produto tiver.
                 let query = _supabaseClient.from('produtos').delete();
-                if (prod.id) { // Se temos um ID (UUID), é a melhor forma de identificar unicamente.
+                if (prod.id) { 
                     query = query.eq('id', prod.id);
-                } else { // Senão, usa a combinação de código e empresa_id (ou código e empresa_id IS NULL)
+                } else { 
                     query = query.eq('codigo', prod.codigo);
                     if (prod.empresa_id) {
                         query = query.eq('empresa_id', prod.empresa_id);
@@ -683,7 +806,7 @@
                 hideLoader(); 
             }
         }
-        async function handleXLSXImport() { /* ... adaptado na versão anterior ... */ 
+        async function handleXLSXImport() { /* ... (Mantida da v2.4) ... */ 
             if (!xlsxFileInput?.files?.length) { alert("Selecione um arquivo XLSX."); return; }
             const file = xlsxFileInput.files[0];
             showLoader();
@@ -731,24 +854,25 @@
 
 
         // --- CONTAGEM DE ESTOQUE (Adaptado) ---
-        async function showInventoryCountScreen_AdminGlobal() { /* ... como antes ... */ 
+        // (Funções mantidas como na v2.4, já usam produtosCache e contexto currentUser)
+        async function showInventoryCountScreen_AdminGlobal() { /* ... */ 
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             await fetchProductsFromSupabase(); 
             showScreen('inventoryCount', { title: 'Balanço (Admin Global)', context: 'Contagem sobre todos produtos.', backAction: showAdminMasterDashboardScreen });
             populateCategoryFilter(); filterInventoryProducts();
         }
-        async function showInventoryCountScreen_Empresa() { /* ... como antes ... */ 
+        async function showInventoryCountScreen_Empresa() { /* ... */ 
             if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
             await fetchProductsFromSupabase(currentUser.empresa_id);
             showScreen('inventoryCount', { title: `Balanço: ${currentUser.empresa_nome}`, context: 'Contagem dos produtos da sua empresa.', backAction: showEmpresaDashboardScreen });
             populateCategoryFilter(); filterInventoryProducts();
         }
-        function saveQuantities() { localStorage.setItem('balancoQuantities_v2.4', JSON.stringify(quantidadesDigitadas)); }
+        function saveQuantities() { localStorage.setItem('balancoQuantities_v2.5', JSON.stringify(quantidadesDigitadas)); }
         function loadQuantities() {
-            const stored = localStorage.getItem('balancoQuantities_v2.4');
+            const stored = localStorage.getItem('balancoQuantities_v2.5'); // Nova chave para evitar conflito com versões antigas
             quantidadesDigitadas = stored ? JSON.parse(stored) : {};
         }
-        function populateCategoryFilter() { /* ... como antes, usa produtosCache ... */ 
+        function populateCategoryFilter() { /* ... (Mantida da v2.4) ... */ 
             const localFiltroCategoriaSelect = document.getElementById('filtroCategoria');
             if (!localFiltroCategoriaSelect) return;
             const currentCategoryValue = localFiltroCategoriaSelect.value; 
@@ -766,7 +890,7 @@
                 localFiltroCategoriaSelect.value = currentCategoryValue;
             }
         }
-        function displayInventoryProducts(listaProdutos) { /* ... como antes, usa chave composta para quantidadesDigitadas ... */ 
+        function displayInventoryProducts(listaProdutos) { /* ... (Mantida da v2.4) ... */ 
             const localInventoryTableBody = document.getElementById('inventoryTableBody');
             if(!localInventoryTableBody) return;
             localInventoryTableBody.innerHTML = "";
@@ -808,7 +932,7 @@
                 celulaQuantidade.appendChild(inputQuantidade);
             });
         }
-        function filterInventoryProducts() { /* ... como antes, usa produtosCache ... */ 
+        function filterInventoryProducts() { /* ... (Mantida da v2.4) ... */ 
             const localPesquisaProdutoInput = document.getElementById('pesquisaProduto');
             const localPesquisaCodigoInput = document.getElementById('pesquisaCodigo');
             const localFiltroCategoriaSelect = document.getElementById('filtroCategoria');
@@ -825,7 +949,7 @@
             );
             displayInventoryProducts(produtosFiltrados);
         }
-        function clearAllQuantities() { /* ... como antes, adaptado para chave composta de quantidades ... */ 
+        function clearAllQuantities() { /* ... (Mantida da v2.4) ... */ 
             if (confirm("Limpar todas as quantidades desta contagem?")) {
                 const currentContextEmpresaId = currentUser?.empresa_id || null;
                 const suffixKeyFragment = currentContextEmpresaId ? `_${currentContextEmpresaId}` : '_global';
@@ -840,7 +964,7 @@
                 alert("Quantidades limpas para o contexto atual.");
             }
         }
-        function gerarArquivoTXT() { /* ... como antes, adaptado para chave composta de quantidades e nome do arquivo ... */
+        function gerarArquivoTXT() { /* ... (Mantida da v2.4) ... */
             let conteudoArquivo = ""; let hasInvalidQuantity = false; let foundData = false; 
             const localInventoryTableBody = document.getElementById('inventoryTableBody');
             if (!localInventoryTableBody) { alert("Tabela não encontrada."); return; }
@@ -854,7 +978,8 @@
                 const codigo = codigoCell.textContent;
                 const produtoOriginal = produtosCache.find(p => 
                     String(p.codigo) === codigo && 
-                    (p.empresa_id === (currentUser?.empresa_id || null) || (p.empresa_id === null && currentUser?.role === 'admin_master' && !currentUser?.empresa_id))
+                    (p.empresa_id === (currentUser?.empresa_id || null) || // Produto da empresa logada OU
+                     (p.empresa_id === null && currentUser?.role === 'admin_master' && !currentUser?.empresa_id)) // Produto global e admin está em contexto global
                 );
 
                 const inputQuantidade = row.querySelector(".quantidade"); 
@@ -888,7 +1013,7 @@
         }
         
         // --- INICIALIZAÇÃO ---
-        window.onload = async () => { 
+        window.onload = async () => { /* ... (Mantida da v2.4 com try-catch para getSession) ... */
             showLoader(); 
             loadQuantities(); 
             
@@ -906,7 +1031,7 @@
             
             try {
                 const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
-                if (sessionError) throw sessionError;
+                if (sessionError) { console.error("Erro ao obter sessão inicial:", sessionError); throw sessionError; }
 
                 if (session?.user) {
                     const user = session.user;
@@ -916,19 +1041,12 @@
                         .eq('id', user.id)
                         .single();
                     
-                    // Se o perfil não for encontrado (PGRST116), mas o usuário existe na sessão, deslogue.
-                    // Isso pode acontecer se o perfil foi deletado mas a sessão ainda é válida.
-                    if (profileError && profileError.code === 'PGRST116') { // No rows found
-                        console.warn("Sessão ativa, mas perfil não encontrado. Deslogando usuário.");
-                        await _supabaseClient.auth.signOut();
-                        showScreen('login');
-                        hideLoader();
-                        return;
-                    } else if (profileError) { // Outro erro ao buscar perfil
+                    if (profileError && profileError.code === 'PGRST116') { 
+                        console.warn("Sessão Supabase ativa, mas perfil não encontrado em user_profiles. Deslogando.", user.id);
+                        await _supabaseClient.auth.signOut(); showScreen('login');
+                    } else if (profileError) { 
                         throw profileError; 
-                    }
-
-                    if (profile && profile.role === 'empresa_user' && profile.empresa_id && profile.empresas) {
+                    } else if (profile && profile.role === 'empresa_user' && profile.empresa_id && profile.empresas) {
                         currentUser = { 
                             id: user.id, email: user.email, role: 'empresa_user', 
                             empresa_id: profile.empresa_id,
@@ -937,15 +1055,16 @@
                         };
                         await showEmpresaDashboardScreen();
                     } else { 
-                        await _supabaseClient.auth.signOut(); 
-                        showScreen('login'); 
+                        console.warn("Sessão Supabase ativa, mas perfil inválido ou não é 'empresa_user'. Deslogando.", profile);
+                        await _supabaseClient.auth.signOut(); showScreen('login'); 
                     }
                 } else { 
                     showScreen('login'); 
                 }
             } catch (e) {
-                console.error("Erro ao restaurar sessão ou buscar perfil:", e);
-                await _supabaseClient.auth.signOut().catch(err => console.error("Erro no signOut de fallback:", err)); 
+                console.error("Erro crítico na inicialização (sessão/perfil):", e);
+                // Tenta deslogar de forma segura se algo deu muito errado.
+                await _supabaseClient.auth.signOut().catch(err => console.error("Erro no signOut de fallback na inicialização:", err)); 
                 currentUser = null; 
                 showScreen('login');
             } finally {
