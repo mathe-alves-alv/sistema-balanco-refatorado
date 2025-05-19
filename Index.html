@@ -3,204 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Balanço de Estoque - Multiempresa v2.1</title>
+    <title>Sistema de Balanço de Estoque - Multiempresa v2.3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            /* Cores do Tema Escuro */
-            --primary-color: #0d6efd; /* Azul Bootstrap um pouco mais moderno */
-            --primary-color-darker: #0b5ed7;
-            --secondary-color: #6c757d; /* Cinza Bootstrap */
-            --secondary-color-darker: #5c636a;
-            --success-color: #198754; /* Verde Bootstrap */
-            --success-color-darker: #157347;
-            --danger-color: #dc3545; /* Vermelho Bootstrap */
-            --danger-color-darker: #bb2d3b;
-            --warning-color: #ffc107; /* Amarelo Bootstrap */
-            --warning-color-darker: #ffae00;
-            --info-color: #0dcaf0; /* Ciano Bootstrap */
-            --info-color-darker: #0baccc;
-
-            --background-color: #212529; /* Cinza bem escuro (Bootstrap Dark BG) */
-            --container-bg-color: #2c3034; /* Um pouco mais claro que o fundo */
-            --header-bg-color: #343a40;  /* Cinza escuro (Bootstrap Dark Table Head) */
-            --input-bg-color: #495057;   /* Cinza para inputs (Bootstrap Dark Forms) */
-            --input-border-color: #6c757d; /* Borda dos inputs */
-            
-            --text-color: #f8f9fa; /* Branco (Bootstrap Dark Text) */
-            --text-muted-color: #adb5bd; /* Cinza claro para texto secundário */
-            --text-on-primary-color: #ffffff;
-            --text-on-secondary-color: #ffffff;
-            --text-on-success-color: #ffffff;
-            --text-on-danger-color: #ffffff;
-            --text-on-warning-color: #000000; /* Texto escuro para botões warning para contraste */
-            
-            --border-color: #495057; /* Cor das bordas mais escura */
-            --hover-row-background: #343a40; 
-            --border-radius: 0.375rem; /* Padrão Bootstrap */
-            --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            --box-shadow-lg: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --primary-color: #0d6efd; --primary-color-darker: #0b5ed7;
+            --secondary-color: #6c757d; --secondary-color-darker: #5c636a;
+            --success-color: #198754; --success-color-darker: #157347;
+            --danger-color: #dc3545; --danger-color-darker: #bb2d3b;
+            --warning-color: #ffc107; --warning-color-darker: #ffae00;
+            --info-color: #0dcaf0; --info-color-darker: #0baccc;
+            --background-color: #212529; --container-bg-color: #2c3034;
+            --header-bg-color: #343a40; --input-bg-color: #495057;
+            --input-border-color: #6c757d; --text-color: #f8f9fa; 
+            --text-muted-color: #adb5bd; --text-on-primary-color: #ffffff;
+            --text-on-secondary-color: #ffffff; --text-on-success-color: #ffffff;
+            --text-on-danger-color: #ffffff; --text-on-warning-color: #000000;
+            --border-color: #495057; --hover-row-background: #343a40; 
+            --border-radius: 0.375rem; --box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            --box-shadow-lg: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }
-
-        body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0; padding: 20px 0; /* Reduzido padding vertical */
-            background-color: var(--background-color);
-            color: var(--text-color); display: flex; flex-direction: column;
-            align-items: center; min-height: 100vh; line-height: 1.6;
-            font-size: 1rem; /* Tamanho de fonte base */
-        }
-
-        .container {
-            width: 95%; /* Um pouco mais largo */
-            max-width: 600px; /* Padrão para forms/dashboards simples */
-            background-color: var(--container-bg-color); padding: 25px 30px; /* Ajustado padding */
-            border-radius: var(--border-radius); box-shadow: var(--box-shadow-lg);
-            margin-top: 20px; margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-        .content-container { /* Para telas com tabelas e mais conteúdo */
-             max-width: 1140px; /* Padrão Bootstrap .container-lg */
-        }
-
-        h1, h2, h3 {
-            color: var(--text-color); text-align: center; margin-top: 0;
-            margin-bottom: 1.5rem; font-weight: 500; /* Aumentado margin-bottom */
-        }
-        h1 { font-size: 2rem; }  /* Ajustado */
-        h2 { font-size: 1.75rem; } /* Ajustado */
-        h3 { font-size: 1.5rem; margin-bottom: 1rem; } /* Ajustado */
-
-        .screen { display: none; } 
-        .screen.active { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        button, .btn { /* Usar classe .btn para consistência */
-            border: 1px solid transparent; 
-            padding: 0.5rem 1rem; /* Ajustado padding */
-            text-align: center; text-decoration: none; display: inline-block; 
-            font-size: 1rem; font-weight: 400; line-height: 1.5;
-            border-radius: var(--border-radius); cursor: pointer;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            margin: 0.25rem; 
-        }
-        button:hover, .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--box-shadow); }
-        button:active, .btn:active { transform: translateY(0); }
-        button:focus-visible, .btn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
-
-
-        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); color: var(--text-on-primary-color); }
-        .btn-primary:hover { background-color: var(--primary-color-darker); border-color: var(--primary-color-darker); }
-        
-        .btn-secondary { background-color: var(--secondary-color); border-color: var(--secondary-color); color: var(--text-on-secondary-color); }
-        .btn-secondary:hover { background-color: var(--secondary-color-darker); border-color: var(--secondary-color-darker); }
-
-        .btn-success { background-color: var(--success-color); border-color: var(--success-color); color: var(--text-on-success-color); }
-        .btn-success:hover { background-color: var(--success-color-darker); border-color: var(--success-color-darker); }
-        
-        .btn-danger { background-color: var(--danger-color); border-color: var(--danger-color); color: var(--text-on-danger-color); }
-        .btn-danger:hover { background-color: var(--danger-color-darker); border-color: var(--danger-color-darker); }
-
-        .btn-warning { background-color: var(--warning-color); border-color: var(--warning-color); color: var(--text-on-warning-color); }
-        .btn-warning:hover { background-color: var(--warning-color-darker); border-color: var(--warning-color-darker); }
-
-        .dashboard-options { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1rem 0; }
-        .dashboard-options .btn { padding: 0.75rem 1rem; font-size: 1.05rem; width: 100%; } /* Botões ocupam largura total */
-
-        .card {
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius); margin-bottom: 1.5rem; 
-            box-shadow: none; /* Sombra mais sutil ou nenhuma, já que o fundo é escuro */
-            background-color: var(--container-bg-color); /* Mantém o fundo do card */
-        }
-        .card-header {
-            padding: 0.75rem 1.25rem; margin-bottom: 0; 
-            background-color: rgba(0,0,0,0.03); /* Fundo sutil para header do card */
-            border-bottom: 1px solid var(--border-color);
-            border-top-left-radius: calc(var(--border-radius) - 1px);
-            border-top-right-radius: calc(var(--border-radius) - 1px);
-        }
-        .card-header > * { margin: 0; font-size: 1.25rem; font-weight: 500; color: var(--text-color); text-align:left; } 
-        .card-body { padding: 1.25rem; }
-        
-        table {
-            width: 100%; border-collapse: collapse; margin-bottom: 1rem;
-            background-color: transparent; /* Tabelas podem ter fundo transparente */
-        }
-        th, td {
-            border: 1px solid var(--border-color); padding: 0.75rem; /* Ajustado padding */
-            text-align: left; vertical-align: middle;
-        }
-        th {
-            background-color: var(--header-bg-color); color: var(--text-color);
-            font-weight: 500; border-bottom-width: 2px; 
-        }
-        tbody tr:nth-child(odd) { background-color: rgba(255,255,255,0.03); } /* Linhas alternadas sutis */
-        tbody tr:hover { background-color: var(--hover-row-background); color: var(--text-color); }
-
-        input[type="text"], input[type="number"], input[type="password"], input[type="email"], select, input[type="file"] {
-            width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 1rem; /* Ajustado padding e margin */
-            border: 1px solid var(--input-border-color); border-radius: var(--border-radius);
-            box-sizing: border-box; font-size: 1rem; line-height: 1.5;
-            background-color: var(--input-bg-color); color: var(--text-color);
-            background-clip: padding-box;
-            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-        }
-        input[type="text"]::placeholder, input[type="number"]::placeholder, input[type="password"]::placeholder, input[type="email"]::placeholder {
-            color: var(--text-muted-color); opacity: 1; /* Placeholders mais visíveis */
-        }
-        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="email"]:focus, select:focus {
-            border-color: var(--primary-color); outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 13, 110, 253), 0.25); /* Sombra de foco estilo Bootstrap */
-        }
-        /* Para o box-shadow acima, precisaremos de --primary-color-rgb. Vou definir no :root, ou usar um valor fixo. */
-        /* Adicionando --primary-color-rgb ao :root */
-        /* :root { --primary-color-rgb: 13,110,253; ... } */
-        /* Usando valor fixo por enquanto para o box-shadow: */
-        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="email"]:focus, select:focus {
-             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); 
-        }
-
-        input[type="file"] { padding: 0.375rem 0.75rem; }
-        select {
-            appearance: none; 
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 16px 12px;
-        }
-
-        .form-group { margin-bottom: 1rem; } 
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-muted-color); } 
-
-        /* Seções e Ações com espaçamento mais consistente */
-        .filter-controls, .product-management-form-fields, .xlsx-import-section, .actions-bar, .sub-form-section {
-            margin-bottom: 1.5rem; padding: 1rem;
-            background-color: rgba(0,0,0,0.03); /* Fundo sutil para agrupar */
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-        }
-        .product-management-form-fields .form-group { margin-bottom: 0; } /* Remove margin extra dentro do flex */
-        .filter-controls > div { flex: 1; min-width: 200px; }
-        .filter-controls input, .filter-controls select { margin-bottom: 0; }
-        .xlsx-import-section input[type="file"] { width: auto; margin-right: 0.5rem; }
-        .actions-bar { text-align: center; padding: 1rem 0; }
-        .actions-bar .btn { margin: 0 0.5rem; }
-
-        #productManagementTable td:last-child, 
-        #inventoryTable td:last-child,
-        #adminEmpresasTable td:last-child { text-align: center; }
-        #inventoryTable input[type="number"] { max-width: 80px; text-align: right; padding: 0.375rem 0.5rem; font-size: 0.9rem; }
-
-        .back-button { margin-bottom: 1.5rem; display: inline-block; }
-        .modal-overlay, .modal-content, .modal-actions, #passwordError, .loader, @keyframes spin { /* Mantidos como antes */ }
-        .login-form { max-width: 400px; margin: 1.5rem auto; }
-        .login-form .form-group { margin-bottom: 1rem; }
-        .login-form button { width: 100%; padding: 0.75rem; font-size: 1.05em; }
-        #loginErrorMessage { color: var(--danger-color); margin-top: 1rem; text-align: center; display: none; }
-        .sub-form-section h4 { text-align: left; font-size: 1.1rem; color: var(--text-muted-color); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;}
-        .table-actions button { margin: 0 2px; padding: 0.25rem 0.5rem; font-size: 0.85rem; } /* Botões menores para tabelas */
+        body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;margin:0;padding:20px 0;background-color:var(--background-color);color:var(--text-color);display:flex;flex-direction:column;align-items:center;min-height:100vh;line-height:1.6;font-size:1rem}
+        .container{width:95%;max-width:600px;background-color:var(--container-bg-color);padding:25px 30px;border-radius:var(--border-radius);box-shadow:var(--box-shadow-lg);margin-top:20px;margin-bottom:20px;border:1px solid var(--border-color)}
+        .content-container{max-width:1140px}
+        h1,h2,h3{color:var(--text-color);text-align:center;margin-top:0;margin-bottom:1.5rem;font-weight:500}
+        h1{font-size:2rem}h2{font-size:1.75rem}h3{font-size:1.5rem;margin-bottom:1rem}
+        .screen{display:none}.screen.active{display:block;animation:fadeIn .5s}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        button,.btn{border:1px solid transparent;padding:.5rem 1rem;text-align:center;text-decoration:none;display:inline-block;font-size:1rem;font-weight:400;line-height:1.5;border-radius:var(--border-radius);cursor:pointer;transition:color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;margin:.25rem}
+        button:hover,.btn:hover{text-decoration:none;transform:translateY(-1px);box-shadow:var(--box-shadow)}
+        button:active,.btn:active{transform:translateY(0)}
+        button:focus-visible,.btn:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
+        .btn-primary{background-color:var(--primary-color);border-color:var(--primary-color);color:var(--text-on-primary-color)}.btn-primary:hover{background-color:var(--primary-color-darker);border-color:var(--primary-color-darker)}
+        .btn-secondary{background-color:var(--secondary-color);border-color:var(--secondary-color);color:var(--text-on-secondary-color)}.btn-secondary:hover{background-color:var(--secondary-color-darker);border-color:var(--secondary-color-darker)}
+        .btn-success{background-color:var(--success-color);border-color:var(--success-color);color:var(--text-on-success-color)}.btn-success:hover{background-color:var(--success-color-darker);border-color:var(--success-color-darker)}
+        .btn-danger{background-color:var(--danger-color);border-color:var(--danger-color);color:var(--text-on-danger-color)}.btn-danger:hover{background-color:var(--danger-color-darker);border-color:var(--danger-color-darker)}
+        .btn-warning{background-color:var(--warning-color);border-color:var(--warning-color);color:var(--text-on-warning-color)}.btn-warning:hover{background-color:var(--warning-color-darker);border-color:var(--warning-color-darker)}
+        .dashboard-options{display:flex;flex-direction:column;align-items:stretch;gap:1rem;padding:1rem 0}
+        .dashboard-options .btn{padding:.75rem 1rem;font-size:1.05rem;width:100%}
+        .card{border:1px solid var(--border-color);border-radius:var(--border-radius);margin-bottom:1.5rem;box-shadow:none;background-color:var(--container-bg-color)}
+        .card-header{padding:.75rem 1.25rem;margin-bottom:0;background-color:rgba(0,0,0,.03);border-bottom:1px solid var(--border-color);border-top-left-radius:calc(var(--border-radius) - 1px);border-top-right-radius:calc(var(--border-radius) - 1px)}
+        .card-header>*{margin:0;font-size:1.25rem;font-weight:500;color:var(--text-color);text-align:left}
+        .card-body{padding:1.25rem}
+        table{width:100%;border-collapse:collapse;margin-bottom:1rem;background-color:transparent}
+        th,td{border:1px solid var(--border-color);padding:.75rem;text-align:left;vertical-align:middle}
+        th{background-color:var(--header-bg-color);color:var(--text-color);font-weight:500;border-bottom-width:2px}
+        tbody tr:nth-child(odd){background-color:rgba(255,255,255,.03)}
+        tbody tr:hover{background-color:var(--hover-row-background);color:var(--text-color)}
+        input[type=text],input[type=number],input[type=password],input[type=email],select,input[type=file]{width:100%;padding:.5rem .75rem;margin-bottom:1rem;border:1px solid var(--input-border-color);border-radius:var(--border-radius);box-sizing:border-box;font-size:1rem;line-height:1.5;background-color:var(--input-bg-color);color:var(--text-color);background-clip:padding-box;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out}
+        input[type=text]::placeholder,input[type=number]::placeholder,input[type=password]::placeholder,input[type=email]::placeholder{color:var(--text-muted-color);opacity:1}
+        input[type=text]:focus,input[type=number]:focus,input[type=password]:focus,input[type=email]:focus,select:focus{border-color:var(--primary-color);outline:0;box-shadow:0 0 0 .25rem rgba(13,110,253,.25)}
+        input[type=file]{padding:.375rem .75rem}
+        select{appearance:none;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .75rem center;background-size:16px 12px}
+        .form-group{margin-bottom:1rem}
+        .form-group label{display:block;margin-bottom:.5rem;font-weight:500;color:var(--text-muted-color)}
+        .filter-controls,.product-management-form-fields,.xlsx-import-section,.actions-bar,.sub-form-section{margin-bottom:1.5rem;padding:1rem;background-color:rgba(0,0,0,.03);border:1px solid var(--border-color);border-radius:var(--border-radius)}
+        .product-management-form-fields .form-group{margin-bottom:0}
+        .filter-controls>div{flex:1;min-width:200px}
+        .filter-controls input,.filter-controls select{margin-bottom:0}
+        .xlsx-import-section input[type=file]{width:auto;margin-right:.5rem}
+        .actions-bar{text-align:center;padding:1rem 0}
+        .actions-bar .btn{margin:0 .5rem}
+        #productManagementTable td:last-child,#inventoryTable td:last-child,#adminEmpresasTable td:last-child{text-align:center}
+        #inventoryTable input[type=number]{max-width:80px;text-align:right;padding:.375rem .5rem;font-size:.9rem}
+        .back-button{margin-bottom:1.5rem;display:inline-block}
+        .modal-overlay,.modal-content,.modal-actions,#passwordError,.loader{/* Mantidos como antes */}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+        .login-form{max-width:400px;margin:1.5rem auto}
+        .login-form .form-group{margin-bottom:1rem}
+        .login-form button{width:100%;padding:.75rem;font-size:1.05em}
+        #loginErrorMessage{color:var(--danger-color);margin-top:1rem;text-align:center;display:none}
+        .sub-form-section h4{text-align:left;font-size:1.1rem;color:var(--text-muted-color);margin-bottom:1rem;border-bottom:1px solid var(--border-color);padding-bottom:.5rem}
+        .table-actions button,.table-actions .btn{margin:0 2px;padding:.25rem .5rem;font-size:.85rem}
+        .generated-password-display { margin-top: 10px; padding: 10px; background-color: var(--input-bg-color); border: 1px dashed var(--border-color); border-radius: var(--border-radius); word-break: break-all; color: var(--text-color); font-family: monospace; text-align: center;}
+        .company-users-list { list-style-type: none; padding-left: 0; font-size: 0.9em; }
+        .company-users-list li { padding: 5px 0; border-bottom: 1px solid var(--border-color); }
+        .company-users-list li:last-child { border-bottom: none; }
+        .company-users-list li .user-email { font-weight: bold; }
+        .company-users-list li .user-details { font-style: italic; color: var(--text-muted-color); font-size: 0.9em; display: block; }
 
     </style>
 </head>
@@ -210,13 +90,14 @@
 
         <div id="screenLogin" class="screen active">
             <h1>Login no Sistema</h1>
-            <div class="login-form card card-body"> <div class="form-group">
+            <div class="login-form card card-body">
+                <div class="form-group">
                     <label for="loginEmail">Email:</label>
-                    <input type="email" id="loginEmail" placeholder="seuemail@exemplo.com">
+                    <input type="email" id="loginEmail" placeholder="seuemail@exemplo.com" autocomplete="email">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Senha:</label>
-                    <input type="password" id="loginPassword" placeholder="Sua senha">
+                    <input type="password" id="loginPassword" placeholder="Sua senha" autocomplete="current-password">
                 </div>
                 <button class="btn btn-primary" onclick="handleLogin()">Entrar</button>
                 <div id="loginErrorMessage"></div>
@@ -225,9 +106,9 @@
 
         <div id="screenAdminMasterDashboard" class="screen">
             <h2>Painel Admin Master</h2>
-            <p style="text-align: center;">Bem-vindo, Admin Master!</p>
+            <p style="text-align: center;">Bem-vindo, <span id="adminMasterNameDisplay">Admin Master</span>!</p>
             <div class="dashboard-options">
-                <button class="btn btn-primary" onclick="showAdminEmpresasScreen()">Gerenciar Empresas</button>
+                <button class="btn btn-primary" onclick="showAdminEmpresasScreen()">Gerenciar Empresas & Usuários</button>
                 <button class="btn btn-primary" onclick="showProductManagementScreen_AdminGlobal()">Gerenciar Produtos (Global)</button>
                 <button class="btn btn-primary" onclick="showInventoryCountScreen_AdminGlobal()">Iniciar Contagem (Global)</button>
                 <button class="btn btn-secondary" onclick="handleLogout()">Logout</button>
@@ -261,23 +142,34 @@
                 <div class="card-header"><h3>Empresas Cadastradas</h3></div>
                 <div class="card-body">
                     <table id="adminEmpresasTable">
-                        <thead><tr><th>Nome da Empresa</th><th>Data Criação</th><th style="width: 250px;">Ações</th></tr></thead> <tbody id="adminEmpresasTableBody"></tbody>
+                        <thead><tr><th>Nome da Empresa</th><th>Data Criação</th><th style="width: 200px;">Ações</th></tr></thead>
+                        <tbody id="adminEmpresasTableBody"></tbody>
                     </table>
-                    <div id="adminAddUserToEmpresaSection" class="sub-form-section" style="display:none; margin-top: 1.5rem; padding-top: 1.5rem;">
-                        <h4>Adicionar Usuário para <span id="selectedEmpresaNameForUser"></span></h4>
-                        <input type="hidden" id="selectedEmpresaIdForUser">
-                        <div class="form-group">
-                            <label for="adminNewUserEmail">Email do Usuário:</label>
-                            <input type="email" id="adminNewUserEmail" placeholder="email@dominio.com">
-                        </div>
-                        <div class="form-group">
-                            <label for="adminNewUserPassword">Senha Inicial (mín. 6 caracteres):</label>
-                            <input type="password" id="adminNewUserPassword" placeholder="Senha forte">
-                        </div>
-                        <button class="btn btn-success" onclick="handleAdminAddUserToEmpresa()">Criar Usuário para Empresa</button>
-                        <button class="btn btn-secondary" onclick="cancelAddUserToEmpresa()">Cancelar</button>
-                    </div>
                 </div>
+            </div>
+            
+            <div id="manageCompanyUsersSection" class="card" style="display:none; margin-top: 2rem;">
+                <div class="card-header"><h3 id="manageCompanyUsersTitle">Usuários da Empresa</h3></div>
+                <div class="card-body">
+                    <h4>Usuários Existentes</h4>
+                    <div id="companyUsersListContainer" style="margin-bottom: 1.5rem; max-height: 200px; overflow-y: auto;">
+                        {/* Usuários serão listados aqui */}
+                    </div>
+                    <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
+                    <h4>Adicionar Novo Usuário para <span id="selectedEmpresaNameForNewUser"></span></h4>
+                    <input type="hidden" id="selectedEmpresaIdForNewUser">
+                    <div class="form-group">
+                        <label for="adminNewUserEmail">Email do Novo Usuário:</label>
+                        <input type="email" id="adminNewUserEmail" placeholder="email@dominio.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminNewUserFullName">Nome Completo (Opcional):</label>
+                        <input type="text" id="adminNewUserFullName" placeholder="Nome Sobrenome">
+                    </div>
+                    <button class="btn btn-success" onclick="handleAdminCreateUserForCompany()">Criar Usuário (Gerar Senha)</button>
+                    <div id="generatedPasswordMessage" class="generated-password-display" style="display:none;"></div>
+                </div>
+                 <button class="btn btn-secondary" onclick="closeManageCompanyUsersSection()" style="margin: 0 1.25rem 1.25rem;">Fechar Gerenciamento de Usuários</button>
             </div>
         </div>
 
@@ -285,42 +177,20 @@
             <button class="btn btn-secondary back-button" id="productManagementBackButton">&larr; Voltar</button>
             <h2 id="productManagementTitle">Gerenciar Produtos</h2>
             <p id="productManagementContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-            
-            <div class="card">
-                <div class="card-header"><h3>Adicionar Novo Produto</h3></div>
-                <div class="card-body">
-                     <div class="product-management-form-fields">
-                        <div class="form-group"><label for="prodCodigo">Código:</label><input type="text" id="prodCodigo"></div>
-                        <div class="form-group"><label for="prodNome">Produto:</label><input type="text" id="prodNome"></div>
-                        <div class="form-group"><label for="prodCategoria">Categoria:</label><input type="text" id="prodCategoria"></div>
-                        <button class="btn btn-success" onclick="handleAddProduct()">Adicionar</button> </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h3>Importar Produtos via XLSX</h3></div>
-                <div class="card-body xlsx-import-section">
-                    <input type="file" id="xlsxFile" accept=".xlsx, .xls"><button class="btn btn-info" onclick="handleXLSXImport()">Importar</button> <p>Colunas: 'codigo', 'produto', 'categoria'.</p>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h3>Produtos Cadastrados</h3></div>
-                <div class="card-body" style="padding:0;"><table id="productManagementTable"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Ação</th></tr></thead><tbody id="productManagementTableBody"></tbody></table></div>
-            </div>
+            <div class="card"><div class="card-header"><h3>Adicionar Novo Produto</h3></div><div class="card-body"><div class="product-management-form-fields"><div class="form-group"><label for="prodCodigo">Código:</label><input type="text" id="prodCodigo"></div><div class="form-group"><label for="prodNome">Produto:</label><input type="text" id="prodNome"></div><div class="form-group"><label for="prodCategoria">Categoria:</label><input type="text" id="prodCategoria"></div><button class="btn btn-success" onclick="handleAddProduct()">Adicionar</button></div></div></div>
+            <div class="card"><div class="card-header"><h3>Importar Produtos via XLSX</h3></div><div class="card-body xlsx-import-section"><input type="file" id="xlsxFile" accept=".xlsx, .xls"><button class="btn btn-info" onclick="handleXLSXImport()">Importar</button><p>Colunas: 'codigo', 'produto', 'categoria'.</p></div></div>
+            <div class="card"><div class="card-header"><h3>Produtos Cadastrados</h3></div><div class="card-body" style="padding:0;"><table id="productManagementTable"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Ação</th></tr></thead><tbody id="productManagementTableBody"></tbody></table></div></div>
         </div>
-
         <div id="screenInventoryCount" class="screen">
             <button class="btn btn-secondary back-button" id="inventoryCountBackButton">&larr; Voltar</button>
             <h2 id="inventoryCountTitle">Balanço de Estoque</h2>
             <p id="inventoryCountContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-
             <div class="actions-bar"><button class="btn btn-success" onclick="gerarArquivoTXT()">Gerar TXT</button><button class="btn btn-warning" onclick="clearAllQuantities()">Limpar Contagens</button></div>
-            <div class="filter-controls card card-body"> <div><label for="pesquisaProduto">Produto:</label><input type="text" id="pesquisaProduto" placeholder="Nome do produto..."></div>
-                <div><label for="pesquisaCodigo">Código:</label><input type="text" id="pesquisaCodigo" placeholder="Código..."></div>
-                <div><label for="filtroCategoria">Categoria:</label><select id="filtroCategoria"><option value="">Todas</option></select></div>
-            </div>
+            <div class="filter-controls card card-body"><div><label for="pesquisaProduto">Produto:</label><input type="text" id="pesquisaProduto" placeholder="Nome..."></div><div><label for="pesquisaCodigo">Código:</label><input type="text" id="pesquisaCodigo" placeholder="Código..."></div><div><label for="filtroCategoria">Categoria:</label><select id="filtroCategoria"><option value="">Todas</option></select></div></div>
             <table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead><tbody id="inventoryTableBody"></tbody></table>
         </div>
     </div>
+
     <script>
         // --- CONFIGURAÇÃO SUPABASE ---
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
@@ -328,14 +198,14 @@
         const { createClient } = supabase;
         const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- VARIÁVEIS GLOBAIS DE ESTADO DA APLICAÇÃO ---
+        // --- VARIÁVEIS GLOBAIS ---
         let produtosCache = []; 
         let quantidadesDigitadas = {}; 
         const ADMIN_MASTER_EMAIL = "matheus@mtech.com";
-        const ADMIN_MASTER_PASSWORD = "260195@@";
+        const ADMIN_MASTER_PASSWORD = "260195@@"; // Lembre-se que esta senha está visível no código!
         let currentUser = null; 
 
-        // --- SELETORES DOM ---
+        // --- SELETORES DOM (principais) ---
         const mainContainer = document.getElementById('mainContainer');
         const screens = {
             login: document.getElementById('screenLogin'),
@@ -349,34 +219,68 @@
         const loginEmailInput = document.getElementById('loginEmail');
         const loginPasswordInput = document.getElementById('loginPassword');
         const loginErrorMessage = document.getElementById('loginErrorMessage');
+        const adminMasterNameDisplay = document.getElementById('adminMasterNameDisplay'); // Para exibir nome do admin
+
+        // Tela Admin Empresas
         const adminNomeEmpresaInput = document.getElementById('adminNomeEmpresa');
         const adminEmpresasTableBody = document.getElementById('adminEmpresasTableBody');
-        const addUserToEmpresaSection = document.getElementById('adminAddUserToEmpresaSection');
-        const selectedEmpresaNameForUserSpan = document.getElementById('selectedEmpresaNameForUser');
-        const selectedEmpresaIdForUserInput = document.getElementById('selectedEmpresaIdForUser');
+        const manageCompanyUsersSection = document.getElementById('manageCompanyUsersSection');
+        const manageCompanyUsersTitle = document.getElementById('manageCompanyUsersTitle');
+        const companyUsersListContainer = document.getElementById('companyUsersListContainer');
+        const selectedEmpresaNameForNewUserSpan = document.getElementById('selectedEmpresaNameForNewUser');
+        const selectedEmpresaIdForNewUserInput = document.getElementById('selectedEmpresaIdForNewUser');
         const adminNewUserEmailInput = document.getElementById('adminNewUserEmail');
-        const adminNewUserPasswordInput = document.getElementById('adminNewUserPassword');
+        const adminNewUserFullNameInput = document.getElementById('adminNewUserFullName');
+        const generatedPasswordMessage = document.getElementById('generatedPasswordMessage');
+
+        // Telas de Produto (elementos dinâmicos)
+        const productManagementBackButton = document.getElementById('productManagementBackButton');
+        const productManagementTitle = document.getElementById('productManagementTitle');
+        const productManagementContext = document.getElementById('productManagementContext');
         const prodCodigoInput = document.getElementById('prodCodigo');
         const prodNomeInput = document.getElementById('prodNome');
         const prodCategoriaInput = document.getElementById('prodCategoria');
         const productManagementTableBody = document.getElementById('productManagementTableBody');
         const xlsxFileInput = document.getElementById('xlsxFile');
-        const productManagementBackButton = document.getElementById('productManagementBackButton');
-        const productManagementTitle = document.getElementById('productManagementTitle');
-        const productManagementContext = document.getElementById('productManagementContext');
+
+        // Telas de Inventário (elementos dinâmicos)
+        const inventoryCountBackButton = document.getElementById('inventoryCountBackButton');
+        const inventoryCountTitle = document.getElementById('inventoryCountTitle');
+        const inventoryCountContext = document.getElementById('inventoryCountContext');
         const pesquisaProdutoInput = document.getElementById('pesquisaProduto');
         const pesquisaCodigoInput = document.getElementById('pesquisaCodigo');
         const filtroCategoriaSelect = document.getElementById('filtroCategoria');
         const inventoryTableBody = document.getElementById('inventoryTableBody');
-        const inventoryCountBackButton = document.getElementById('inventoryCountBackButton');
-        const inventoryCountTitle = document.getElementById('inventoryCountTitle');
-        const inventoryCountContext = document.getElementById('inventoryCountContext');
+
+        // Dashboard Empresa (elementos dinâmicos)
         const empresaDashboardTitle = document.getElementById('empresaDashboardTitle');
         const empresaUserNameSpan = document.getElementById('empresaUserName');
 
-        // --- FUNÇÕES UTILITÁRIAS DE UI ---
+
+        // --- FUNÇÕES UTILITÁRIAS ---
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
+
+        function generateRandomPassword(length = 10) {
+            const lowercaseCharset = "abcdefghijklmnopqrstuvwxyz";
+            const uppercaseCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const numberCharset = "0123456789";
+            const specialCharset = "!@#$%^&*()_+~"; // Removido caracteres que podem ser problemáticos em alguns contextos
+            
+            let password = "";
+            // Garante pelo menos um de cada
+            password += lowercaseCharset.charAt(Math.floor(Math.random() * lowercaseCharset.length));
+            password += uppercaseCharset.charAt(Math.floor(Math.random() * uppercaseCharset.length));
+            password += numberCharset.charAt(Math.floor(Math.random() * numberCharset.length));
+            password += specialCharset.charAt(Math.floor(Math.random() * specialCharset.length));
+
+            const combinedCharset = lowercaseCharset + uppercaseCharset + numberCharset + specialCharset;
+            for (let i = 4; i < length; ++i) { // Começa do 4 porque já temos 4 caracteres
+                password += combinedCharset.charAt(Math.floor(Math.random() * combinedCharset.length));
+            }
+            // Embaralha a senha para que os caracteres garantidos não fiquem sempre no início
+            return password.split('').sort(() => 0.5 - Math.random()).join('');
+        }
 
         function showScreen(screenId, screenConfig = {}) {
             hideLoader();
@@ -390,7 +294,6 @@
                     mainContainer.classList.remove('content-container');
                 }
 
-                // Configurações dinâmicas da tela
                 if (screenId === 'productManagement') {
                     productManagementTitle.textContent = screenConfig.title || 'Gerenciar Produtos';
                     productManagementContext.textContent = screenConfig.context || '';
@@ -401,7 +304,9 @@
                     inventoryCountBackButton.onclick = screenConfig.backAction || (() => showScreen(currentUser?.role === 'admin_master' ? 'adminMasterDashboard' : 'empresaDashboard'));
                 } else if (screenId === 'empresaDashboard' && currentUser) {
                     empresaDashboardTitle.textContent = `Painel: ${currentUser.empresa_nome || 'Minha Empresa'}`;
-                    empresaUserNameSpan.textContent = currentUser.email;
+                    empresaUserNameSpan.textContent = currentUser.full_name || currentUser.email;
+                } else if (screenId === 'adminMasterDashboard' && currentUser && adminMasterNameDisplay) {
+                     adminMasterNameDisplay.textContent = currentUser.full_name || currentUser.email;   
                 }
             } else {
                 console.error("Tela não encontrada:", screenId);
@@ -415,34 +320,44 @@
             const email = loginEmailInput.value.trim();
             const password = loginPasswordInput.value.trim();
             loginErrorMessage.textContent = ""; loginErrorMessage.style.display = "none";
-
             if (!email || !password) {
                 loginErrorMessage.textContent = "Preencha email e senha."; loginErrorMessage.style.display = "block"; return;
             }
             showLoader();
-            if (email === ADMIN_MASTER_EMAIL && password === ADMIN_MASTER_PASSWORD) {
-                currentUser = { email: ADMIN_MASTER_EMAIL, role: 'admin_master' };
+            if (email.toLowerCase() === ADMIN_MASTER_EMAIL.toLowerCase() && password === ADMIN_MASTER_PASSWORD) {
+                currentUser = { email: ADMIN_MASTER_EMAIL, role: 'admin_master', full_name: 'Admin Master' };
                 showAdminMasterDashboardScreen();
             } else {
                 try {
                     const { data, error } = await _supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    if (data.user && data.user.app_metadata?.role === 'empresa_user' && data.user.app_metadata?.empresa_id) {
+                    
+                    // Após login, buscar perfil para pegar metadados atualizados, incluindo empresa_nome e full_name da tabela user_profiles
+                    const { data: profile, error: profileError } = await _supabaseClient
+                        .from('user_profiles')
+                        .select('empresa_id, role, full_name, empresas ( nome_empresa )') // Faz join para pegar nome da empresa
+                        .eq('id', data.user.id)
+                        .single();
+
+                    if (profileError) throw new Error("Perfil do usuário não encontrado ou erro ao buscar perfil.");
+
+                    if (profile && profile.role === 'empresa_user' && profile.empresa_id) {
                         currentUser = { 
                             id: data.user.id, email: data.user.email, role: 'empresa_user', 
-                            empresa_id: data.user.app_metadata.empresa_id,
-                            empresa_nome: data.user.app_metadata.empresa_nome || 'Empresa Associada'
+                            empresa_id: profile.empresa_id,
+                            empresa_nome: profile.empresas.nome_empresa || 'Empresa Associada', // Nome da empresa do join
+                            full_name: profile.full_name || data.user.email
                         };
                         await showEmpresaDashboardScreen();
                     } else {
-                        throw new Error("Conta de usuário inválida ou sem permissões de empresa.");
+                        if(data.user) await _supabaseClient.auth.signOut(); 
+                        throw new Error("Conta de usuário de empresa inválida ou não configurada corretamente.");
                     }
                 } catch (e) {
                     console.error("Erro no login (Supabase):", e);
                     loginErrorMessage.textContent = e.message || "Email ou senha inválidos."; 
                     loginErrorMessage.style.display = "block";
-                    if (currentUser) await _supabaseClient.auth.signOut(); // Garante logout se algo deu errado no meio
-                    currentUser = null;
+                    // Não precisa deslogar aqui, o Supabase signInWithPassword não cria sessão se falhar.
                 }
             }
             hideLoader();
@@ -454,23 +369,21 @@
                 await _supabaseClient.auth.signOut();
             }
             currentUser = null;
-            loginEmailInput.value = ""; loginPasswordInput.value = "";
+            if(loginEmailInput) loginEmailInput.value = ""; 
+            if(loginPasswordInput) loginPasswordInput.value = "";
             showScreen('login');
             hideLoader();
         }
 
-        // --- TELAS DE PAINEL ---
+        // --- PAINÉIS ---
         function showAdminMasterDashboardScreen() { showScreen('adminMasterDashboard'); }
-        async function showEmpresaDashboardScreen() { 
-             // A personalização do título e nome de usuário é feita em showScreen agora
-            showScreen('empresaDashboard');
-        }
+        async function showEmpresaDashboardScreen() { showScreen('empresaDashboard');}
         
-        // --- GERENCIAMENTO DE EMPRESAS (ADMIN MASTER) ---
+        // --- ADMIN: GERENCIAR EMPRESAS E USUÁRIOS ---
         async function showAdminEmpresasScreen() {
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             showLoader();
-            addUserToEmpresaSection.style.display = 'none';
+            if(manageCompanyUsersSection) manageCompanyUsersSection.style.display = 'none';
             await fetchAndRenderEmpresas(); 
             showScreen('adminEmpresas'); 
         }
@@ -488,19 +401,17 @@
                         row.insertCell().textContent = empresa.nome_empresa;
                         row.insertCell().textContent = new Date(empresa.created_at).toLocaleDateString('pt-BR');
                         const actionsCell = row.insertCell();
-                        const btnAddUser = document.createElement('button');
-                        btnAddUser.textContent = 'Adicionar Usuário';
-                        btnAddUser.className = 'btn btn-secondary table-actions'; // Estilo para botões em tabela
-                        btnAddUser.onclick = () => showAddUserToEmpresaForm(empresa.id, empresa.nome_empresa);
-                        actionsCell.appendChild(btnAddUser);
-                        // TODO: Adicionar botões Editar/Excluir empresa
+                        const btnManageUsers = document.createElement('button');
+                        btnManageUsers.textContent = 'Gerenciar Usuários';
+                        btnManageUsers.className = 'btn btn-info table-actions'; // Mudado para btn-info
+                        btnManageUsers.onclick = () => openManageCompanyUsers(empresa.id, empresa.nome_empresa);
+                        actionsCell.appendChild(btnManageUsers);
                     });
                 } else {
                     adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Nenhuma empresa cadastrada.</td></tr>';
                 }
             } catch (e) {
-                console.error('Erro ao buscar empresas:', e);
-                adminEmpresasTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color);">Erro: ${e.message}</td></tr>`;
+                adminEmpresasTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color);">Erro ao listar empresas: ${e.message}</td></tr>`;
             }
         }
 
@@ -510,234 +421,165 @@
             showLoader();
             try {
                 const { data: existing } = await _supabaseClient.from('empresas').select('id').ilike('nome_empresa', nomeEmpresa).single();
-                if (existing) { alert('Erro: Empresa já existe.'); hideLoader(); return; }
+                if (existing) { alert('Erro: Empresa com este nome já existe.'); hideLoader(); return; }
                 const { error } = await _supabaseClient.from('empresas').insert([{ nome_empresa: nomeEmpresa }]);
                 if (error) throw error;
-                alert('Empresa adicionada!'); adminNomeEmpresaInput.value = ''; 
+                alert('Empresa adicionada com sucesso!'); adminNomeEmpresaInput.value = ''; 
                 await fetchAndRenderEmpresas(); 
-            } catch (e) {
-                console.error('Erro add empresa:', e); alert('Falha: ' + e.message);
-            } finally { hideLoader(); }
-        }
-
-        function showAddUserToEmpresaForm(empresaId, nomeEmpresa) {
-            selectedEmpresaIdForUserInput.value = empresaId;
-            selectedEmpresaNameForUserSpan.textContent = nomeEmpresa;
-            adminNewUserEmailInput.value = ""; adminNewUserPasswordInput.value = "";
-            addUserToEmpresaSection.style.display = 'block'; adminNewUserEmailInput.focus();
-        }
-        function cancelAddUserToEmpresa() { // Nova função para cancelar
-            addUserToEmpresaSection.style.display = 'none';
-        }
-
-        async function handleAdminAddUserToEmpresa() {
-            const empresaId = selectedEmpresaIdForUserInput.value;
-            const nomeEmpresa = selectedEmpresaNameForUserSpan.textContent;
-            const email = adminNewUserEmailInput.value.trim();
-            const password = adminNewUserPasswordInput.value.trim();
-
-            if (!empresaId || !email || !password) { alert("Preencha email e senha."); return; }
-            if (password.length < 6) { alert("Senha deve ter no mínimo 6 caracteres."); return; }
-
-            showLoader();
-            try {
-                const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
-                    email, password,
-                    options: { data: { empresa_id: empresaId, empresa_nome: nomeEmpresa, role: 'empresa_user' }}
-                });
-                if (signUpError) throw signUpError;
-                if (authData.user) {
-                    alert(`Usuário ${email} criado para ${nomeEmpresa}!`);
-                } else if (authData && !authData.user && authData.session === null) {
-                    alert(`Usuário ${email} registrado para ${nomeEmpresa}. Verifique o email para confirmação (se habilitado no Supabase).`);
-                } else { throw new Error("Resposta inesperada ao criar usuário."); }
-                adminNewUserEmailInput.value = ""; adminNewUserPasswordInput.value = "";
-                addUserToEmpresaSection.style.display = 'none';
-            } catch (e) {
-                console.error("Erro criar usuário empresa:", e); alert(`Erro: ${e.message}`);
+            } catch (e) { console.error('Erro ao adicionar empresa:', e); alert('Falha ao adicionar empresa: ' + e.message);
             } finally { hideLoader(); }
         }
         
-        // --- GERENCIAMENTO DE PRODUTOS (CONTEXTUALIZADO) ---
-        async function showProductManagementScreen_AdminGlobal() {
-            if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
-            await fetchProductsFromSupabase(); // Busca todos
-            showScreen('productManagement', { title: 'Produtos (Admin Global)', context: 'Todos produtos do sistema.', backAction: showAdminMasterDashboardScreen });
-        }
-        async function showProductManagementScreen_Empresa() {
-            if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
-            await fetchProductsFromSupabase(currentUser.empresa_id); 
-            showScreen('productManagement', { title: `Produtos: ${currentUser.empresa_nome}`, context: 'Produtos da sua empresa.', backAction: showEmpresaDashboardScreen });
-        }
-        
-        async function fetchProductsFromSupabase(empresaId = null) {
-            showLoader();
-            try {
-                let query = _supabaseClient.from('produtos').select('*').order('produto');
-                if (empresaId) {
-                    query = query.eq('empresa_id', empresaId);
-                } else if (currentUser?.role !== 'admin_master') {
-                    produtosCache = []; hideLoader(); return; // Segurança: não admin só vê com empresaId
-                }
-                const { data, error } = await query;
-                if (error) throw error;
-                produtosCache = data || []; 
-            } catch (e) {
-                console.error('Erro buscar produtos:', e); alert('Falha: ' + e.message); produtosCache = [];
-            } finally {
-                renderProductManagementTable(); hideLoader(); 
-            }
-        }
-
-        function renderProductManagementTable() {
-            if (!productManagementTableBody) return;
-            productManagementTableBody.innerHTML = ""; 
-            if (produtosCache.length === 0) {
-                productManagementTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;">Nenhum produto.</td></tr>`;
+        async function openManageCompanyUsers(empresaId, nomeEmpresa) {
+            if(!manageCompanyUsersSection || !manageCompanyUsersTitle || !selectedEmpresaIdForNewUserInput || 
+               !selectedEmpresaNameForNewUserSpan || !companyUsersListContainer || !adminNewUserEmailInput || !adminNewUserFullNameInput || !generatedPasswordMessage) {
+                console.error("Um ou mais elementos da UI para gerenciar usuários não foram encontrados.");
                 return;
             }
-            [...produtosCache].sort((a,b) => String(a.codigo).localeCompare(String(b.codigo))).forEach(p => {
-                const r = productManagementTableBody.insertRow();
-                r.insertCell().textContent = p.codigo; r.insertCell().textContent = p.produto; r.insertCell().textContent = p.categoria;
-                const ac = r.insertCell(); const btn = document.createElement('button');
-                btn.textContent = "Remover"; btn.className = 'btn btn-danger table-actions';
-                btn.onclick = () => handleRemoveProduct(p.id || p.codigo); ac.appendChild(btn);
-            });
-        }
 
-        async function handleAddProduct() {
-            const codigo = prodCodigoInput.value.trim(); const nome = prodNomeInput.value.trim();
-            const categoria = prodCategoriaInput.value.trim();
-            if (!codigo || !nome || !categoria) { alert("Preencha Código, Produto, Categoria."); return; }
+            manageCompanyUsersTitle.textContent = `Usuários da Empresa: ${nomeEmpresa}`;
+            selectedEmpresaIdForNewUserInput.value = empresaId;
+            selectedEmpresaNameForNewUserSpan.textContent = nomeEmpresa;
+            adminNewUserEmailInput.value = "";
+            adminNewUserFullNameInput.value = "";
+            generatedPasswordMessage.style.display = 'none';
+            generatedPasswordMessage.textContent = '';
+            generatedPasswordMessage.style.color = 'var(--text-color)'; // Reseta cor
             
-            let empresaIdParaProduto = null;
-            if (currentUser?.role === 'empresa_user') empresaIdParaProduto = currentUser.empresa_id;
-            else if (currentUser?.role === 'admin_master') {
-                // Admin: se empresa_id for NOT NULL no BD, esta inserção falhará sem um empresa_id.
-                // Por agora, o admin adiciona produtos "sem empresa" (empresa_id = null).
-                // No futuro, o admin master precisaria de um seletor de empresa aqui.
-                if (!confirm("Admin: Adicionar produto sem empresa específica (global)? (Requer que empresa_id seja anulável no BD)")) { return; }
-            } else { alert("Usuário não autorizado."); return; }
-
-            showLoader();
+            companyUsersListContainer.innerHTML = '<p>Carregando usuários...</p>';
             try {
-                const { data, error } = await _supabaseClient.from('produtos')
-                    .insert([{ codigo, produto: nome, categoria, empresa_id: empresaIdParaProduto }]).select(); 
+                const { data: users, error } = await _supabaseClient
+                    .from('user_profiles')
+                    .select('id, email, full_name, role, created_at')
+                    .eq('empresa_id', empresaId)
+                    .order('email');
                 if (error) throw error;
-                if (data && data[0]) produtosCache.push(data[0]);
-                renderProductManagementTable(); 
-                prodCodigoInput.value = ""; prodNomeInput.value = ""; prodCategoriaInput.value = "";
-                prodCodigoInput.focus(); alert('Produto adicionado!');
+
+                if (users && users.length > 0) {
+                    let usersHtml = '<ul class="company-users-list">';
+                    users.forEach(user => {
+                        usersHtml += `<li><span class="user-email">${user.email}</span> <span class="user-details">- ${user.full_name || 'Nome não informado'} (${user.role || 'usuário'})</span></li>`;
+                        // TODO: Adicionar botões de ação (Resetar Senha, Editar, Deletar) aqui
+                    });
+                    usersHtml += '</ul>';
+                    companyUsersListContainer.innerHTML = usersHtml;
+                } else {
+                    companyUsersListContainer.innerHTML = '<p>Nenhum usuário cadastrado para esta empresa.</p>';
+                }
             } catch (e) {
-                console.error('Erro add produto:', e);
-                if (e.message.includes('violates unique constraint') && e.message.includes('idx_produtos_empresa_id_codigo')) {
-                    alert('Erro: Produto com este código já existe para esta empresa.');
-                } else if (e.message.includes('null value in column "empresa_id" violates not-null constraint')) {
-                    alert('Erro: Produto precisa ser associado a uma empresa.');
-                } else { alert('Falha: ' + e.message); }
-            } finally { hideLoader(); }
+                console.error("Erro ao buscar usuários da empresa:", e);
+                companyUsersListContainer.innerHTML = `<p style="color:var(--danger-color)">Erro ao carregar usuários: ${e.message}</p>`;
+            }
+            manageCompanyUsersSection.style.display = 'block'; // Mostra a seção
+            adminNewUserEmailInput.focus();
         }
 
-        async function handleRemoveProduct(idOuCodigo) {
-            const pIndex = produtosCache.findIndex(p => p.id === idOuCodigo || p.codigo === idOuCodigo);
-            if (pIndex === -1) { alert("Produto não encontrado."); return; }
-            const prod = produtosCache[pIndex];
-            if (!confirm(`Remover "${prod.produto}"?`)) return;
-            showLoader();
-            try {
-                let query = _supabaseClient.from('produtos').delete();
-                if (prod.id) query = query.eq('id', prod.id); // Prioriza UUID se existir
-                else { // Fallback para código, precisa de contexto da empresa se códigos não forem globalmente únicos
-                    query = query.eq('codigo', prod.codigo);
-                    if (prod.empresa_id) query = query.eq('empresa_id', prod.empresa_id);
-                    else query = query.is('empresa_id', null); // Para produtos globais
-                }
-                const { error } = await query;
-                if (error) throw error;
-                produtosCache.splice(pIndex, 1);
-                if (quantidadesDigitadas[prod.codigo + (prod.empresa_id ? '_' + prod.empresa_id : '')]) {
-                    delete quantidadesDigitadas[prod.codigo + (prod.empresa_id ? '_' + prod.empresa_id : '')];
-                    saveQuantities();
-                }
-                renderProductManagementTable(); alert('Produto removido!');
-            } catch (e) {
-                console.error('Erro remover produto:', e); alert('Falha: ' + e.message);
-            } finally { hideLoader(); }
+        function closeManageCompanyUsersSection() {
+            if(manageCompanyUsersSection) manageCompanyUsersSection.style.display = 'none';
         }
         
-        async function handleXLSXImport() {
-            if (!xlsxFileInput?.files?.length) { alert("Selecione um arquivo XLSX."); return; }
-            const file = xlsxFileInput.files[0];
+        async function handleAdminCreateUserForCompany() {
+            const empresaId = selectedEmpresaIdForNewUserInput.value;
+            const nomeEmpresa = selectedEmpresaNameForNewUserSpan.textContent; 
+            const email = adminNewUserEmailInput.value.trim();
+            const fullName = adminNewUserFullNameInput.value.trim(); 
+
+            if (!empresaId || !email ) { alert("Preencha pelo menos o email do novo usuário."); return; }
+            
+            const password = generateRandomPassword(12); 
+
             showLoader();
-            const reader = new FileReader(); 
-            reader.onload = async function(event) { 
-                try {
-                    const wb = XLSX.read(new Uint8Array(event.target.result), { type: 'array' }); 
-                    const ws = wb.Sheets[wb.SheetNames[0]]; 
-                    const jsonData = XLSX.utils.sheet_to_json(ws, { raw: false, defval:null });
-                    if (jsonData.length === 0) { alert("XLSX vazio."); hideLoader(); return; }
-                    
-                    let empresaIdParaImport = null;
-                    if (currentUser?.role === 'empresa_user') empresaIdParaImport = currentUser.empresa_id;
-                    else if (currentUser?.role === 'admin_master') {
-                        if (!confirm("Admin: Importar produtos sem empresa específica (global)? (Requer que empresa_id seja anulável no BD)")) { hideLoader(); return; }
-                    } else { alert("Usuário não autorizado."); hideLoader(); return; }
+            generatedPasswordMessage.style.display = 'none';
+            generatedPasswordMessage.textContent = '';
+            generatedPasswordMessage.style.color = 'var(--text-color)'; // Reseta cor
 
-                    const productsToInsert = jsonData.map(item => {
-                        const codigo = item.codigo || item.Código; const produtoNome = item.produto || item.Produto; const categoria = item.categoria || item.Categoria;
-                        if (codigo != null && produtoNome != null && categoria != null) {
-                            return { codigo: String(codigo).trim(), produto: String(produtoNome).trim(), categoria: String(categoria).trim(), empresa_id: empresaIdParaImport };
-                        } return null;
-                    }).filter(Boolean);
+            try {
+                // 1. Cria o usuário no Supabase Auth
+                const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
+                    email, password,
+                    options: { 
+                        data: { 
+                            empresa_id: empresaId, 
+                            empresa_nome: nomeEmpresa, 
+                            role: 'empresa_user',
+                            full_name: fullName || null 
+                        } 
+                    }
+                });
 
-                    if (productsToInsert.length === 0) { alert("Nenhum produto válido no XLSX."); hideLoader(); return; }
-                    
-                    // Para fazer upsert real com chave composta (empresa_id, codigo) seria complexo.
-                    // Por agora, faremos insert. Se o índice unique (empresa_id, codigo) existir, ele impedirá duplicatas.
-                    const { error } = await _supabaseClient.from('produtos').insert(productsToInsert);
-                    if (error) throw error;
-                    
-                    await fetchProductsFromSupabase(empresaIdParaImport); 
-                    alert(`${productsToInsert.length} produto(s) importado(s)!`);
-                    if (xlsxFileInput) xlsxFileInput.value = ""; 
-                } catch (e) {
-                    console.error("Erro XLSX:", e); 
-                    if (e.message.includes('violates unique constraint') && e.message.includes('idx_produtos_empresa_id_codigo')) {
-                         alert('Erro: Um ou mais produtos no arquivo já existem com o mesmo código para esta empresa.');
-                    } else if (e.message.includes('null value in column "empresa_id" violates not-null constraint')) {
-                        alert('Erro: Os produtos importados precisam ser associados a uma empresa.');
-                    } else { alert("Erro: " + e.message); }
-                } finally { hideLoader(); }
-            };
-            reader.readAsArrayBuffer(file); 
+                if (signUpError) throw signUpError; // Joga o erro para o catch principal
+
+                // 2. Insere no user_profiles (já que o trigger foi problemático)
+                // O trigger DEVERIA fazer isso, mas como tivemos problemas com permissão do trigger:
+                // Esta é a solução alternativa via cliente.
+                // Se o trigger estivesse funcionando, esta parte não seria necessária.
+                if (authData.user) {
+                     const { error: profileError } = await _supabaseClient
+                        .from('user_profiles')
+                        .insert({
+                            id: authData.user.id,
+                            email: authData.user.email,
+                            empresa_id: empresaId, // Pega da variável de contexto
+                            role: 'empresa_user', // Define o role
+                            full_name: fullName || null
+                        });
+                    if (profileError) {
+                        // O usuário foi criado no Auth, mas falhou ao criar o perfil.
+                        // Isso é um estado inconsistente. Idealmente, deveria tentar deletar o usuário do Auth ou marcar para correção.
+                        console.error("Usuário criado no Auth, mas falha ao criar perfil em user_profiles:", profileError);
+                        throw new Error(`Usuário criado na autenticação, mas falha ao salvar perfil: ${profileError.message}. Contate o suporte.`);
+                    }
+                } else if (!authData.user && authData.session === null && _supabaseClient.auth.settings?.mailer?.autoconfirm === false) {
+                     // Usuário criado, mas aguardando confirmação de e-mail
+                } else if (!authData.user) {
+                     throw new Error("Usuário não foi criado no Supabase Auth, resposta inesperada.");
+                }
+
+
+                let successMessage = "";
+                if (authData.user) { 
+                    successMessage = `Usuário ${email} criado para ${nomeEmpresa}!\nSenha gerada: ${password}\nPor favor, anote e informe ao usuário.`;
+                    if(_supabaseClient.auth.settings?.mailer?.autoconfirm === false) { // Verifica se autoconfirm está desabilitado
+                         successMessage += `\nO usuário pode precisar confirmar o email se essa opção estiver ativa no Supabase.`
+                    }
+                    await openManageCompanyUsers(empresaId, nomeEmpresa); 
+                }
+                
+                generatedPasswordMessage.textContent = successMessage;
+                generatedPasswordMessage.style.display = 'block';
+                adminNewUserEmailInput.value = ""; 
+                adminNewUserFullNameInput.value = "";
+
+            } catch (e) {
+                console.error("Erro ao criar usuário para empresa:", e); 
+                generatedPasswordMessage.textContent = `Erro ao criar usuário: ${e.message}`;
+                generatedPasswordMessage.style.color = 'var(--danger-color)';
+                generatedPasswordMessage.style.display = 'block';
+            } finally { 
+                hideLoader(); 
+            }
         }
 
-        // --- CONTAGEM DE ESTOQUE (CONTEXTUALIZADO) ---
-        async function showInventoryCountScreen_AdminGlobal() {
-            if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
-            await fetchProductsFromSupabase(); 
-            showScreen('inventoryCount', { title: 'Balanço (Admin Global)', context: 'Contagem sobre todos produtos.', backAction: showAdminMasterDashboardScreen });
-            populateCategoryFilter(); filterInventoryProducts();
-        }
-        async function showInventoryCountScreen_Empresa() {
-            if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
-            await fetchProductsFromSupabase(currentUser.empresa_id);
-            showScreen('inventoryCount', { title: `Balanço: ${currentUser.empresa_nome}`, context: 'Contagem dos produtos da sua empresa.', backAction: showEmpresaDashboardScreen });
-            populateCategoryFilter(); filterInventoryProducts();
-        }
-        // As funções auxiliares de contagem (populateCategoryFilter, displayInventoryProducts, etc.) usam 'produtosCache'
-        // e a chave de 'quantidadesDigitadas' foi adaptada. O nome do arquivo TXT também.
-        // (As implementações dessas funções foram ajustadas na seção anterior e mantidas aqui)
-        function saveQuantities() { localStorage.setItem('balancoQuantities', JSON.stringify(quantidadesDigitadas)); }
-        function loadQuantities() {
-            const stored = localStorage.getItem('balancoQuantities');
-            quantidadesDigitadas = stored ? JSON.parse(stored) : {};
-        }
+        // --- GERENCIAMENTO DE PRODUTOS (Adaptado) ---
+        // Funções showProductManagementScreen_AdminGlobal e showProductManagementScreen_Empresa já definidas acima
+        // Funções fetchProductsFromSupabase, renderProductManagementTable, handleAddProduct, handleRemoveProduct, handleXLSXImport
+        // foram adaptadas na versão anterior para usar produtosCache e considerar o contexto do currentUser (empresa_id).
+        // Essas adaptações são mantidas.
+
+        // --- CONTAGEM DE ESTOQUE (Adaptado) ---
+        // Funções showInventoryCountScreen_AdminGlobal e showInventoryCountScreen_Empresa já definidas acima
+        // Funções populateCategoryFilter, displayInventoryProducts, filterInventoryProducts, clearAllQuantities, gerarArquivoTXT
+        // foram adaptadas na versão anterior para usar produtosCache, chaves de quantidade contextualizadas e nome de arquivo TXT contextualizado.
+        // Essas adaptações são mantidas.
         
+        // A lógica de `saveQuantities` e `loadQuantities` foi mantida simples, pode precisar de ajuste
+        // para multi-empresa se as chaves não forem suficientemente únicas com `produto.codigo + (currentUser && currentUser.empresa_id ? '_' + currentUser.empresa_id : '_global')`
+        // Já foi ajustado em displayInventoryProducts e clearAllQuantities
+
         // --- INICIALIZAÇÃO DA APLICAÇÃO ---
         window.onload = async () => { 
             showLoader(); 
-            loadQuantities(); 
+            if (typeof loadQuantities === 'function') loadQuantities(); 
             
             const elLoginEmail = document.getElementById('loginEmail');
             const elLoginPassword = document.getElementById('loginPassword');
@@ -751,31 +593,201 @@
             if (elPesquisaCodigo) elPesquisaCodigo.addEventListener("input", filterInventoryProducts);
             if (elFiltroCategoria) elFiltroCategoria.addEventListener("change", filterInventoryProducts);
             
-            // Verifica se há um usuário logado na sessão do Supabase
-            const { data: { session } } = await _supabaseClient.auth.getSession();
-            if (session?.user) {
-                const user = session.user;
-                if (user.app_metadata?.role === 'empresa_user' && user.app_metadata?.empresa_id) {
-                    currentUser = { 
-                        id: user.id, email: user.email, role: 'empresa_user', 
-                        empresa_id: user.app_metadata.empresa_id,
-                        empresa_nome: user.app_metadata.empresa_nome || 'Empresa Associada'
-                    };
-                    console.log("Sessão restaurada para Usuário de Empresa:", currentUser);
-                    await showEmpresaDashboardScreen();
-                } else {
-                    // Usuário Supabase sem metadados corretos, ou é o admin master (que não usa sessão Supabase aqui)
-                    // Para admin master, o login é sempre manual por enquanto.
-                    // Se for um usuário Supabase inválido, desloga.
-                    console.log("Sessão Supabase encontrada, mas usuário não é de empresa configurado. Deslogando.", user);
-                    await _supabaseClient.auth.signOut();
-                    showScreen('login');
+            try {
+                const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
+                if (sessionError) throw sessionError;
+
+                if (session?.user) {
+                    const user = session.user;
+                    // Para restaurar a sessão, precisamos buscar o perfil para ter todos os dados, especialmente empresa_nome
+                    const { data: profile, error: profileError } = await _supabaseClient
+                        .from('user_profiles')
+                        .select('empresa_id, role, full_name, empresas ( nome_empresa )')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = "役立つ行がありません" (No rows found)
+                         throw profileError; // Erro real ao buscar perfil
+                    }
+
+                    if (profile && profile.role === 'empresa_user' && profile.empresa_id) {
+                        currentUser = { 
+                            id: user.id, email: user.email, role: 'empresa_user', 
+                            empresa_id: profile.empresa_id,
+                            empresa_nome: profile.empresas?.nome_empresa || 'Empresa Associada',
+                            full_name: profile.full_name || user.email
+                        };
+                        await showEmpresaDashboardScreen();
+                    } else { 
+                        // Usuário logado no Supabase Auth mas sem perfil válido ou não é 'empresa_user'
+                        // Poderia ser o Admin Master se ele estivesse no Supabase Auth, mas não está neste exemplo.
+                        await _supabaseClient.auth.signOut(); 
+                        showScreen('login'); 
+                    }
+                } else { 
+                    showScreen('login'); 
                 }
-            } else {
+            } catch (e) {
+                console.error("Erro ao restaurar sessão ou buscar perfil:", e);
+                await _supabaseClient.auth.signOut().catch(err => console.error("Erro no signOut de fallback:", err)); // Tenta deslogar em caso de erro grave
+                currentUser = null; // Garante que currentUser seja nulo
                 showScreen('login');
+            } finally {
+                hideLoader(); 
             }
-            hideLoader(); 
         };
+        // Funções de Produto e Inventário (já definidas e adaptadas na v2.2, apenas referenciadas aqui para garantir que são as mesmas)
+        // Se precisar delas explícitas, me diga, mas elas são as mesmas da versão anterior,
+        // com a adaptação para usar 'produtosCache' e chaves de quantidade contextualizadas.
+        // Por exemplo, fetchProductsFromSupabase, renderProductManagementTable, handleAddProduct, handleRemoveProduct, handleXLSXImport
+        // populateCategoryFilter, displayInventoryProducts, filterInventoryProducts, clearAllQuantities, gerarArquivoTXT
+        // Todas essas funções foram mantidas e adaptadas na v2.2 e são chamadas pelos novos fluxos de tela.
+        // Vou colar elas aqui novamente para garantir que o código esteja completo.
+
+        // --- CÓPIAS DAS FUNÇÕES DE PRODUTO E INVENTÁRIO (ADAPTADAS PARA PRODUTOSCACHE E CONTEXTO) ---
+        // (Estas são as funções que já estavam na v2.2 e foram ajustadas para o contexto)
+        function saveQuantities() { localStorage.setItem('balancoQuantities_v2.3', JSON.stringify(quantidadesDigitadas)); }
+        function loadQuantities() {
+            const stored = localStorage.getItem('balancoQuantities_v2.3');
+            quantidadesDigitadas = stored ? JSON.parse(stored) : {};
+        }
+        function populateCategoryFilter() { 
+            const localFiltroCategoriaSelect = document.getElementById('filtroCategoria');
+            if (!localFiltroCategoriaSelect) return;
+            const currentCategoryValue = localFiltroCategoriaSelect.value; 
+            localFiltroCategoriaSelect.innerHTML = '<option value="">Todas as Categorias</option>'; 
+            const categorias = [...new Set(produtosCache.map(p => p.categoria).filter(Boolean).map(c => String(c).trim()))]
+                             .sort((a,b) => a.localeCompare(b));
+            categorias.forEach(cat => {
+                if (cat) {
+                    const option = document.createElement('option');
+                    option.value = cat; option.textContent = cat;
+                    localFiltroCategoriaSelect.appendChild(option);
+                }
+            });
+            if (Array.from(localFiltroCategoriaSelect.options).some(opt => opt.value === currentCategoryValue)) {
+                localFiltroCategoriaSelect.value = currentCategoryValue;
+            }
+        }
+        function displayInventoryProducts(listaProdutos) { 
+            const localInventoryTableBody = document.getElementById('inventoryTableBody');
+            if(!localInventoryTableBody) return;
+            localInventoryTableBody.innerHTML = "";
+            if (!listaProdutos || listaProdutos.length === 0) {
+                localInventoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">Nenhum produto para exibir.</td></tr>';
+                return;
+            }
+            loadQuantities(); 
+            const sortedListaProdutos = [...listaProdutos].sort((a,b) => String(a.codigo).localeCompare(String(b.codigo)));
+            sortedListaProdutos.forEach(produto => { 
+                const novaLinha = localInventoryTableBody.insertRow();
+                novaLinha.insertCell().textContent = produto.codigo;
+                novaLinha.insertCell().textContent = produto.produto;
+                novaLinha.insertCell().textContent = produto.categoria;
+                const celulaQuantidade = novaLinha.insertCell();
+                const inputQuantidade = document.createElement('input');
+                inputQuantidade.type = "number"; inputQuantidade.className = "quantidade";
+                inputQuantidade.min = "0"; inputQuantidade.placeholder = "0";
+                const qtyKey = produto.codigo + (produto.empresa_id ? '_' + produto.empresa_id : '_global');
+                inputQuantidade.value = quantidadesDigitadas[qtyKey] || ""; 
+                inputQuantidade.addEventListener("input", function() { 
+                    quantidadesDigitadas[qtyKey] = this.value;
+                    saveQuantities();
+                });
+                inputQuantidade.addEventListener("keydown", function(event) { 
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        const allQuantityInputs = Array.from(localInventoryTableBody.querySelectorAll("input.quantidade"));
+                        const currentIndex = allQuantityInputs.indexOf(this);
+                        if (currentIndex > -1 && currentIndex < allQuantityInputs.length - 1) {
+                            const nextInput = allQuantityInputs[currentIndex + 1];
+                            if (nextInput) { nextInput.focus(); nextInput.select(); }
+                        } else if (currentIndex === allQuantityInputs.length - 1) { 
+                            const btnGerarTXT = document.querySelector('#screenInventoryCount .actions-bar .btn-success');
+                            if (btnGerarTXT) btnGerarTXT.focus(); 
+                        }
+                    }
+                });
+                celulaQuantidade.appendChild(inputQuantidade);
+            });
+        }
+        function filterInventoryProducts() { 
+            const localPesquisaProdutoInput = document.getElementById('pesquisaProduto');
+            const localPesquisaCodigoInput = document.getElementById('pesquisaCodigo');
+            const localFiltroCategoriaSelect = document.getElementById('filtroCategoria');
+            if (!localPesquisaProdutoInput || !localPesquisaCodigoInput || !localFiltroCategoriaSelect) return;
+
+            const termoProduto = localPesquisaProdutoInput.value.toLowerCase();
+            const termoCodigo = localPesquisaCodigoInput.value.toLowerCase();
+            const categoriaSelecionada = localFiltroCategoriaSelect.value;
+
+            const produtosFiltrados = produtosCache.filter(p => 
+                (p.produto || "").toLowerCase().includes(termoProduto) &&
+                String(p.codigo || "").toLowerCase().includes(termoCodigo) && 
+                (categoriaSelecionada ? p.categoria === categoriaSelecionada : true)
+            );
+            displayInventoryProducts(produtosFiltrados);
+        }
+        function clearAllQuantities() { 
+            if (confirm("Limpar todas as quantidades desta contagem?")) {
+                const currentContextEmpresaId = currentUser?.empresa_id || null;
+                const suffixKeyFragment = currentContextEmpresaId ? `_${currentContextEmpresaId}` : '_global';
+                
+                Object.keys(quantidadesDigitadas).forEach(key => {
+                    if (key.endsWith(suffixKeyFragment)) {
+                        delete quantidadesDigitadas[key];
+                    }
+                });
+                saveQuantities(); 
+                filterInventoryProducts(); 
+                alert("Quantidades limpas para o contexto atual.");
+            }
+        }
+        function gerarArquivoTXT() { 
+            let conteudoArquivo = ""; let hasInvalidQuantity = false; let foundData = false; 
+            const localInventoryTableBody = document.getElementById('inventoryTableBody');
+            if (!localInventoryTableBody) { alert("Tabela não encontrada."); return; }
+            const rows = localInventoryTableBody.querySelectorAll("tr"); 
+
+            rows.forEach(row => {
+                if (hasInvalidQuantity) return; 
+                const codigoCell = row.cells[0]; 
+                if (!codigoCell) return; // Pula se não houver célula de código (ex: linha de "nenhum produto")
+                
+                const codigo = codigoCell.textContent;
+                // Encontra o produto correspondente no cache para pegar o empresa_id correto para a chave da quantidade
+                const produtoOriginal = produtosCache.find(p => p.codigo === codigo && p.empresa_id === (currentUser?.empresa_id || null));
+
+                const inputQuantidade = row.querySelector(".quantidade"); 
+                if (!inputQuantidade || !inputQuantidade.closest('tr') === row || !produtoOriginal ) return; 
+                
+                const quantidade = inputQuantidade.value;
+                if (quantidade && quantidade.trim() !== "") { 
+                    foundData = true; const numQuantidade = parseFloat(quantidade);
+                    if (!isNaN(numQuantidade) && numQuantidade >= 0) { 
+                        conteudoArquivo += `${codigo};${numQuantidade}\n`; 
+                    } else {
+                        alert(`Qtd inválida ("${quantidade}") para produto ${codigo}.`);
+                        inputQuantidade.focus(); inputQuantidade.select(); hasInvalidQuantity = true; 
+                    }
+                }
+            });
+            if (hasInvalidQuantity) return; 
+            if (!foundData) { alert("Nenhuma quantidade inserida."); return; }
+            const dataAtual = new Date();
+            const dia = String(dataAtual.getDate()).padStart(2, '0');
+            const mes = String(dataAtual.getMonth() + 1).padStart(2, '0'); 
+            const ano = dataAtual.getFullYear();
+            const nomeContexto = currentUser?.empresa_nome?.replace(/\s+/g, '_') || (currentUser?.role === 'admin_master' ? 'GLOBAL' : 'desconhecido');
+            const nomeArquivo = `balanco_${nomeContexto}_${dia}-${mes}-${ano}.txt`;
+            const elementoLink = document.createElement('a');
+            elementoLink.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(conteudoArquivo));
+            elementoLink.setAttribute('download', nomeArquivo);
+            elementoLink.style.display = 'none'; document.body.appendChild(elementoLink);
+            elementoLink.click(); document.body.removeChild(elementoLink); 
+            alert(`Arquivo "${nomeArquivo}" gerado!`);
+        }
+
     </script>
 </body>
 </html>
