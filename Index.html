@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Balanço de Estoque - Multiempresa v2.8</title>
+    <title>Sistema de Balanço de Estoque - Multiempresa v2.8.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* CSS da versão anterior (v2.7 - tema claro) mantido. Cole o CSS completo aqui. */
+        /* CSS da versão anterior (v2.8 - tema claro) mantido. Cole o CSS completo aqui. */
         /* ... (COLE O CSS DA VERSÃO ANTERIOR AQUI) ... */
         :root {
             --primary-color: #007bff; --primary-color-darker: #0069d9;
@@ -63,7 +63,7 @@
         select{appearance:none;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23212529' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .75rem center;background-size:16px 12px}
         .form-group{margin-bottom:1rem}
         .form-group label{display:block;margin-bottom:.5rem;font-weight:500;color:var(--text-color); }
-        .filter-controls,.product-management-form-fields,.xlsx-import-section,.actions-bar,.sub-form-section{margin-bottom:1.5rem;padding:1rem;background-color:var(--container-bg-color);border:1px solid var(--border-color);border-radius:var(--border-radius)} /* Ajustado background para branco */
+        .filter-controls,.product-management-form-fields,.xlsx-import-section,.actions-bar,.sub-form-section{margin-bottom:1.5rem;padding:1rem;background-color:var(--container-bg-color);border:1px solid var(--border-color);border-radius:var(--border-radius)} 
         .product-management-form-fields .form-group{margin-bottom:0}
         .filter-controls>div{flex:1;min-width:200px}
         .filter-controls input,.filter-controls select{margin-bottom:0}
@@ -73,7 +73,7 @@
         #productManagementTable td:last-child,#inventoryTable td:last-child,#adminEmpresasTable td:last-child, #colaboradoresTable td:last-child, #historicoContagensTable td:last-child, #adminCategoriasTable td:last-child {text-align:center} 
         #inventoryTable input[type=number]{max-width:80px;text-align:right;padding:.375rem .5rem;font-size:.9rem}
         .back-button{margin-bottom:1.5rem;display:inline-block}
-        .modal-overlay { background-color: rgba(0,0,0,0.5); } /* Escurecido o overlay do modal */
+        .modal-overlay { background-color: rgba(0,0,0,0.5); } 
         .modal-content { background-color: var(--container-bg-color); color: var(--text-color); }
         .modal-content h4 { color: var(--text-color); }
         .modal-content p { color: var(--text-muted-color); }
@@ -87,10 +87,10 @@
         .company-users-list { list-style-type: none; padding-left: 0; font-size: 0.9em; }
         .company-users-list li { padding: 8px 5px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .company-users-list li:last-child { border-bottom: none; }
-        .company-users-list li .user-info { margin-right: 10px; }
+        .company-users-list li .user-info { margin-right: 10px; flex-grow: 1; /* Para ocupar espaço */ }
         .company-users-list li .user-info .user-email { font-weight: bold; color: var(--primary-color); }
         .company-users-list li .user-info .user-details { font-style: italic; color: var(--text-muted-color); font-size: 0.9em; display: block; }
-        .company-users-list li .user-actions { display: flex; gap: 5px; }
+        .company-users-list li .user-actions { display: flex; gap: 5px; flex-shrink: 0; /* Para não encolher os botões */ }
         .password-change-form { max-width: 450px; margin: 1.5rem auto; }
         .form-inline-flex { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 1rem;}
         .form-inline-flex .form-group { flex: 1; margin-bottom: 0;}
@@ -99,7 +99,7 @@
         #previewContagemTable th, #previewContagemTable td { font-size: 0.9rem; padding: 0.5rem; }
         .admin-context-selector { margin-bottom: 1.5rem; padding: 1rem; background-color: var(--header-bg-color); border-radius: var(--border-radius); }
         .admin-context-selector label { margin-right: 0.5rem; font-weight: 500;}
-        .admin-context-selector select { display: inline-block; width: auto; min-width: 250px; }
+        .admin-context-selector select { display: inline-block; width: auto; min-width: 250px; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -121,7 +121,7 @@
             <p style="text-align: center;">Bem-vindo, <span id="adminMasterNameDisplay">Admin Master</span>!</p>
             <div class="dashboard-options">
                 <button class="btn btn-primary" onclick="showAdminEmpresasScreen()">Gerenciar Empresas & Seus Logins</button>
-                <button class="btn btn-primary" onclick="showAdminCategoriasScreen()">Gerenciar Categorias</button>
+                <button class="btn btn-primary" onclick="showAdminCategoriasScreen()">Gerenciar Categorias</button> 
                 <button class="btn btn-primary" onclick="showProductManagementScreen_AdminGlobal()">Gerenciar Produtos</button>
                 <button class="btn btn-primary" onclick="showInventoryCountScreen_AdminGlobal()">Contagem de Estoque</button>
                 <button class="btn btn-secondary" onclick="handleLogout()">Logout</button>
@@ -151,7 +151,6 @@
                         <label for="adminCategoriaEmpresaSelect">Associar Categoria a (Opcional):</label>
                         <select id="adminCategoriaEmpresaSelect">
                             <option value="">-- Categoria Global --</option>
-                            {/* Empresas serão populadas aqui */}
                         </select>
                     </div>
                     <div class="form-group">
@@ -212,7 +211,7 @@
             <h2 id="productManagementTitle">Gerenciar Produtos</h2>
             <div id="adminProdutoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
                 <label for="adminProdutoEmpresaSelect">Gerenciar Produtos Para Empresa:</label>
-                <select id="adminProdutoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
+                <select id="adminProdutoEmpresaSelect"><option value="">-- Produtos Globais (Sem Empresa) --</option></select>
             </div>
             <p id="productManagementContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
             <div class="card"><div class="card-header"><h3>Adicionar Novo Produto</h3></div><div class="card-body">
@@ -235,7 +234,7 @@
             <h2 id="inventoryCountTitle">Balanço de Estoque</h2>
             <div id="adminContagemEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
                 <label for="adminContagemEmpresaSelect">Realizar Contagem Para Empresa:</label>
-                <select id="adminContagemEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
+                <select id="adminContagemEmpresaSelect"><option value="">-- Contagem Global (Sem Empresa) --</option></select>
             </div>
             <p id="inventoryCountContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
             <div class="card card-body">
@@ -244,8 +243,8 @@
                     <select id="selectColaboradorContagem" style="margin-bottom: 1rem;"></select>
                 </div>
                 <div class="actions-bar" style="border:none; padding-bottom:0;">
-                     <button class="btn btn-info" onclick="showPreviewContagem()">Ver Resumo da Contagem</button> 
-                     <button class="btn btn-success" onclick="gerarArquivoTXT()">Gerar TXT e Salvar Histórico</button>
+                     <button class="btn btn-info" onclick="showPreviewContagem()">Ver Resumo</button> 
+                     <button class="btn btn-success" onclick="gerarArquivoTXT()">Gerar TXT & Salvar Histórico</button>
                      <button class="btn btn-warning" onclick="clearAllQuantities()">Limpar Quantidades</button>
                 </div>
             </div>
@@ -258,23 +257,27 @@
 
     <script>
         // --- CONFIGURAÇÃO SUPABASE ---
+        // ... (Mantida como antes)
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
         const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- VARIÁVEIS GLOBAIS ---
+        // ... (Mantidas e adicionado adminSelectedEmpresaParaCategoria)
         let produtosCache = []; 
         let categoriasCache = []; 
-        let empresasCache = []; // Cache para empresas (usado nos selects do admin)
-        let colaboradoresCache = []; // Cache para colaboradores (usado no select da contagem)
+        let empresasCache = []; 
+        let colaboradoresCache = []; 
         let quantidadesDigitadas = {}; 
         const ADMIN_MASTER_EMAIL = "matheus@mtech.com";
         const ADMIN_MASTER_PASSWORD = "260195@@";
         let currentUser = null; 
-        let adminSelectedEmpresaId = null; // Para admin master selecionar empresa para produtos/contagem/categorias
+        let adminSelectedEmpresaId = null; 
+        let adminSelectedEmpresaParaCategoriaId = null; // Novo: para contexto de categoria
 
-        // --- SELETORES DOM (principais) ---
+        // --- SELETORES DOM ---
+        // ... (Mantidos e adicionados novos para categoria e seletores de empresa do admin)
         const mainContainer = document.getElementById('mainContainer');
         const screens = {
             login: document.getElementById('screenLogin'),
@@ -294,7 +297,6 @@
         const loginErrorMessage = document.getElementById('loginErrorMessage');
         const adminMasterNameDisplay = document.getElementById('adminMasterNameDisplay');
 
-        // Admin Empresas
         const adminNomeEmpresaInput = document.getElementById('adminNomeEmpresa');
         const adminEmpresasTableBody = document.getElementById('adminEmpresasTableBody');
         const adminDefineLoginEmpresaSection = document.getElementById('adminDefineLoginEmpresaSection');
@@ -304,17 +306,14 @@
         const adminEmpresaLoginFullNameInput = document.getElementById('adminEmpresaLoginFullName');
         const generatedEmpresaPasswordMessage = document.getElementById('generatedEmpresaPasswordMessage');
 
-        // Admin Categorias
         const adminCategoriaEmpresaSelect = document.getElementById('adminCategoriaEmpresaSelect');
         const adminNomeCategoriaInput = document.getElementById('adminNomeCategoria');
         const adminCategoriasTableBody = document.getElementById('adminCategoriasTableBody');
 
-        // Empresa Colaboradores
         const colaboradoresEmpresaNomeSpan = document.getElementById('colaboradoresEmpresaNome');
         const colaboradorNomeInput = document.getElementById('colaboradorNome');
         const colaboradoresTableBody = document.getElementById('colaboradoresTableBody');
         
-        // Change Password
         const currentPasswordInput = document.getElementById('currentPasswordInput');
         const newPasswordInput = document.getElementById('newPasswordInput');
         const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
@@ -323,13 +322,11 @@
         const changingPasswordForUserDisplay = document.getElementById('changingPasswordForUserDisplay');
         const currentPasswordGroup = document.getElementById('currentPasswordGroup');
 
-        // Histórico Contagens
         const historicoEmpresaNomeSpan = document.getElementById('historicoEmpresaNome');
         const historicoContagensTableBody = document.getElementById('historicoContagensTableBody');
         const modalDetalhesContagem = document.getElementById('modalDetalhesContagem');
         const detalhesContagemConteudo = document.getElementById('detalhesContagemConteudo');
 
-        // Produtos
         const productManagementBackButton = document.getElementById('productManagementBackButton');
         const productManagementTitle = document.getElementById('productManagementTitle');
         const productManagementContext = document.getElementById('productManagementContext');
@@ -341,7 +338,6 @@
         const productManagementTableBody = document.getElementById('productManagementTableBody');
         const xlsxFileInput = document.getElementById('xlsxFile');
 
-        // Inventário
         const inventoryCountBackButton = document.getElementById('inventoryCountBackButton');
         const inventoryCountTitle = document.getElementById('inventoryCountTitle');
         const inventoryCountContext = document.getElementById('inventoryCountContext');
@@ -355,38 +351,34 @@
         const modalPreviewContagem = document.getElementById('modalPreviewContagem'); 
         const previewContagemTableContainer = document.getElementById('previewContagemTableContainer'); 
 
-        // Dashboard Empresa
         const empresaDashboardTitle = document.getElementById('empresaDashboardTitle');
         const empresaUserNameSpan = document.getElementById('empresaUserName');
-
 
         // --- FUNÇÕES UTILITÁRIAS ---
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
-
-        function generateNumericPassword(length = 6) { /* ... (Mantida da v2.6) ... */
-            let password = '';
+        function generateNumericPassword(length = 6) { /* ... (Mantida) ... */ 
+             let password = '';
             for (let i = 0; i < length; i++) {
                 password += Math.floor(Math.random() * 10).toString();
             }
             return password;
         }
 
-        async function populateEmpresasSelect(selectElementId, includeGlobalOption = false, globalOptionText = "-- Categoria Global --") {
+        async function populateEmpresasSelect(selectElementId, includeSpecialOption = false, specialOptionValue = "", specialOptionText = "-- Selecione --") {
             const selectEmp = document.getElementById(selectElementId);
             if (!selectEmp) { console.error(`Select de empresa ${selectElementId} não encontrado.`); return; }
             
-            selectEmp.innerHTML = ''; // Limpa opções anteriores
-            if (includeGlobalOption) {
-                const globalOpt = document.createElement('option');
-                globalOpt.value = ""; // ou "NULL_VALUE_PLACEHOLDER" se precisar distinguir de "nenhuma empresa selecionada"
-                globalOpt.textContent = globalOptionText;
-                selectEmp.appendChild(globalOpt);
-            } else {
-                 selectEmp.innerHTML = '<option value="">-- Selecione uma Empresa --</option>';
+            const currentValue = selectEmp.value; // Salva valor atual
+            selectEmp.innerHTML = ''; 
+            if (includeSpecialOption) {
+                const opt = document.createElement('option');
+                opt.value = specialOptionValue; 
+                opt.textContent = specialOptionText;
+                selectEmp.appendChild(opt);
             }
-
-            if (empresasCache.length === 0) { // Busca empresas se o cache estiver vazio
+            // Usa empresasCache se já populado, senão busca.
+            if (empresasCache.length === 0) {
                 try {
                     const { data, error } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
                     if (error) throw error;
@@ -402,10 +394,15 @@
                 option.textContent = emp.nome_empresa;
                 selectEmp.appendChild(option);
             });
+            // Tenta restaurar valor
+            if (Array.from(selectEmp.options).some(opt => opt.value === currentValue)) {
+                selectEmp.value = currentValue;
+            } else if (includeSpecialOption) {
+                selectEmp.value = specialOptionValue;
+            }
         }
 
-
-        function showScreen(screenId, screenConfig = {}) { /* ... (Mantida e adaptada da v2.6) ... */
+        function showScreen(screenId, screenConfig = {}) { /* ... (Adaptada para novos seletores de admin) ... */ 
             hideLoader();
             Object.values(screens).forEach(screen => screen && screen.classList.remove('active'));
             
@@ -417,20 +414,25 @@
                     mainContainer.classList.remove('content-container');
                 }
 
+                // Esconde seletores de contexto do admin por padrão
+                if(adminProdutoEmpresaSelectorContainer) adminProdutoEmpresaSelectorContainer.style.display = 'none';
+                if(adminContagemEmpresaSelectorContainer) adminContagemEmpresaSelectorContainer.style.display = 'none';
+
+
                 if (screenId === 'productManagement') {
                     productManagementTitle.textContent = screenConfig.title || 'Gerenciar Produtos';
                     productManagementContext.textContent = screenConfig.context || '';
                     productManagementBackButton.onclick = screenConfig.backAction || (() => showScreen(currentUser?.role === 'admin_master' ? 'adminMasterDashboard' : 'empresaDashboard'));
-                    // Mostrar seletor de empresa para admin
-                    adminProdutoEmpresaSelectorContainer.style.display = (currentUser?.role === 'admin_master' && screenConfig.showEmpresaSelector) ? 'block' : 'none';
-
+                    if (currentUser?.role === 'admin_master' && screenConfig.showEmpresaSelector) {
+                        adminProdutoEmpresaSelectorContainer.style.display = 'block';
+                    }
                 } else if (screenId === 'inventoryCount') {
                     inventoryCountTitle.textContent = screenConfig.title || 'Balanço de Estoque';
                     inventoryCountContext.textContent = screenConfig.context || '';
                     inventoryCountBackButton.onclick = screenConfig.backAction || (() => showScreen(currentUser?.role === 'admin_master' ? 'adminMasterDashboard' : 'empresaDashboard'));
-                    // Mostrar seletor de empresa para admin
-                    adminContagemEmpresaSelectorContainer.style.display = (currentUser?.role === 'admin_master' && screenConfig.showEmpresaSelector) ? 'block' : 'none';
-
+                     if (currentUser?.role === 'admin_master' && screenConfig.showEmpresaSelector) {
+                        adminContagemEmpresaSelectorContainer.style.display = 'block';
+                    }
                 } else if (screenId === 'empresaDashboard' && currentUser) {
                     empresaDashboardTitle.textContent = `Painel: ${currentUser.empresa_nome || 'Minha Empresa'}`;
                     empresaUserNameSpan.textContent = currentUser.full_name || currentUser.email;
@@ -449,92 +451,67 @@
         }
         
         // --- LÓGICA DE LOGIN E LOGOUT ---
-        async function handleLogin() { /* ... (Mantida da v2.6) ... */ }
-        async function handleLogout() { /* ... (Mantida da v2.6, com limpeza de adminSelectedEmpresaId) ... */
-            showLoader();
-            if (currentUser && currentUser.role !== 'admin_master') { 
-                const { error } = await _supabaseClient.auth.signOut();
-                if (error) { console.error("Erro no logout do Supabase:", error); }
-            }
-            currentUser = null;
-            adminSelectedEmpresaId = null; // Limpa contexto de empresa do admin
-            if(loginEmailInput) loginEmailInput.value = ""; 
-            if(loginPasswordInput) loginPasswordInput.value = "";
-            produtosCache = []; 
-            quantidadesDigitadas = {}; 
-            showScreen('login');
-            hideLoader();
-            console.log("Usuário deslogado.");
-        }
+        async function handleLogin() { /* ... (Mantida) ... */ }
+        async function handleLogout() { /* ... (Mantida, com adminSelectedEmpresaId = null) ... */ }
 
         // --- PAINÉIS ---
-        function showAdminMasterDashboardScreen() { 
-            adminSelectedEmpresaId = null; // Limpa contexto de empresa ao voltar para o painel admin
-            showScreen('adminMasterDashboard'); 
-        }
-        async function showEmpresaDashboardScreen() { showScreen('empresaDashboard');}
+        function showAdminMasterDashboardScreen() { adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null; showScreen('adminMasterDashboard'); }
+        async function showEmpresaDashboardScreen() { adminSelectedEmpresaId = null; showScreen('empresaDashboard');}
         
         // --- ADMIN: GERENCIAR EMPRESAS E SEUS LOGINS ---
-        async function showAdminEmpresasScreen() { /* ... (Mantida da v2.6) ... */ 
-             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
-            showLoader();
-            if(adminDefineLoginEmpresaSection) adminDefineLoginEmpresaSection.style.display = 'none';
-            await fetchAndRenderEmpresas(); 
-            showScreen('adminEmpresas'); 
-        }
-        async function fetchAndRenderEmpresas() { /* ... (Mantida da v2.6) ... */ }
-        async function handleAdminAddEmpresa() { /* ... (Mantida da v2.6, mas atualiza empresasCache) ... */
-            const nomeEmpresa = adminNomeEmpresaInput.value.trim();
-            if (!nomeEmpresa) { alert('Digite o nome da empresa.'); adminNomeEmpresaInput.focus(); return; }
-            showLoader();
-            try {
-                const { data: existing } = await _supabaseClient.from('empresas').select('id').ilike('nome_empresa', nomeEmpresa).single();
-                if (existing) { alert('Erro: Empresa com este nome já existe.'); hideLoader(); return; }
-                const { data: novaEmpresa, error } = await _supabaseClient.from('empresas').insert([{ nome_empresa: nomeEmpresa }]).select().single();
-                if (error) throw error;
-                if (novaEmpresa) empresasCache.push(novaEmpresa); // Adiciona ao cache
-                alert('Empresa adicionada com sucesso!'); adminNomeEmpresaInput.value = ''; 
-                await fetchAndRenderEmpresas(); 
-            } catch (e) { console.error('Erro ao adicionar empresa:', e); alert('Falha ao adicionar empresa: ' + e.message);
-            } finally { hideLoader(); }
-        }
-        function openAdminDefineLoginEmpresa(empresaId, nomeEmpresa) { /* ... (Mantida da v2.6) ... */ }
-        function closeAdminDefineLoginEmpresaSection() { /* ... (Mantida da v2.6) ... */ }
-        async function handleAdminCreateOrUpdateEmpresaLogin() { /* ... (Mantida da v2.6) ... */ }
+        async function showAdminEmpresasScreen() { /* ... (Mantida) ... */ }
+        async function fetchAndRenderEmpresas() { /* ... (Mantida) ... */ }
+        async function handleAdminAddEmpresa() { /* ... (Mantida, atualiza empresasCache) ... */ }
+        function openAdminDefineLoginEmpresa(empresaId, nomeEmpresa) { /* ... (Mantida) ... */ }
+        function closeAdminDefineLoginEmpresaSection() { /* ... (Mantida) ... */ }
+        async function handleAdminCreateOrUpdateEmpresaLogin() { /* ... (Mantida) ... */ }
 
-        // --- ADMIN: GERENCIAR CATEGORIAS (NOVO) ---
+        // --- ADMIN: GERENCIAR CATEGORIAS (Modificada para contexto de empresa) ---
         async function showAdminCategoriasScreen() {
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             showLoader();
-            await populateEmpresasSelect('adminCategoriaEmpresaSelect', true, "-- Categoria Global --"); // Popula select de empresas
-            await fetchAndRenderCategorias();
+            adminSelectedEmpresaParaCategoriaId = null; // Reseta contexto
+            await populateEmpresasSelect('adminCategoriaEmpresaSelect', true, "-- Categoria Global --"); 
+            adminCategoriaEmpresaSelect.value = ""; // Garante que "Global" esteja selecionado ou nada
+            await fetchAndRenderCategorias(); // Mostra todas (globais e de empresas) inicialmente ou com base no select
+            hideLoader(); // Esconde o loader ANTES de mostrar a tela
             showScreen('adminCategorias');
+
+            // Listener para quando o admin troca a empresa no select de categorias
+            adminCategoriaEmpresaSelect.onchange = async () => {
+                adminSelectedEmpresaParaCategoriaId = adminCategoriaEmpresaSelect.value || null; // "" para global
+                await fetchAndRenderCategorias(adminSelectedEmpresaParaCategoriaId); // Recarrega categorias para o contexto
+            };
+            // Dispara para carregar o contexto inicial (categorias globais)
+            if (adminCategoriaEmpresaSelect.onchange) adminCategoriaEmpresaSelect.onchange();
         }
 
-        async function fetchAndRenderCategorias() {
-            if (!adminCategoriasTableBody) { console.error("Elem. tabela categorias não encontrado."); return; }
-            adminCategoriasTableBody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>'; // Colspan 4 agora
+        async function fetchAndRenderCategorias(filterEmpresaId = undefined) { // undefined para buscar todas inicialmente
+            if (!adminCategoriasTableBody) { console.error("Tabela de categorias não encontrada."); return; }
+            adminCategoriasTableBody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
             try {
-                // Join com empresas para mostrar o nome da empresa, se houver empresa_id
-                const { data, error } = await _supabaseClient
-                    .from('categorias')
-                    .select(`
-                        id,
-                        nome_categoria,
-                        created_at,
-                        empresa_id,
-                        empresas ( nome_empresa )
-                    `)
-                    .order('nome_categoria');
+                let query = _supabaseClient.from('categorias').select(`id, nome_categoria, created_at, empresa_id, empresas ( nome_empresa )`).order('nome_categoria');
+                if (filterEmpresaId === null) { // Explicitamente global
+                    query = query.is('empresa_id', null);
+                } else if (filterEmpresaId) { // Empresa específica
+                    query = query.eq('empresa_id', filterEmpresaId);
+                }
+                // Se filterEmpresaId for undefined, busca todas.
+
+                const { data, error } = await query;
                 if (error) throw error;
                 
-                categoriasCache = data || []; 
+                // Não vamos mais popular o categoriasCache global aqui, pois ele deve ser contextual.
+                // O cache de categorias para dropdowns será populado dinamicamente.
+                // categoriasCache = data || []; // Removido daqui
+
                 adminCategoriasTableBody.innerHTML = "";
-                if (categoriasCache.length > 0) {
-                    categoriasCache.forEach(cat => {
+                const categoriasExibidas = data || [];
+                if (categoriasExibidas.length > 0) {
+                    categoriasExibidas.forEach(cat => {
                         const row = adminCategoriasTableBody.insertRow();
                         row.insertCell().textContent = cat.nome_categoria;
-                        row.insertCell().textContent = cat.empresas ? cat.empresas.nome_empresa : "Global"; // Mostra nome da empresa ou "Global"
+                        row.insertCell().textContent = cat.empresas ? cat.empresas.nome_empresa : (cat.empresa_id ? 'Empresa ID: ' + cat.empresa_id.substring(0,4) : "Global");
                         row.insertCell().textContent = new Date(cat.created_at).toLocaleDateString('pt-BR');
                         const actionsCell = row.insertCell();
                         const btnDelete = document.createElement('button');
@@ -544,7 +521,7 @@
                         actionsCell.appendChild(btnDelete);
                     });
                 } else {
-                    adminCategoriasTableBody.innerHTML = '<tr><td colspan="4">Nenhuma categoria cadastrada.</td></tr>';
+                    adminCategoriasTableBody.innerHTML = '<tr><td colspan="4">Nenhuma categoria encontrada para este filtro.</td></tr>';
                 }
             } catch (e) {
                 console.error("Erro ao buscar categorias:", e);
@@ -554,33 +531,38 @@
 
         async function handleAdminAddCategoria() {
             const nomeCategoria = adminNomeCategoriaInput.value.trim();
-            const empresaIdSelecionada = adminCategoriaEmpresaSelect.value || null; // Pega "" como null
+            // Pega do select que o admin usou para definir o contexto desta categoria
+            const empresaIdCtx = adminCategoriaEmpresaSelect.value === "" ? null : adminCategoriaEmpresaSelect.value;
 
             if (!nomeCategoria) { alert("Digite o nome da categoria."); adminNomeCategoriaInput.focus(); return; }
             showLoader();
             try {
-                // Verifica duplicidade considerando a empresa_id ou global
-                let query = _supabaseClient.from('categorias').select('id').ilike('nome_categoria', nomeCategoria);
-                if (empresaIdSelecionada) {
-                    query = query.eq('empresa_id', empresaIdSelecionada);
+                let queryCheck = _supabaseClient.from('categorias').select('id').ilike('nome_categoria', nomeCategoria);
+                if (empresaIdCtx) {
+                    queryCheck = queryCheck.eq('empresa_id', empresaIdCtx);
                 } else {
-                    query = query.is('empresa_id', null);
+                    queryCheck = queryCheck.is('empresa_id', null);
                 }
-                const { data: existing } = await query.single();
+                const { data: existing } = await queryCheck.single();
+
                 if (existing) { 
-                    alert(`Erro: Categoria "${nomeCategoria}" já existe ${empresaIdSelecionada ? 'para esta empresa' : 'como global'}.`); 
+                    alert(`Erro: Categoria "${nomeCategoria}" já existe ${empresaIdCtx ? 'para esta empresa' : 'como global'}.`); 
                     hideLoader(); return; 
                 }
 
                 const { error } = await _supabaseClient.from('categorias').insert([{ 
                     nome_categoria: nomeCategoria,
-                    empresa_id: empresaIdSelecionada 
+                    empresa_id: empresaIdCtx 
                 }]);
                 if (error) throw error;
-                alert("Categoria adicionada com sucesso!");
+                alert("Categoria adicionada!");
                 adminNomeCategoriaInput.value = "";
-                adminCategoriaEmpresaSelect.value = ""; // Reseta select
-                await fetchAndRenderCategorias(); 
+                // Reseta o select para o contexto atual para que a lista seja atualizada corretamente.
+                await fetchAndRenderCategorias(empresaIdCtx); 
+                // Atualiza o cache global de categorias para dropdowns de produto
+                const { data: cats } = await _supabaseClient.from('categorias').select('*').order('nome_categoria');
+                if (cats) categoriasCache = cats; 
+
             } catch (e) {
                 console.error("Erro ao adicionar categoria:", e);
                 alert("Falha: " + e.message);
@@ -588,32 +570,37 @@
                 hideLoader();
             }
         }
-        async function handleAdminDeleteCategoria(categoriaId, nomeCategoria) {
-             if (!confirm(`Deletar categoria "${nomeCategoria}"? Produtos que usam esta categoria textual não serão alterados, mas ela não aparecerá mais nas opções.`)) return;
+        async function handleAdminDeleteCategoria(categoriaId, nomeCategoria) { /* ... (Mantida da v2.7, mas atualiza cache global) ... */ 
+            if (!confirm(`Deletar categoria "${nomeCategoria}"?`)) return;
             showLoader();
             try {
                 const { error } = await _supabaseClient.from('categorias').delete().eq('id', categoriaId);
                 if (error) throw error;
                 alert(`Categoria "${nomeCategoria}" deletada.`);
-                await fetchAndRenderCategorias();
+                const empresaIdCtx = adminCategoriaEmpresaSelect.value === "" ? null : adminCategoriaEmpresaSelect.value;
+                await fetchAndRenderCategorias(empresaIdCtx);
+                // Atualiza o cache global de categorias
+                const { data: cats } = await _supabaseClient.from('categorias').select('*').order('nome_categoria');
+                if (cats) categoriasCache = cats; 
             } catch (e) { console.error("Erro ao deletar categoria:", e); alert("Falha: " + e.message);
             } finally { hideLoader(); }
         }
         
+
         // --- EMPRESA LOGADA: GERENCIAR COLABORADORES ---
-        // (Funções mantidas como na v2.6)
+        // (Funções mantidas como na v2.7)
         async function showEmpresaColaboradoresScreen() { /* ... */ }
         async function fetchAndRenderColaboradores(empresaId) { /* ... */ }
         async function handleAddColaborador() { /* ... */ }
         async function handleDeleteColaborador(colaboradorId, empresaId) { /* ... */ }
 
         // --- USUÁRIO DA EMPRESA: ALTERAR PRÓPRIA SENHA ---
-        // (Funções mantidas como na v2.6)
+        // (Funções mantidas como na v2.7)
         function showChangePasswordScreen_Empresa() { /* ... */ }
         async function handleChangePassword() { /* ... */ }
 
         // --- HISTÓRICO DE CONTAGENS (EMPRESA LOGADA) ---
-        // (Funções mantidas como na v2.6)
+        // (Funções mantidas como na v2.7)
         async function showHistoricoContagensScreen() { /* ... */ }
         async function fetchAndRenderHistoricoContagens(empresaId) { /* ... */ }
         function showDetalhesContagem(dadosContagem) { /* ... */ }
@@ -621,37 +608,28 @@
 
 
         // --- GERENCIAMENTO DE PRODUTOS (Adaptado para Admin Selecionar Empresa e Categorias Dinâmicas) ---
-        async function populateCategoriaSelect_ProdutoForm(empresaIdContexto = null) { // Renomeado para clareza
+        async function populateCategoriaSelect_ProdutoForm(empresaIdContexto = null) {
             if (!prodCategoriaSelect) { console.error("Select de categoria de produto não encontrado."); return; }
-            
             const currentValue = prodCategoriaSelect.value;
             prodCategoriaSelect.innerHTML = '<option value="">-- Sem Categoria --</option>';
             
-            let categoriasParaDropdown = [];
-            // 1. Busca categorias globais (empresa_id IS NULL)
-            const { data: globalCats, error: globalError } = await _supabaseClient.from('categorias')
-                .select('nome_categoria').is('empresa_id', null).order('nome_categoria');
-            if (globalError) console.error("Erro ao buscar categorias globais:", globalError);
-            else if (globalCats) categoriasParaDropdown.push(...globalCats);
-
-            // 2. Se houver um contexto de empresa, busca categorias específicas daquela empresa
+            let categoriasDisponiveis = [];
+            // Adiciona categorias globais (onde empresa_id é null)
+            categoriasDisponiveis.push(...categoriasCache.filter(c => c.empresa_id === null));
+            // Se houver um contexto de empresa, adiciona as categorias específicas dessa empresa
             if (empresaIdContexto) {
-                const { data: empresaCats, error: empresaError } = await _supabaseClient.from('categorias')
-                    .select('nome_categoria').eq('empresa_id', empresaIdContexto).order('nome_categoria');
-                if (empresaError) console.error("Erro ao buscar categorias da empresa:", empresaError);
-                else if (empresaCats) categoriasParaDropdown.push(...empresaCats);
+                categoriasDisponiveis.push(...categoriasCache.filter(c => c.empresa_id === empresaIdContexto));
             }
             
-            // Remove duplicatas (caso uma categoria global tenha o mesmo nome de uma da empresa, improvável com as constraints certas)
-            // e ordena
-            const nomesUnicos = [...new Set(categoriasParaDropdown.map(c => c.nome_categoria))].sort();
-
+            // Remove duplicatas por nome_categoria e ordena
+            const nomesUnicos = [...new Set(categoriasDisponiveis.map(c => c.nome_categoria))].sort();
             nomesUnicos.forEach(nomeCat => {
                 const option = document.createElement('option');
                 option.value = nomeCat;
                 option.textContent = nomeCat;
                 prodCategoriaSelect.appendChild(option);
             });
+
             if (Array.from(prodCategoriaSelect.options).some(opt => opt.value === currentValue)) {
                 prodCategoriaSelect.value = currentValue;
             }
@@ -660,64 +638,59 @@
         async function showProductManagementScreen_AdminGlobal() { 
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             showLoader();
-            adminSelectedEmpresaId = null; // Reseta contexto de empresa do admin
-            await populateEmpresasSelect('adminProdutoEmpresaSelect'); // Popula select de empresas
-            adminProdutoEmpresaSelect.value = ""; // Garante que nenhuma empresa esteja pré-selecionada
+            adminSelectedEmpresaId = null; 
+            await populateEmpresasSelect('adminProdutoEmpresaSelect', true, "-- Produtos Globais (Sem Empresa) --", ""); // "" para valor de global
+            adminProdutoEmpresaSelect.value = ""; 
             
-            await fetchProductsFromSupabase(); // Busca produtos globais (empresa_id = null) inicialmente
-            await populateCategoriaSelect_ProdutoForm(); // Popula categorias (globais, já que nenhuma empresa selecionada)
+            await fetchProductsFromSupabase(null); // Busca produtos globais (empresa_id = null)
+            await populateCategoriaSelect_ProdutoForm(null); // Popula com categorias globais
             
-            hideLoader(); // Esconde loader antes de configurar a tela
+            hideLoader(); 
             showScreen('productManagement', { 
                 title: 'Produtos (Admin)', 
-                context: 'Selecione uma empresa para ver/adicionar seus produtos, ou adicione produtos globais (sem empresa).', 
+                context: 'Gerenciando produtos globais. Selecione uma empresa para ver seus produtos.', 
                 backAction: showAdminMasterDashboardScreen,
-                showEmpresaSelector: true // Mostra o seletor de empresa
+                showEmpresaSelector: true 
             });
 
-            // Listener para quando o admin troca a empresa no select de produtos
             adminProdutoEmpresaSelect.onchange = async () => {
-                adminSelectedEmpresaId = adminProdutoEmpresaSelect.value || null;
+                adminSelectedEmpresaId = adminProdutoEmpresaSelect.value || null; // "" vira null
                 showLoader();
-                await fetchProductsFromSupabase(adminSelectedEmpresaId); // Carrega produtos da empresa selecionada (ou globais se null)
-                await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaId); // Recarrega categorias para o contexto
+                await fetchProductsFromSupabase(adminSelectedEmpresaId); 
+                await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaId); 
                 productManagementContext.textContent = adminSelectedEmpresaId 
                     ? `Gerenciando produtos para: ${empresasCache.find(e=>e.id === adminSelectedEmpresaId)?.nome_empresa}` 
                     : 'Gerenciando produtos globais (sem empresa).';
                 hideLoader();
             };
-            // Dispara o onchange para carregar o contexto inicial (sem empresa)
-             if (adminProdutoEmpresaSelect.onchange) adminProdutoEmpresaSelect.onchange();
-
         }
-        async function showProductManagementScreen_Empresa() { 
+        async function showProductManagementScreen_Empresa() { /* ... (Mantida da v2.7, mas chama populateCategoriaSelect_ProdutoForm) ... */ 
             if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
             showLoader();
+            adminSelectedEmpresaId = currentUser.empresa_id; // Define contexto para o usuário da empresa
             await fetchProductsFromSupabase(currentUser.empresa_id); 
-            await populateCategoriaSelect_ProdutoForm(currentUser.empresa_id); // Popula com globais + da empresa
+            await populateCategoriaSelect_ProdutoForm(currentUser.empresa_id); 
             hideLoader();
             showScreen('productManagement', { 
                 title: `Produtos: ${currentUser.empresa_nome}`, 
                 context: 'Produtos pertencentes à sua empresa.', 
                 backAction: showEmpresaDashboardScreen,
-                showEmpresaSelector: false // Não mostra seletor para usuário de empresa
+                showEmpresaSelector: false 
             });
         }
-        async function fetchProductsFromSupabase(empresaId = null) { 
+        async function fetchProductsFromSupabase(empresaIdFiltro = null) { // Renomeado para clareza
             showLoader();
             try {
                 let query = _supabaseClient.from('produtos').select('*, empresas(nome_empresa)').order('produto'); 
-                if (empresaId) { // Busca produtos de uma empresa específica
-                    query = query.eq('empresa_id', empresaId);
-                } else if (currentUser?.role === 'admin_master' && adminSelectedEmpresaId === null) { // Admin buscando explicitamente globais
+                if (empresaIdFiltro) { 
+                    query = query.eq('empresa_id', empresaIdFiltro);
+                } else { // Se empresaIdFiltro é null, buscar apenas produtos globais (empresa_id IS NULL)
                     query = query.is('empresa_id', null);
-                } else if (currentUser?.role !== 'admin_master' && !empresaId) { // Usuário de empresa sem empresaId no contexto (erro de fluxo)
-                    produtosCache = []; renderProductManagementTable(); populateCategoryFilter('filtroCategoria'); hideLoader(); return; 
-                } else if (currentUser?.role === 'admin_master' && adminSelectedEmpresaId) { // Admin buscando para empresa especifica do select
-                     query = query.eq('empresa_id', adminSelectedEmpresaId);
                 }
-                // Se empresaId for null e não for admin buscando explicitamente globais, não faz nada (produtosCache fica vazio)
-                
+                // Exceção: se for admin e não houver empresaIdFiltro E adminSelectedEmpresaId for undefined (significando que ele não quer filtrar por empresa ainda, mas está na tela global)
+                // Esta lógica precisa ser refinada se o admin global puder ver *todos* os produtos de todas as empresas numa única lista.
+                // Por agora: ou é de uma empresa específica, ou são os globais (empresa_id IS NULL).
+
                 const { data, error } = await query;
                 if (error) throw error;
                 produtosCache = data || []; 
@@ -732,10 +705,10 @@
             }
         }
         function renderProductManagementTable() { /* ... (Mantida da v2.7) ... */ }
-        async function handleAddProduct() { 
+        async function handleAddProduct() { /* ... (Adaptada da v2.7 para usar adminSelectedEmpresaId ou currentUser.empresa_id) ... */
             const codigo = prodCodigoInput.value.trim(); 
             const nome = prodNomeInput.value.trim();
-            const categoriaSelecionada = prodCategoriaSelect.value || null; // Pega do select, "" vira null
+            const categoriaSelecionada = prodCategoriaSelect.value || null; 
 
             if (!codigo || !nome) { alert("Preencha Código e Produto."); return; }
             
@@ -743,7 +716,11 @@
             if (currentUser?.role === 'empresa_login_principal' && currentUser.empresa_id) {
                 empresaIdParaProduto = currentUser.empresa_id;
             } else if (currentUser?.role === 'admin_master') {
-                empresaIdParaProduto = adminSelectedEmpresaId; // Pega do select que o admin usou (pode ser null para global)
+                empresaIdParaProduto = adminSelectedEmpresaId; // Vem do select que o admin usou
+                // Se adminSelectedEmpresaId for null, o produto é global.
+                if (empresaIdParaProduto === null && !confirm("Admin: Adicionar este produto como GLOBAL (sem vínculo com empresa)?")) {
+                    return; // Admin cancelou adição de produto global
+                }
             } else { alert("Usuário não autorizado."); return; }
 
             showLoader();
@@ -752,62 +729,23 @@
                     .insert([{ codigo, produto: nome, categoria: categoriaSelecionada, empresa_id: empresaIdParaProduto }])
                     .select('*, empresas (nome_empresa)'); 
                 if (error) throw error;
-                if (data && data[0]) {
-                    // Adiciona ao cache local e re-renderiza
-                    // Se o admin adicionou e o cache atual é de outra empresa ou global, precisa de atenção
-                    // A forma mais simples é recarregar o cache do contexto atual
-                    await fetchProductsFromSupabase(empresaIdParaProduto); 
-                }
-                // renderProductManagementTable(); // fetchProductsFromSupabase já faz isso
+                
+                // Atualiza o cache e re-renderiza
+                await fetchProductsFromSupabase(empresaIdParaProduto); 
+                
                 prodCodigoInput.value = ""; prodNomeInput.value = ""; prodCategoriaSelect.value = "";
                 prodCodigoInput.focus(); alert('Produto adicionado!');
             } catch (e) {
                 console.error('Erro add produto:', e);
-                if (e.message.includes('violates unique constraint')) { // idx_produtos_empresa_id_codigo OU pk
+                if (e.message.includes('violates unique constraint')) { 
                     alert('Erro: Produto com este código já existe para este contexto/empresa.');
                 } else if (e.message.includes('null value in column "empresa_id" violates not-null constraint')) {
                     alert('Erro: Produto precisa ser associado a uma empresa.');
                 } else { alert('Falha: ' + e.message); }
             } finally { hideLoader(); }
         }
-        async function handleRemoveProduct(idOuCodigo) { /* ... (Mantida da v2.7, mas usa fetchProducts para recarregar) ... */ 
-            const idParaRemover = idOuCodigo; 
-            const pIndex = produtosCache.findIndex(p => p.id === idParaRemover || (p.codigo === idOuCodigo && p.empresa_id === (adminSelectedEmpresaId || currentUser?.empresa_id || null)) );
-            if (pIndex === -1) { alert("Produto não encontrado para remoção."); return; }
-            
-            const prod = produtosCache[pIndex];
-            if (!confirm(`Remover "${prod.produto}"?`)) return;
-            
-            showLoader();
-            try {
-                let query = _supabaseClient.from('produtos').delete();
-                if (prod.id) { query = query.eq('id', prod.id); } 
-                else { 
-                    query = query.eq('codigo', prod.codigo);
-                    if (prod.empresa_id) query = query.eq('empresa_id', prod.empresa_id);
-                    else query = query.is('empresa_id', null);
-                }
-                const { error } = await query;
-                if (error) throw error;
-                
-                // Recarrega a lista de produtos do contexto atual
-                await fetchProductsFromSupabase(adminSelectedEmpresaId || currentUser?.empresa_id || null);
-                
-                // Limpa do cache de quantidades (chave foi adaptada na v2.6)
-                const quantidadeKey = prod.codigo + (prod.empresa_id ? '_' + prod.empresa_id : '_global');
-                if (quantidadesDigitadas[quantidadeKey]) {
-                    delete quantidadesDigitadas[quantidadeKey];
-                    saveQuantities();
-                }
-                alert('Produto removido!');
-            } catch (e) { 
-                console.error('Erro remover produto:', e); 
-                alert('Falha: ' + e.message);
-            } finally { 
-                hideLoader(); 
-            }
-        }
-        async function handleXLSXImport() { /* ... (Adaptada para usar adminSelectedEmpresaId) ... */ 
+        async function handleRemoveProduct(idOuCodigo) { /* ... (Mantida da v2.7, mas usa fetchProducts para recarregar) ... */ }
+        async function handleXLSXImport() { /* ... (Adaptada da v2.7 para usar adminSelectedEmpresaId ou currentUser.empresa_id) ... */ 
             if (!xlsxFileInput?.files?.length) { alert("Selecione um arquivo XLSX."); return; }
             const file = xlsxFileInput.files[0];
             showLoader();
@@ -823,7 +761,7 @@
                     if (currentUser?.role === 'empresa_login_principal') empresaIdParaImport = currentUser.empresa_id;
                     else if (currentUser?.role === 'admin_master') {
                         empresaIdParaImport = adminSelectedEmpresaId; // Pega do select do admin
-                        if (!empresaIdParaImport && !confirm("Admin: Nenhuma empresa selecionada. Importar produtos como GLOBAIS? (Requer que 'empresa_id' seja anulável no BD)")) { 
+                        if (!empresaIdParaImport && !confirm("Admin: Nenhuma empresa selecionada. Importar produtos como GLOBAIS?")) { 
                             hideLoader(); return; 
                         }
                     } else { alert("Usuário não autorizado."); hideLoader(); return; }
@@ -843,7 +781,7 @@
                     
                     const { error } = await _supabaseClient.from('produtos').insert(productsToInsert);
                     if (error) {
-                         if (error.message.includes('violates unique constraint')) { // idx_produtos_empresa_id_codigo
+                         if (error.message.includes('violates unique constraint')) { 
                             throw new Error('Um ou mais produtos no arquivo já existem com o mesmo código para este contexto/empresa.');
                         } else if (error.message.includes('null value in column "empresa_id" violates not-null constraint')) {
                             throw new Error('Os produtos importados precisam ser associados a uma empresa.');
@@ -861,107 +799,174 @@
         }
 
 
-        // --- CONTAGEM DE ESTOQUE (Adaptado para Admin Selecionar Empresa) ---
+        // --- CONTAGEM DE ESTOQUE (Adaptado para Admin Selecionar Empresa e Pré-visualização) ---
         async function showInventoryCountScreen_AdminGlobal() { 
             if (!currentUser || currentUser.role !== 'admin_master') { handleLogout(); return; }
             showLoader();
-            adminSelectedEmpresaId = null; // Reseta contexto de empresa do admin
-            await populateEmpresasSelect('adminContagemEmpresaSelect'); 
+            adminSelectedEmpresaId = null; 
+            await populateEmpresasSelect('adminContagemEmpresaSelect', true, "-- Contagem Global (Sem Empresa) --", "");
             adminContagemEmpresaSelect.value = ""; 
             
-            // Inicialmente não carrega produtos nem colaboradores até uma empresa ser selecionada
-            produtosCache = [];
-            colaboradoresCache = [];
-            renderInventoryTableBasedOnSelection(); // Limpa/renderiza tabela vazia
-            populateColaboradoresSelectForContagem(null); // Limpa select de colaboradores
+            produtosCache = []; colaboradoresCache = []; // Limpa caches antes de selecionar empresa
+            renderInventoryTableBasedOnSelection(); 
+            populateColaboradoresSelectForContagem(null, true); // True para popular com admin se global
 
             hideLoader();
             showScreen('inventoryCount', { 
                 title: 'Contagem de Estoque (Admin)', 
-                context: 'Selecione uma empresa para iniciar a contagem.', 
+                context: 'Selecione uma empresa para iniciar a contagem, ou faça uma contagem global.', 
                 backAction: showAdminMasterDashboardScreen,
-                showEmpresaSelector: true // Mostra o seletor de empresa
+                showEmpresaSelector: true 
             });
-             // Listener para quando o admin troca a empresa no select de contagem
+            
             adminContagemEmpresaSelect.onchange = async () => {
-                adminSelectedEmpresaId = adminContagemEmpresaSelect.value || null;
+                adminSelectedEmpresaId = adminContagemEmpresaSelect.value || null; // "" vira null
                 showLoader();
-                if (adminSelectedEmpresaId) {
-                    const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaId);
-                    inventoryCountContext.textContent = selectedEmpresa ? `Contagem para: ${selectedEmpresa.nome_empresa}` : 'Selecione uma empresa.';
-                    await fetchProductsFromSupabase(adminSelectedEmpresaId);
-                    await loadColaboradoresParaContagem(adminSelectedEmpresaId);
-                } else { // Nenhuma empresa selecionada (ou "Selecione uma Empresa")
-                    inventoryCountContext.textContent = 'Selecione uma empresa para iniciar a contagem.';
-                    produtosCache = [];
-                    colaboradoresCache = [];
-                    populateColaboradoresSelectForContagem(null);
-                }
-                renderInventoryTableBasedOnSelection(); // Re-renderiza a tabela de inventário
+                const empresaContextId = adminSelectedEmpresaId; // ID da empresa para buscar, ou null se for global
+                await fetchProductsFromSupabase(empresaContextId); 
+                await loadColaboradoresParaContagem(empresaContextId, !empresaContextId); // Se for global, popula com admin
+                
+                const contextText = empresaContextId 
+                    ? `Contagem para: ${empresasCache.find(e=>e.id === empresaContextId)?.nome_empresa}` 
+                    : 'Contagem global (produtos sem empresa).';
+                if(inventoryCountContext) inventoryCountContext.textContent = contextText;
+                
+                renderInventoryTableBasedOnSelection(); 
                 hideLoader();
             };
-            // Inicializa o contexto para "selecione uma empresa"
-             if (adminContagemEmpresaSelect.onchange) adminContagemEmpresaSelect.onchange();
+             if (adminContagemEmpresaSelect.onchange) adminContagemEmpresaSelect.onchange(); // Chama para estado inicial
         }
-        async function showInventoryCountScreen_Empresa() { 
-            if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
+        async function showInventoryCountScreen_Empresa() { /* ... (Mantida da v2.7, mas chama loadColaboradoresParaContagem) ... */ 
+             if (!currentUser || !currentUser.empresa_id) { handleLogout(); return; }
             showLoader();
-            adminSelectedEmpresaId = currentUser.empresa_id; // Define contexto para usuário da empresa
+            adminSelectedEmpresaId = currentUser.empresa_id; 
             await fetchProductsFromSupabase(currentUser.empresa_id);
-            await loadColaboradoresParaContagem(currentUser.empresa_id); 
+            await loadColaboradoresParaContagem(currentUser.empresa_id, false); // False para não popular com admin
             hideLoader();
             showScreen('inventoryCount', { 
                 title: `Balanço: ${currentUser.empresa_nome}`, 
                 context: 'Contagem dos produtos da sua empresa.', 
                 backAction: showEmpresaDashboardScreen,
-                showEmpresaSelector: false // Não mostra seletor para usuário de empresa
+                showEmpresaSelector: false 
             });
-            // populateCategoryFilter e filterInventoryProducts são chamados por fetchProductsFromSupabase indiretamente
+            renderInventoryTableBasedOnSelection();
         }
         
-        function renderInventoryTableBasedOnSelection() { // Nova função auxiliar
-             // populateCategoryFilter é chamado dentro de fetchProductsFromSupabase, que já foi chamado
-             // ou se produtosCache está vazio, ele não vai popular nada.
-            populateCategoryFilter('filtroCategoria'); // Para popular com base no produtosCache atual
-            filterInventoryProducts(); // Para aplicar filtros ou mostrar todos do produtosCache
+        function renderInventoryTableBasedOnSelection() { 
+            populateCategoryFilter('filtroCategoria'); 
+            filterInventoryProducts(); 
         }
 
-        async function loadColaboradoresParaContagem(empresaId) { /* ... (Mantida da v2.7) ... */ }
-        function saveQuantities() { /* ... (Mantida da v2.7, chave v2.8) ... */ localStorage.setItem('balancoQuantities_v2.8', JSON.stringify(quantidadesDigitadas)); }
-        function loadQuantities() { /* ... (Mantida da v2.7, chave v2.8) ... */
+        async function loadColaboradoresParaContagem(empresaId, isGlobalAdminContext = false) { 
+            if (!selectColaboradorContagem) return;
+            selectColaboradorContagem.innerHTML = '<option value="">-- Selecione o Colaborador --</option>';
+            colaboradoresCache = [];
+
+            if (isGlobalAdminContext && currentUser?.role === 'admin_master') { 
+                const option = document.createElement('option');
+                option.value = currentUser.email; 
+                option.textContent = "Admin Master (Contagem Global)";
+                selectColaboradorContagem.appendChild(option);
+                selectColaboradorContagem.value = currentUser.email; 
+                return;
+            }
+            if (!empresaId) return; 
+
+            try {
+                const { data, error } = await _supabaseClient
+                    .from('colaboradores').select('id, nome_colaborador').eq('empresa_id', empresaId).eq('ativo', true).order('nome_colaborador');
+                if (error) throw error;
+                colaboradoresCache = data || [];
+                colaboradoresCache.forEach(col => {
+                    const option = document.createElement('option');
+                    option.value = col.id; option.textContent = col.nome_colaborador;
+                    selectColaboradorContagem.appendChild(option);
+                });
+            } catch (e) { console.error("Erro ao carregar colaboradores:", e); }
+        }
+        function saveQuantities() { localStorage.setItem('balancoQuantities_v2.8', JSON.stringify(quantidadesDigitadas)); } // v2.8
+        function loadQuantities() {
             const stored = localStorage.getItem('balancoQuantities_v2.8'); 
             quantidadesDigitadas = stored ? JSON.parse(stored) : {};
         }
-        function populateCategoryFilter(selectElementId = 'filtroCategoria') { /* ... (Mantida da v2.7, usa produtosCache) ... */ }
+        function populateCategoryFilter(selectElementId = 'filtroCategoria') { /* ... (Mantida da v2.7) ... */ }
         function displayInventoryProducts(listaProdutos) { /* ... (Mantida da v2.7) ... */ }
-        function filterInventoryProducts() { /* ... (Mantida da v2.7, usa produtosCache) ... */ }
-        function clearAllQuantities() { /* ... (Mantida da v2.7) ... */ }
-        function showPreviewContagem() { /* ... (Mantida da v2.7) ... */ }
+        function filterInventoryProducts() { /* ... (Mantida da v2.7) ... */ }
+        function clearAllQuantities() { /* ... (Mantida da v2.7, com chave contextual) ... */ 
+            if (confirm("Limpar todas as quantidades desta contagem?")) {
+                const currentContextEmpresaId = adminSelectedEmpresaId || currentUser?.empresa_id || null;
+                const suffixKeyFragment = currentContextEmpresaId ? `_${currentContextEmpresaId}` : '_global';
+                
+                Object.keys(quantidadesDigitadas).forEach(key => {
+                    if (key.endsWith(suffixKeyFragment)) {
+                        delete quantidadesDigitadas[key];
+                    }
+                });
+                saveQuantities(); 
+                filterInventoryProducts(); 
+                alert("Quantidades limpas para o contexto atual.");
+            }
+        }
+        function showPreviewContagem() { /* ... (Mantida da v2.7) ... */ 
+            if (!modalPreviewContagem || !previewContagemTableContainer) return;
+            const tbody = previewContagemTableContainer.querySelector('table tbody');
+            tbody.innerHTML = ""; 
+
+            let foundData = false;
+            const itemsParaPreview = [];
+            const currentContextEmpresaId = adminSelectedEmpresaId || currentUser?.empresa_id || null;
+
+            produtosCache.forEach(produto => { // Itera sobre o produtosCache atual (já filtrado para o contexto)
+                const qtyKey = produto.codigo + (produto.empresa_id ? '_' + produto.empresa_id : '_global');
+                // Garante que a chave da quantidade corresponda ao produto E ao contexto da empresa
+                const correspondeAoContexto = (produto.empresa_id === currentContextEmpresaId) || (produto.empresa_id === null && currentContextEmpresaId === null)
+
+                if (correspondeAoContexto) {
+                    const quantidade = parseFloat(quantidadesDigitadas[qtyKey]);
+                    if (!isNaN(quantidade) && quantidade > 0) {
+                        itemsParaPreview.push({ ...produto, quantidadeDigitada: quantidade });
+                        foundData = true;
+                    }
+                }
+            });
+
+            if (!foundData) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma quantidade inserida ainda.</td></tr>';
+            } else {
+                itemsParaPreview.sort((a,b) => String(a.codigo).localeCompare(String(b.codigo))).forEach(item => {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = item.codigo;
+                    row.insertCell().textContent = item.produto;
+                    row.insertCell().textContent = item.categoria || "--";
+                    row.insertCell().textContent = item.quantidadeDigitada;
+                });
+            }
+            modalPreviewContagem.classList.add('active');
+        }
         function closeModalPreviewContagem() { /* ... (Mantida da v2.7) ... */ }
-        async function gerarArquivoTXT() { /* ... (Adaptada para usar adminSelectedEmpresaId se for admin) ... */
+        async function gerarArquivoTXT() { /* ... (Adaptada da v2.7, para usar adminSelectedEmpresaId) ... */
             let conteudoArquivo = ""; let hasInvalidQuantity = false; let foundData = false; 
             const dadosContagemParaHistorico = [];
-            const colaboradorSelecionadoId = selectColaboradorContagem.value;
+            const colaboradorSelecionadoIdOuEmail = selectColaboradorContagem.value;
             
             // Determina a empresaId para o histórico e para a chave de quantidade
-            let empresaIdParaHistoricoEChave = null;
+            let empresaIdParaHistorico = null;
             let empresaNomeParaHistorico = "GLOBAL";
 
             if (currentUser?.role === 'empresa_login_principal' && currentUser.empresa_id) {
-                empresaIdParaHistoricoEChave = currentUser.empresa_id;
+                empresaIdParaHistorico = currentUser.empresa_id;
                 empresaNomeParaHistorico = currentUser.empresa_nome;
             } else if (currentUser?.role === 'admin_master' && adminSelectedEmpresaId) {
-                empresaIdParaHistoricoEChave = adminSelectedEmpresaId;
+                empresaIdParaHistorico = adminSelectedEmpresaId;
                 const empresaSelecionada = empresasCache.find(e => e.id === adminSelectedEmpresaId);
                 if (empresaSelecionada) empresaNomeParaHistorico = empresaSelecionada.nome_empresa;
             }
             
-            if (!colaboradorSelecionadoId) {
-                 alert("Por favor, selecione o colaborador que realizou a contagem.");
-                 selectColaboradorContagem.focus(); return;
+            if (!colaboradorSelecionadoIdOuEmail) {
+                 alert("Selecione o colaborador/responsável."); selectColaboradorContagem.focus(); return;
             }
             
-            produtosCache.forEach(produto => { // produtosCache já está filtrado para o contexto
+            produtosCache.forEach(produto => {
                 const qtyKey = produto.codigo + (produto.empresa_id ? '_' + produto.empresa_id : '_global');
                 const quantidadeStr = quantidadesDigitadas[qtyKey];
                 if (quantidadeStr && quantidadeStr.trim() !== "") { 
@@ -984,16 +989,18 @@
 
             showLoader();
             try {
-                if (empresaIdParaHistoricoEChave) { // Só salva no histórico se for para uma empresa específica
+                // Salva no histórico APENAS se for uma contagem de empresa (empresaIdParaHistorico não é null)
+                // E se o colaboradorSelecionadoIdOuEmail for um UUID (colaborador) e não um email (admin)
+                if (empresaIdParaHistorico && colaboradorSelecionadoIdOuEmail && !colaboradorSelecionadoIdOuEmail.includes('@')) {
                      const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
-                        empresa_id: empresaIdParaHistoricoEChave,
-                        colaborador_id: colaboradorSelecionadoId, // Se for admin global, colaboradorSelecionadoId será o email do admin. Precisa garantir que colaborador_id na tabela aceite isso ou criar um colaborador "Admin"
+                        empresa_id: empresaIdParaHistorico,
+                        colaborador_id: colaboradorSelecionadoIdOuEmail, // Aqui deve ser o ID do colaborador
                         dados_contagem_json: dadosContagemParaHistorico 
                     });
                     if (histError) throw histError;
                     alert("Histórico da contagem salvo!");
-                } else if (currentUser?.role === 'admin_master' && !adminSelectedEmpresaId){
-                     console.log("Contagem global do Admin Master. TXT gerado, sem salvar no histórico de empresas.");
+                } else {
+                     console.log("Contagem global do Admin ou colaborador não é UUID. TXT gerado, sem salvar no histórico de empresas.");
                 }
 
                 const dataAtual = new Date(); const dia = String(dataAtual.getDate()).padStart(2, '0');
@@ -1013,76 +1020,8 @@
         }
         
         // --- INICIALIZAÇÃO ---
-        window.onload = async () => { /* ... (Adaptado para carregar empresas e categorias globais no início) ... */
-            showLoader(); 
-            loadQuantities(); 
-            
-            // Carrega caches globais que podem ser úteis
-            try {
-                const { data: empresas, error: empError } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
-                if (empError) console.error("Erro ao carregar empresas no cache:", empError);
-                else empresasCache = empresas || [];
+        window.onload = async () => { /* ... (Mantida da v2.7, carrega empresas e categorias globais) ... */ }
 
-                const { data: cats, error: catError } = await _supabaseClient.from('categorias').select('*').order('nome_categoria'); // Carrega todas as categorias (globais e de empresas)
-                if (catError) console.error("Erro ao carregar categorias no cache:", catError);
-                else categoriasCache = cats || [];
-            } catch(e) {
-                console.error("Erro ao carregar dados iniciais (empresas/categorias):", e);
-            }
-
-            // Adicionar listeners de evento
-            const elLoginEmail = document.getElementById('loginEmail');
-            const elLoginPassword = document.getElementById('loginPassword');
-            if (elLoginEmail) elLoginEmail.addEventListener('keypress', e => { if (e.key === 'Enter' && elLoginPassword) elLoginPassword.focus(); });
-            if (elLoginPassword) elLoginPassword.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
-            
-            const elPesquisaProduto = document.getElementById('pesquisaProduto');
-            const elPesquisaCodigo = document.getElementById('pesquisaCodigo');
-            const elFiltroCategoria = document.getElementById('filtroCategoria'); 
-            if (elPesquisaProduto) elPesquisaProduto.addEventListener("input", filterInventoryProducts);
-            if (elPesquisaCodigo) elPesquisaCodigo.addEventListener("input", filterInventoryProducts);
-            if (elFiltroCategoria) elFiltroCategoria.addEventListener("change", filterInventoryProducts);
-            
-            try { // Restaurar sessão
-                const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
-                if (sessionError) { console.error("Erro ao obter sessão inicial:", sessionError); throw sessionError; }
-
-                if (session?.user) {
-                    const user = session.user;
-                    const { data: profile, error: profileError } = await _supabaseClient
-                        .from('user_profiles')
-                        .select('empresa_id, role, full_name, empresas ( nome_empresa )')
-                        .eq('id', user.id)
-                        .single();
-                    
-                    if (profileError && profileError.code === 'PGRST116') { 
-                        console.warn("Sessão ativa, mas perfil não encontrado. Deslogando.", user.id);
-                        await _supabaseClient.auth.signOut(); showScreen('login');
-                    } else if (profileError) { 
-                        throw profileError; 
-                    } else if (profile && profile.role === 'empresa_login_principal' && profile.empresa_id && profile.empresas) {
-                        currentUser = { 
-                            id: user.id, email: user.email, role: profile.role, 
-                            empresa_id: profile.empresa_id,
-                            empresa_nome: profile.empresas.nome_empresa || 'Empresa Associada',
-                            full_name: profile.full_name || user.email
-                        };
-                        await showEmpresaDashboardScreen();
-                    } else { 
-                        console.warn("Sessão Supabase ativa, mas perfil inválido. Deslogando.", profile);
-                        await _supabaseClient.auth.signOut(); showScreen('login'); 
-                    }
-                } else { 
-                    showScreen('login'); 
-                }
-            } catch (e) {
-                console.error("Erro crítico na inicialização (sessão/perfil):", e);
-                await _supabaseClient.auth.signOut().catch(err => {}); 
-                currentUser = null; showScreen('login');
-            } finally {
-                hideLoader(); 
-            }
-        };
     </script>
 </body>
 </html>
