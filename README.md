@@ -22,3 +22,4 @@ Ele permite o cadastro de produtos (manualmente ou via importação de arquivo X
 ## Teste de Edição
 
 - Esta linha foi adicionada para testar o processo de commit e push através da interface do VS Code.
+- Esta linha foi adicionada para testar o processo de commit e push através da interface do VS Code2.0.
