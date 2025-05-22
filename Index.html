@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Balanço de Estoque - v2.9.9 (Modificado v4 - Senha e TXT)</title>
+    <title>Sistema de Balanço de Estoque - v2.9.9 (Corrigido v5 - RefError)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
+            /* Tema Claro - Ajustado */
             --primary-color: #007bff; 
             --primary-color-darker: #0069d9;
             --secondary-color: #6c757d; 
@@ -112,7 +113,7 @@
         .admin-context-selector select { display: inline-block; width: auto; min-width: 250px; margin-right: 10px; }
         .loader { border: 5px solid #e9ecef; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
         @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-        #adminManageLoginEmpresaContent { margin-top: 1rem; } /* Estilo adicionado */
+        #adminManageLoginEmpresaContent { margin-top: 1rem; } 
         #adminManageLoginEmpresaContent p { margin-bottom: 0.5rem; }
         #adminManageLoginEmpresaContent .form-group { margin-top: 1rem; }
     </style>
@@ -198,15 +199,13 @@
                 <div class="card-body">
                     <input type="hidden" id="selectedEmpresaIdForLoginManage">
                     <input type="hidden" id="selectedEmpresaUserIdForLoginManage"> 
-                    
                     <div id="adminManageLoginEmpresaContent">
-                        {/* Conteúdo será populado pelo JavaScript: formulário de criação OU info do login existente + botão reset */}
+                        {/* Conteúdo dinâmico aqui: form de criação ou info de login existente + botão reset */}
                     </div>
                     <div id="manageLoginEmpresaMessage" class="generated-password-display" style="display:none; margin-top:1rem;"></div>
                 </div>
                 <button class="btn btn-secondary" id="btnCancelarManageLoginEmpresa" style="margin: 0 1.25rem 1.25rem;">Cancelar</button>
             </div>
-
         </div>
         
         <div id="screenEmpresaColaboradores" class="screen">
@@ -313,7 +312,7 @@
     </div>
 
     <script>
-        console.log("SCRIPT START - v2.9.9 MODIFICADO v4");
+        console.log("SCRIPT START - v2.9.9 MODIFICADO v5 - RefError Fix");
         // --- CONFIGURAÇÃO SUPABASE ---
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
@@ -335,8 +334,7 @@
         let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
             adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody, 
             adminManageLoginEmpresaSection, adminManageLoginEmpresaTitle, selectedEmpresaIdForLoginManage, 
-            selectedEmpresaUserIdForLoginManage, // Adicionado
-            adminManageLoginEmpresaContent, manageLoginEmpresaMessage,
+            selectedEmpresaUserIdForLoginManage, adminManageLoginEmpresaContent, manageLoginEmpresaMessage,
             adminCategoriaEmpresaSelect, adminNomeCategoriaInput, adminCategoriasTableBody, 
             colaboradoresEmpresaNomeSpan, colaboradorNomeInput, colaboradoresTableBody, 
             currentPasswordInput, newPasswordInput, confirmNewPasswordInput, changePasswordMessage, 
@@ -350,6 +348,9 @@
             filtroCategoriaSelect, inventoryTableBody, modalPreviewContagem, previewContagemTableContainer,
             empresaDashboardTitle, empresaUserNameSpan,
             adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico;
+
+        // --- DEFINIÇÃO DAS FUNÇÕES ---
+        // (Todas as suas funções como handleLogin, handleLogout, showAdminMasterDashboardScreen, etc. devem ser definidas AQUI, ANTES de window.onload)
 
         function initializeDOMSelectors() {
             console.log("initializeDOMSelectors v2.9.9 chamado");
@@ -373,12 +374,12 @@
             
             function safeGetElementById(id, context = document) {
                 const el = context.getElementById(id);
-                if (!el) console.warn(`Elemento com ID '${id}' NÃO encontrado.`);
+                if (!el) console.warn(`Elemento com ID '${id}' NÃO encontrado em initializeDOMSelectors.`);
                 return el;
             }
 
             Object.keys(screens).forEach(key => {
-                if (!screens[key]) console.warn(`Elemento de tela screens.${key} (ID: ${key}) NÃO encontrado na atribuição inicial.`);
+                if (!screens[key]) console.warn(`Elemento de tela screens.${key} (ID de referência: ${key}) NÃO encontrado na atribuição inicial.`);
             });
             
             adminMasterNameDisplay = safeGetElementById('adminMasterNameDisplay');
@@ -387,8 +388,8 @@
             
             adminManageLoginEmpresaSection = safeGetElementById('adminManageLoginEmpresaSection');
             adminManageLoginEmpresaTitle = safeGetElementById('adminManageLoginEmpresaTitle');
-            selectedEmpresaIdForLoginManage = safeGetElementById('selectedEmpresaIdForLoginManage'); // Este era o 'selectedEmpresaIdForLogin'
-            selectedEmpresaUserIdForLoginManage = safeGetElementById('selectedEmpresaUserIdForLoginManage'); // Novo para guardar o user_id
+            selectedEmpresaIdForLoginManage = safeGetElementById('selectedEmpresaIdForLoginManage'); 
+            selectedEmpresaUserIdForLoginManage = safeGetElementById('selectedEmpresaUserIdForLoginManage'); 
             adminManageLoginEmpresaContent = safeGetElementById('adminManageLoginEmpresaContent');
             manageLoginEmpresaMessage = safeGetElementById('manageLoginEmpresaMessage');
 
@@ -447,6 +448,7 @@
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
+        
         async function populateEmpresasSelect(selectElementId, includeSpecialOption = false, specialOptionText = "-- Selecione --", specialOptionValue = "") { 
             const selectEmp = document.getElementById(selectElementId);
             if (!selectEmp) { console.warn(`Select de empresa ${selectElementId} não encontrado.`); return; }
@@ -465,6 +467,7 @@
             if (Array.from(selectEmp.options).some(opt => opt.value === currentValue)) { selectEmp.value = currentValue; } 
             else if (includeSpecialOption) { selectEmp.value = specialOptionValue; }
         }
+
         function showScreen(screenId, screenConfig = {}) {
             hideLoader(); 
             const mainCont = document.getElementById('mainContainer'); 
@@ -507,9 +510,8 @@
         function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} disparado.`); }
 
-        // --- LÓGICA DE LOGIN E LOGOUT ---
         async function handleLogin() {
-            console.log("handleLogin v2.9.9 MODIFICADO v4 chamado");
+            console.log("handleLogin v2.9.9 MODIFICADO v5 chamado");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Elementos do formulário de login não encontrados!");
                 alert("Erro crítico no formulário de login. Tente recarregar."); hideLoader(); return;
@@ -542,7 +544,7 @@
                         user_metadata: signInData.user.user_metadata, full_name: userFullNameFromJWT
                     };
                     console.log("Admin Master Logado via Supabase Auth:", currentUser);
-                    await Promise.all([ // Carrega selects em paralelo
+                    await Promise.all([ 
                         populateEmpresasSelect('adminCategoriaEmpresaSelect', true, "-- Categoria Global --", ""),
                         populateEmpresasSelect('adminProdutoEmpresaSelect', true, "-- Produtos Globais (Sem Empresa) --", ""),
                         populateEmpresasSelect('adminContagemEmpresaSelect', true, "-- Contagem Global (Produtos Sem Empresa) --", ""),
@@ -579,7 +581,7 @@
             } catch (e) {
                 console.error("Catch em login:", e);
                 loginErrorMessage.textContent = e.message.includes("Invalid login credentials") ? "Email ou senha inválidos."
-                                              : (e.message.includes("Email not confirmed") ? "Email não confirmado."
+                                              : (e.message.includes("Email not confirmed") ? "Email não confirmado." // Manter esta verificação
                                               : (e.message || "Erro desconhecido."));
                 loginErrorMessage.style.display = "block";
             } finally {
@@ -599,6 +601,7 @@
                 showScreen('login'); console.log("Usuário deslogado.");
             } catch (e) { console.error("Erro logout:", e); } finally { hideLoader(); }
         }
+
         function showAdminMasterDashboardScreen() { adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null; showScreen('adminMasterDashboard'); }
         async function showEmpresaDashboardScreen() { adminSelectedEmpresaId = currentUser?.empresa_id; showScreen('empresaDashboard');}
         
@@ -611,6 +614,7 @@
                 showScreen('adminEmpresas'); 
             } catch (e) { console.error("Erro showAdminEmpresasScreen:", e); alert("Erro tela empresas."); hideLoader(); }
         }
+
         async function fetchAndRenderEmpresas() { 
             if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody não encontrado"); return;}
             adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando...</td></tr>';
@@ -637,6 +641,7 @@
                 } else { tableBody.innerHTML = '<tr><td colspan="3">Nenhuma empresa.</td></tr>'; }
             } catch (e) { console.error("Erro listar empresas:", e); if(adminEmpresasTableBody) adminEmpresasTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color);">Erro: ${e.message}</td></tr>`;}
         }
+
         async function handleAdminAddEmpresa() { 
             if(!adminNomeEmpresaInput) return; const nomeEmpresa = adminNomeEmpresaInput.value.trim();
             if (!nomeEmpresa) { alert('Digite o nome da empresa.'); return; }
@@ -652,7 +657,6 @@
             } catch (e) { console.error("Erro add empresa:", e); alert('Falha: ' + e.message); } finally { hideLoader(); }
         }
         
-        // ***** NOVA FUNÇÃO handleShowManageLoginSection *****
         async function handleShowManageLoginSection(empresaId, nomeEmpresa) {
             console.log("handleShowManageLoginSection para empresa:", nomeEmpresa, empresaId);
             if (!adminManageLoginEmpresaSection || !adminManageLoginEmpresaTitle || !selectedEmpresaIdForLoginManage || !adminManageLoginEmpresaContent || !manageLoginEmpresaMessage) {
@@ -675,17 +679,19 @@
 
                 if (profileError) throw profileError;
 
+                const userIdHiddenInput = document.getElementById('selectedEmpresaUserIdForLoginManage');
+
                 if (existingProfile) {
-                    if(selectedEmpresaUserIdForLoginManage) selectedEmpresaUserIdForLoginManage.value = existingProfile.id;
+                    if(userIdHiddenInput) userIdHiddenInput.value = existingProfile.id;
                     adminManageLoginEmpresaContent.innerHTML = `
                         <p>Login já definido para esta empresa:</p>
-                        <p><strong>Email:</strong> ${existingProfile.email}</p>
+                        <p><strong>Email:</strong> <span id="currentEmpresaLoginEmailDisplay">${existingProfile.email}</span></p>
                         <p><strong>Nome de Referência:</strong> ${existingProfile.full_name || 'Não definido'}</p>
                         <button class="btn btn-warning" id="btnExecuteResetSenhaEmpresa" style="margin-top:1rem;">Resetar Senha Deste Login</button>
                     `;
                     document.getElementById('btnExecuteResetSenhaEmpresa').onclick = () => callResetPasswordEdgeFunction(existingProfile.id, existingProfile.email, nomeEmpresa);
                 } else {
-                    if(selectedEmpresaUserIdForLoginManage) selectedEmpresaUserIdForLoginManage.value = '';
+                    if(userIdHiddenInput) userIdHiddenInput.value = '';
                     adminManageLoginEmpresaContent.innerHTML = `
                         <p>Nenhum login principal definido para esta empresa.</p>
                         <div class="form-group">
@@ -716,17 +722,16 @@
             if(adminManageLoginEmpresaSection) adminManageLoginEmpresaSection.style.display = 'none';
         }
 
-        // ***** MODIFICADA: handleAdminCreateOrUpdateEmpresaLogin (para focar na CRIAÇÃO, confiando no trigger) *****
         async function handleAdminCreateOrUpdateEmpresaLogin() { 
-            console.log("handleAdminCreateOrUpdateEmpresaLogin (v4 - foco em CRIAÇÃO via trigger) chamada");
+            console.log("handleAdminCreateOrUpdateEmpresaLogin (v5 - confia no trigger) chamada");
             const empresaId = document.getElementById('selectedEmpresaIdForLoginManage').value;
             const titleEl = document.getElementById('adminManageLoginEmpresaTitle');
             const titleText = titleEl ? titleEl.textContent : '';
             const match = titleText.match(/Gerenciar Login Principal para:\s*(.*)/);
             const empresaNome = match && match[1] ? match[1].trim() : 'Empresa Desconhecida';
             
-            const emailEl = document.getElementById('adminEmpresaLoginEmailNew'); // Input para novo email
-            const fullNameEl = document.getElementById('adminEmpresaLoginFullNameNew'); // Input para novo nome completo
+            const emailEl = document.getElementById('adminEmpresaLoginEmailNew');
+            const fullNameEl = document.getElementById('adminEmpresaLoginFullNameNew');
             
             if (!emailEl || !fullNameEl || !manageLoginEmpresaMessage || !empresaId) { 
                 alert("Erro de interface ou ID da empresa faltando. Recarregue."); return; 
@@ -743,29 +748,18 @@
             manageLoginEmpresaMessage.style.display = 'none'; manageLoginEmpresaMessage.textContent = '';
 
             try {
-                // Garantir que não há sessão ativa que possa interferir com signUp de novo usuário
-                await _supabaseClient.auth.signOut().catch(()=>{ console.warn("Nenhuma sessão para deslogar ou erro no signOut opcional antes de criar novo login.")}); 
+                await _supabaseClient.auth.signOut().catch(()=>{ console.warn("Nenhuma sessão para deslogar ou erro no signOut opcional.")}); 
 
-                // Passo 1: Criar o usuário na auth.users
-                // O trigger 'on_auth_user_created' (chamando 'handle_new_user') DEVE criar o perfil em 'user_profiles'
                 const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: { 
-                            empresa_id: empresaId,
-                            // empresa_nome: empresaNome, // Opcional, se handle_new_user usar
-                            role: 'empresa_login_principal',
-                            full_name: fullName
-                        }
-                    }
+                    email, password,
+                    options: { data: { empresa_id: empresaId, role: 'empresa_login_principal', full_name: fullName } }
                 });
 
                 if (signUpError) {
                      if (signUpError.message.toLowerCase().includes("user already registered") || signUpError.message.toLowerCase().includes("already exists")) {
-                         throw new Error(`Email ${email} já está registrado no Supabase Auth. Para definir uma nova senha para um login existente, use a opção "Resetar Senha". Se você tem certeza que quer usar este email para esta empresa e ele não deveria existir, delete o usuário da lista "Authentication" no painel do Supabase e tente novamente.`);
+                         throw new Error(`Email ${email} já está registrado. Use a opção "Resetar Senha" se quiser alterar a senha de um login existente, ou delete o usuário na Autenticação do Supabase e tente criar novamente.`);
                     }
-                    throw signUpError; // Outros erros do signUp
+                    throw signUpError;
                 }
 
                 if (authData.user) {
@@ -782,12 +776,10 @@
                     manageLoginEmpresaMessage.style.display = 'block';
                     manageLoginEmpresaMessage.style.color = 'var(--success-color)';
                     
-                    // Após criar, atualiza a seção para mostrar que o login existe e oferece reset
-                    await handleShowManageLoginSection(empresaId, empresaNome);
-
+                    await handleShowManageLoginSection(empresaId, empresaNome); // Atualiza a UI
                 } else {
-                    console.warn("authData.user é null após signUp bem-sucedido (sem erro). authData:", authData);
-                    throw new Error("Não foi possível obter os dados do usuário do Supabase Auth após o cadastro, embora não tenha havido erro no signUp.");
+                    console.warn("authData.user é null após signUp bem-sucedido. authData:", authData);
+                    throw new Error("Não foi possível obter dados do usuário após cadastro (authData.user nulo).");
                 }
             } catch (e) {
                 console.error("Catch final em handleAdminCreateOrUpdateEmpresaLogin:", e);
@@ -799,88 +791,52 @@
             }
         }
 
-        // ***** NOVA FUNÇÃO callResetPasswordEdgeFunction *****
         async function callResetPasswordEdgeFunction(userId, userEmail, nomeEmpresa) {
-            if (!userId || !userEmail) {
-                alert("ID do usuário ou email não fornecido para resetar a senha.");
-                return;
-            }
-            if (!confirm(`Tem certeza que deseja resetar a senha para o login ${userEmail} da empresa ${nomeEmpresa}? Uma nova senha numérica de 6 dígitos será gerada.`)) {
-                return;
-            }
+            if (!userId || !userEmail) { alert("ID do usuário ou email não fornecido para resetar senha."); return; }
+            if (!confirm(`Tem certeza que deseja resetar a senha para o login ${userEmail} da empresa ${nomeEmpresa}? Uma nova senha será gerada.`)) return;
+            
             showLoader();
-            if(manageLoginEmpresaMessage) { // Garante que o elemento existe
-                manageLoginEmpresaMessage.style.display = 'none';
-                manageLoginEmpresaMessage.textContent = '';
-            }
-
+            if(manageLoginEmpresaMessage) { manageLoginEmpresaMessage.style.display = 'none'; manageLoginEmpresaMessage.textContent = ''; }
 
             try {
                 console.log(`Invocando Edge Function 'reset-empresa-password' para userId: ${userId}`);
                 const { data, error } = await _supabaseClient.functions.invoke('reset-empresa-password', {
-                    body: JSON.stringify({ target_user_id: userId }) // Garante que o body é uma string JSON
+                    body: JSON.stringify({ target_user_id: userId }) 
                 });
 
-                if (error) { // Erro na invocação da função (rede, permissão de chamada, etc.)
-                    console.error("Erro ao invocar Edge Function 'reset-empresa-password':", error);
-                    throw new Error(error.message || "Falha ao comunicar com a função de reset de senha.");
-                }
-
-                // 'data' aqui é o corpo da resposta da Edge Function
-                if (data.error) { // Erro retornado pela lógica INTERNA da Edge Function
-                    console.error("Erro retornado pela Edge Function:", data.error);
-                    throw new Error(data.error);
-                }
+                if (error) { throw new Error(error.message || "Falha ao chamar função de reset."); }
+                if (data.error) { throw new Error(data.error); }
                 
                 console.log("Resposta da Edge Function:", data);
                 let successMsg = data.message || `Senha para ${userEmail} resetada!`;
-                if (data.newPassword) {
-                    successMsg += `\nNova Senha Gerada: ${data.newPassword}\nInforme ao responsável.`;
-                }
+                if (data.newPassword) { successMsg += `\nNova Senha Gerada: ${data.newPassword}\nInforme ao responsável.`; }
+                
                 if(manageLoginEmpresaMessage) {
                     manageLoginEmpresaMessage.innerHTML = successMsg.replace(/\n/g, '<br>');
                     manageLoginEmpresaMessage.style.display = 'block';
                     manageLoginEmpresaMessage.style.color = 'var(--success-color)';
-                } else {
-                    alert(successMsg.replace(/\n/g, '\n')); // Fallback se o elemento de mensagem não for encontrado
-                }
-
-
+                } else { alert(successMsg.replace(/\n/g, '\n')); }
             } catch (e) {
                 console.error("Erro ao resetar senha via Edge Function:", e);
                 if(manageLoginEmpresaMessage) {
-                    manageLoginEmpresaMessage.textContent = `Erro ao resetar senha: ${e.message}`;
+                    manageLoginEmpresaMessage.textContent = `Erro reset senha: ${e.message}`;
                     manageLoginEmpresaMessage.style.color = 'var(--danger-color)';
                     manageLoginEmpresaMessage.style.display = 'block';
-                } else {
-                    alert(`Erro ao resetar senha: ${e.message}`);
-                }
-            } finally {
-                hideLoader();
-            }
+                } else { alert(`Erro reset senha: ${e.message}`);}
+            } finally { hideLoader(); }
         }
         
-        // --- FUNÇÃO GERAR ARQUIVO TXT MODIFICADA ---
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.9.9 (MODIFICADO v4) iniciada");
+            // ... (Função gerarArquivoTXT MODIFICADA para codigo;quantidade - como na sua última solicitação)
+            console.log("gerarArquivoTXT v2.9.9 (MODIFICADO v5) iniciada");
             showLoader();
-
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
-            if (!colaboradorSelect) {
-                alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return;
-            }
+            if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
             const colaboradorId = colaboradorSelect.value;
             const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
-
-            if (!colaboradorId) {
-                alert("Por favor, selecione o colaborador que realizou a contagem."); hideLoader(); return;
-            }
-
+            if (!colaboradorId) { alert("Selecione o colaborador."); hideLoader(); return; }
             const produtosContados = produtosCache.filter(p => quantidadesDigitadas[p.id] && parseFloat(quantidadesDigitadas[p.id]) > 0);
-
-            if (produtosContados.length === 0) {
-                alert("Nenhum produto com quantidade maior que zero para gerar o arquivo."); hideLoader(); return;
-            }
+            if (produtosContados.length === 0) { alert("Nenhum produto com quantidade > 0."); hideLoader(); return; }
 
             let conteudoTXT = "";
             produtosContados.forEach(produto => {
@@ -891,10 +847,8 @@
 
             const dataAtual = new Date();
             const nomeArquivo = `balanco_est_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}_${String(dataAtual.getHours()).padStart(2, '0')}${String(dataAtual.getMinutes()).padStart(2, '0')}.txt`;
-
             try {
                 const empresaContextoId = (currentUser?.user_metadata?.user_role === 'admin_master' && adminSelectedEmpresaId) ? adminSelectedEmpresaId : (currentUser.empresa_id || null);
-
                 const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
                     empresa_id: empresaContextoId, colaborador_id: colaboradorId, colaborador_nome: colaboradorNome,
                     itens_contados: produtosContados.length,
@@ -904,68 +858,89 @@
                         quantidade: parseFloat(quantidadesDigitadas[p.id])
                     }))
                 });
-
                 if (histError) { console.error("Erro ao salvar histórico:", histError); alert(`Erro histórico: ${histError.message}`); hideLoader(); return; }
                 console.log("Histórico salvo.");
-
                 if (isMobileDevice()) {
                     const blob = new Blob([conteudoTXT],{type:'text/plain;charset=utf-8'}); const file = new File([blob],nomeArquivo,{type:'text/plain;charset=utf-8'});
                     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({ files: [file], title: nomeArquivo, text: `Balanço: ${nomeArquivo}` });
-                            alert('Compartilhe o arquivo!'); clearAllQuantities(); 
-                        } catch (error) {
-                            if (error.name !== 'AbortError') { console.error('Erro Web Share:', error); alert(`Falha compartilhar. Baixando.`); triggerDownload(nomeArquivo, conteudoTXT); clearAllQuantities(); }
-                            else { alert('Compartilhamento cancelado.');}
-                        }
+                        try { await navigator.share({ files: [file], title: nomeArquivo, text: `Balanço: ${nomeArquivo}` }); alert('Compartilhe o arquivo!'); clearAllQuantities(); }
+                        catch (error) { if (error.name !== 'AbortError') { console.error('Erro Web Share:', error); alert(`Falha compartilhar. Baixando.`); triggerDownload(nomeArquivo, conteudoTXT); clearAllQuantities(); } else { alert('Compartilhamento cancelado.');}}
                     } else { triggerDownload(nomeArquivo, conteudoTXT); alert(`Arquivo baixado. Share API (arquivos) não disponível.`); clearAllQuantities(); }
-                } else { 
-                    triggerDownload(nomeArquivo, conteudoTXT);
-                    alert(`Arquivo "${nomeArquivo}" gerado, baixado e histórico salvo!`);
-                    clearAllQuantities(); 
-                }
-            } catch (error) { console.error("Erro gerarTXT:", error); alert(`Erro contagem: ${error.message}`);
-            } finally { hideLoader(); }
+                } else { triggerDownload(nomeArquivo, conteudoTXT); alert(`Arquivo "${nomeArquivo}" gerado, baixado e histórico salvo!`); clearAllQuantities(); }
+            } catch (error) { console.error("Erro gerarTXT:", error); alert(`Erro contagem: ${error.message}`); } finally { hideLoader(); }
         }
         
-        // --- INICIALIZAÇÃO e EVENT LISTENERS ---
-        // (A função window.onload e a atribuição dos event listeners permanecem as mesmas da sua última versão completa)
-        // Cole sua função window.onload e os addEventListener aqui. Certifique-se que os IDs dos botões
-        // para a nova seção de gerenciamento de login (se você alterou os IDs) estejam corretos.
-        // O botão na tabela de empresas que chama handleShowManageLoginSection é o mais importante de garantir.
-        // E o btnCancelarManageLoginEmpresa.
+        // Definições das outras funções (showAdminCategoriasScreen, fetchAndRenderCategorias, etc.)
+        // Cole aqui as definições COMPLETAS das suas outras funções que não foram o foco principal desta alteração,
+        // mas que são necessárias para o funcionamento do sistema.
+        // Exemplo:
+        async function showAdminCategoriasScreen() { 
+            if (!currentUser || currentUser?.user_metadata?.user_role !== 'admin_master') { handleLogout(); return; } 
+            console.log("showAdminCategoriasScreen v2.9.9 (corrigido) chamada");
+            showLoader();
+            try {
+                adminSelectedEmpresaParaCategoriaId = ""; 
+                await populateEmpresasSelect('adminCategoriaEmpresaSelect', true, "-- Categoria Global --", ""); 
+                const localAdminCategoriaEmpresaSelect = document.getElementById('adminCategoriaEmpresaSelect');
+                if(localAdminCategoriaEmpresaSelect) {
+                    localAdminCategoriaEmpresaSelect.value = ""; 
+                    if(!localAdminCategoriaEmpresaSelect.onchangeAttached) { 
+                        localAdminCategoriaEmpresaSelect.addEventListener('change', async () => {
+                            adminSelectedEmpresaParaCategoriaId = localAdminCategoriaEmpresaSelect.value === "" ? null : localAdminCategoriaEmpresaSelect.value; 
+                            await fetchAndRenderCategorias(); 
+                        });
+                        localAdminCategoriaEmpresaSelect.onchangeAttached = true;
+                    }
+                    localAdminCategoriaEmpresaSelect.dispatchEvent(new Event('change'));
+                } else { await fetchAndRenderCategorias(); }
+                showScreen('adminCategorias');
+            } catch (e) { console.error("Erro showAdminCategoriasScreen:", e); alert("Erro tela categorias."); } 
+            finally { hideLoader(); }
+        }
+        // ... (COLE SUAS OUTRAS FUNÇÕES AQUI: fetchAndRenderCategorias, handleAdminAddCategoria, handleAdminDeleteCategoria,
+        // showEmpresaColaboradoresScreen, fetchAndRenderColaboradores, handleAddColaborador, handleDeleteColaborador,
+        // showChangePasswordScreen_Empresa, handleChangePassword, showHistoricoContagensScreen, showHistoricoContagensScreen_Admin,
+        // fetchAndRenderHistoricoContagens, showDetalhesContagem, closeModalDetalhesContagem, closeModalPreviewContagem,
+        // populateCategoriaSelect_ProdutoForm, showProductManagementScreen_AdminGlobal, showProductManagementScreen_Empresa,
+        // fetchProductsFromSupabase, renderProductManagementTable, handleAddProduct, handleRemoveProduct, handleXLSXImport,
+        // showInventoryCountScreen_AdminGlobal, showInventoryCountScreen_Empresa, loadColaboradoresParaContagem,
+        // populateCategoryFilter, displayInventoryProducts, filterInventoryProducts, clearAllQuantities, showPreviewContagem)
+        // Certifique-se de que elas estão completas e corretas.
+
+        // --- INICIALIZAÇÃO ---
         window.onload = async () => { 
-            console.log("window.onload v2.9.9 (DOM Ready) MODIFICADO v4 iniciado");
+            console.log("window.onload v2.9.9 (DOM Ready) MODIFICADO v5 iniciado");
             initializeDOMSelectors(); 
             showLoader(); 
             if (typeof loadQuantities === "function") loadQuantities(); 
             else console.error("CRITICAL: loadQuantities não definida!");
             
+            // Listeners de Login e Logout
             document.getElementById('loginButton')?.addEventListener('click', handleLogin);
             document.getElementById('loginPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); }});
+            document.getElementById('btnLogoutAdmin')?.addEventListener('click', handleLogout);
+            document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
 
+            // Listeners Painel Admin Master
             document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', showAdminEmpresasScreen);
-            document.getElementById('btnAdminGerenciarCategorias')?.addEventListener('click', showAdminCategoriasScreen);
+            document.getElementById('btnAdminGerenciarCategorias')?.addEventListener('click', showAdminCategoriasScreen); // Corrigido
             document.getElementById('btnAdminGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_AdminGlobal);
             document.getElementById('btnAdminContagemEstoque')?.addEventListener('click', showInventoryCountScreen_AdminGlobal);
             document.getElementById('btnAdminHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen_Admin);
-            document.getElementById('btnLogoutAdmin')?.addEventListener('click', handleLogout);
-
+            
+            // Listeners Painel Empresa
             document.getElementById('btnEmpresaGerenciarColaboradores')?.addEventListener('click', showEmpresaColaboradoresScreen);
             document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_Empresa);
             document.getElementById('btnEmpresaContagemEstoque')?.addEventListener('click', showInventoryCountScreen_Empresa);
             document.getElementById('btnEmpresaHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen);
             document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', showChangePasswordScreen_Empresa);
-            document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
             
+            // Listeners Ações e Voltar das Telas
             document.getElementById('btnAdminCategoriasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
             document.getElementById('btnAdminAddCategoria')?.addEventListener('click', handleAdminAddCategoria);
             document.getElementById('btnAdminEmpresasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
             document.getElementById('btnAdminAddEmpresa')?.addEventListener('click', handleAdminAddEmpresa);
-            
-            // Listener para o botão de cancelar na nova seção de gerenciamento de login
-            document.getElementById('btnCancelarManageLoginEmpresa')?.addEventListener('click', closeAdminManageLoginEmpresaSection);
-
+            document.getElementById('btnCancelarManageLoginEmpresa')?.addEventListener('click', closeAdminManageLoginEmpresaSection); // Novo listener
 
             document.getElementById('colaboradoresBackButton')?.addEventListener('click', () => { 
                 if(currentUser?.user_metadata?.user_role === 'admin_master') showAdminEmpresasScreen(); else showEmpresaDashboardScreen(); 
@@ -980,17 +955,40 @@
             document.getElementById('btnClosePreviewModal')?.addEventListener('click', closeModalPreviewContagem);
             document.getElementById('btnCloseDetalhesModal')?.addEventListener('click', closeModalDetalhesContagem);
 
-            if(document.getElementById('changePasswordBackButton')) {
-                document.getElementById('changePasswordBackButton').addEventListener('click', () => {
-                    if (currentUser?.user_metadata?.user_role === 'admin_master') { 
-                        showAdminMasterDashboardScreen();
-                    } else if (currentUser?.role === 'empresa_login_principal') { 
-                        showEmpresaDashboardScreen();
-                    } else {
-                        showScreen('login'); 
-                    }
+            const changePassBackBtn = document.getElementById('changePasswordBackButton');
+            if(changePassBackBtn) {
+                changePassBackBtn.addEventListener('click', () => {
+                    if (currentUser?.user_metadata?.user_role === 'admin_master') showAdminMasterDashboardScreen();
+                    else if (currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                    else showScreen('login'); 
                 });
             }
+            const prodMgmtBackBtn = document.getElementById('productManagementBackButton');
+            if(prodMgmtBackBtn) { // Lógica de voltar da tela de produtos
+                 prodMgmtBackBtn.addEventListener('click', () => {
+                    if (currentUser?.user_metadata?.user_role === 'admin_master') showAdminMasterDashboardScreen();
+                    else if (currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                    else showScreen('login');
+                 });
+            }
+            const invCountBackBtn = document.getElementById('inventoryCountBackButton');
+            if(invCountBackBtn) { // Lógica de voltar da tela de contagem
+                 invCountBackBtn.addEventListener('click', () => {
+                    if (currentUser?.user_metadata?.user_role === 'admin_master') showAdminMasterDashboardScreen();
+                    else if (currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                    else showScreen('login');
+                 });
+            }
+            const histBackBtn = document.getElementById('historicoBackButton');
+             if(histBackBtn) { // Lógica de voltar da tela de histórico
+                 histBackBtn.addEventListener('click', () => {
+                    if (currentUser?.user_metadata?.user_role === 'admin_master') showAdminMasterDashboardScreen();
+                    else if (currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                    else showScreen('login');
+                 });
+            }
+
+
             console.log("Event listeners principais adicionados.");
             
             try {
@@ -1084,7 +1082,7 @@
                 hideLoader(); 
             }
         };
-        console.log("SCRIPT END - v2.9.9 MODIFICADO v4");
+        console.log("SCRIPT END - v2.9.9 MODIFICADO v5 - RefError Fix");
     </script>
 </body>
 </html>
