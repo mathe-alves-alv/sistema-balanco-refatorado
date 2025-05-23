@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.9.10 (PDF & UI Enhancements)</title>
+    <title>Inventory Balance System - v2.9.11 (Correções UI e Login)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script> {/* Updated to a recent version for jsPDF 2.x */}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
     <style>
         :root {
@@ -87,7 +87,7 @@
         .filter-controls input,.filter-controls select{margin-bottom:0}
         .xlsx-import-section input[type=file]{width:auto;margin-right:.5rem}
         .actions-bar{text-align:center;padding:1rem 0; background-color: transparent; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
-        .actions-bar .btn{margin:0 .25rem} /* Reduced margin for more buttons */
+        .actions-bar .btn{margin:0 .25rem} 
         #productManagementTable td:last-child,#inventoryTable td:last-child,#adminEmpresasTable td:last-child, #colaboradoresTable td:last-child, #historicoContagensTable td:last-child, #adminCategoriasTable td:last-child {text-align:center} 
         #inventoryTable input[type=number]{max-width:80px;text-align:right;padding:.375rem .5rem;font-size:.9rem}
         .back-button{margin-bottom:1.5rem;display:inline-block}
@@ -203,8 +203,7 @@
                     <input type="hidden" id="selectedEmpresaIdForLoginManage">
                     <input type="hidden" id="selectedEmpresaUserIdForLoginManage"> 
                     <div id="adminManageLoginEmpresaContent">
-                         {/* Dynamic content here */}
-                    </div>
+                         </div>
                     <div id="manageLoginEmpresaMessage" class="generated-password-display" style="display:none; margin-top:1rem;"></div>
                 </div>
                 <button class="btn btn-secondary" id="btnCancelarManageLoginEmpresa" style="margin: 0 1.25rem 1.25rem;">Cancelar</button>
@@ -280,7 +279,7 @@
                 </div>
                 <div class="actions-bar" style="border:none; padding-bottom:0;">
                        <button class="btn btn-info" id="btnShowPreviewContagem">Ver Resumo</button> 
-                       <button class="btn btn-primary" id="btnGerarPDF">Gerar PDF</button> {/* New PDF Button */}
+                       <button class="btn btn-primary" id="btnGerarPDF">Gerar PDF</button>
                        <button class="btn btn-success" id="btnGerarTXT">Gerar TXT & Salvar Histórico</button>
                        <button class="btn btn-warning" id="btnClearAllQuantities">Limpar Quantidades</button>
                 </div>
@@ -316,12 +315,8 @@
     </div>
 
     <script>
-        // Make sure all your functions (handleLogin, showAdminEmpresasScreen, etc.) 
-        // are defined here BEFORE the window.onload function.
-        // I pasted the main modified functions and the ones you already had.
-        // Check if any function your buttons call is missing.
-
-        console.log("SCRIPT START - v2.9.10 PDF & UI Enhancements");
+        // Script version v2.9.11 (UI and Login Fixes)
+        console.log("SCRIPT START - v2.9.11 (UI and Login Fixes)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
@@ -330,7 +325,7 @@
         let produtosCache = [], categoriasCache = [], empresasCache = [], colaboradoresCache = [], quantidadesDigitadas = {}; 
         const ADMIN_MASTER_EMAIL = "matheus@mtech.com"; 
         let currentUser = null, adminSelectedEmpresaId = null, adminSelectedEmpresaParaCategoriaId = null;
-        let userProfilesCache = []; // Cache for user profiles (logins principais)
+        let userProfilesCache = []; 
 
 
         let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
@@ -352,7 +347,7 @@
             adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico;
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.9.10 called");
+            console.log("initializeDOMSelectors v2.9.11 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
@@ -440,8 +435,8 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.10', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.10'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.11', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.11'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
@@ -454,7 +449,7 @@
             if (includeSpecialOption) {
                 const opt = document.createElement('option'); opt.value = specialOptionValue; opt.textContent = specialOptionText; selectEmp.appendChild(opt);
             }
-            if (empresasCache.length === 0) { // Only fetch if cache is empty
+            if (empresasCache.length === 0) { 
                 try {
                     const { data, error } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
                     if (error) throw error; 
@@ -516,7 +511,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.9.10 called");
+            console.log("handleLogin v2.9.11 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Critical error in login form. Try reloading."); hideLoader(); return;
@@ -565,10 +560,18 @@
                         console.error("Error fetching profile:", profileError); await _supabaseClient.auth.signOut(); throw profileError;
                     }
                     if (!profile) { 
-                        console.warn("Profile not found:", signInData.user.id); await _supabaseClient.auth.signOut();
-                        throw new Error("Perfil do usuário não encontrado. Contate o suporte.");
-                    }
-                    if (profile.role === 'empresa_login_principal' && profile.empresa_id && profile.empresas) {
+                        console.warn("Profile not found for user:", signInData.user.id, "This might be an admin_master user without a separate profile entry or an issue.");
+                         // If it's an admin_master based on email but JWT didn't reflect, handle as admin_master.
+                        if (signInData.user.email === ADMIN_MASTER_EMAIL) {
+                            currentUser = { id: signInData.user.id, email: signInData.user.email, role: 'admin_master', user_metadata: signInData.user.user_metadata, full_name: userFullNameFromJWT };
+                            console.log("Fallback to Admin Master based on email (profile not found):", currentUser);
+                            await Promise.all([ /* ... populate selects ... */ ]);
+                            showAdminMasterDashboardScreen();
+                        } else {
+                            await _supabaseClient.auth.signOut();
+                            throw new Error("Perfil do usuário não encontrado. Contate o suporte.");
+                        }
+                    } else if (profile.role === 'empresa_login_principal' && profile.empresa_id && profile.empresas) {
                         currentUser = {
                             id: signInData.user.id, email: signInData.user.email, role: profile.role, 
                             user_metadata: signInData.user.user_metadata, empresa_id: profile.empresa_id,
@@ -578,7 +581,7 @@
                         console.log("Company User OK:", currentUser);
                         await showEmpresaDashboardScreen();
                     } else {
-                        console.warn("Invalid profile or missing company data:", email, profile);
+                        console.warn("Invalid profile or missing company data for non-admin:", email, profile);
                         await _supabaseClient.auth.signOut();
                         throw new Error("Conta de empresa inválida/não configurada.");
                     }
@@ -602,7 +605,7 @@
                 currentUser = null; adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
                 produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.10'); 
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.11'); 
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
@@ -622,7 +625,7 @@
 
         async function fetchAndRenderEmpresas() { 
             if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); return;}
-            adminEmpresasTableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+            adminEmpresasTableBody.innerHTML = '<tr><td colspan="4">Carregando empresas...</td></tr>';
             showLoader();
             try {
                 // Fetch companies
@@ -633,14 +636,17 @@
                 if (companiesError) throw companiesError;
                 empresasCache = companiesData || [];
 
-                // Fetch principal login profiles
+                // Fetch principal login profiles to display their email in the table
                 const { data: profilesData, error: profilesError } = await _supabaseClient
                     .from('user_profiles')
-                    .select('empresa_id, email, full_name')
+                    .select('empresa_id, email, full_name') // Only fetch what's needed for display
                     .eq('role', 'empresa_login_principal');
-                if (profilesError) throw profilesError;
-                userProfilesCache = profilesData || []; // Store in a dedicated cache or map
-
+                if (profilesError) {
+                    console.warn("Could not fetch user profiles for company list, emails might be missing:", profilesError);
+                    userProfilesCache = [];
+                } else {
+                    userProfilesCache = profilesData || [];
+                }
                 const profilesMap = new Map(userProfilesCache.map(p => [p.empresa_id, p]));
 
                 adminEmpresasTableBody.innerHTML = ""; 
@@ -666,8 +672,11 @@
                         btnManageColabs.onclick = () => showEmpresaColaboradoresScreen(empresa.id, empresa.nome_empresa, true); 
                         actionsCell.appendChild(btnManageColabs);
                     });
-                } else { adminEmpresasTableBody.innerHTML = '<tr><td colspan="4">Nenhuma empresa.</td></tr>'; }
-            } catch (e) { console.error("Error listing companies:", e); if(adminEmpresasTableBody) adminEmpresasTableBody.innerHTML = `<tr><td colspan="4" style="color:var(--danger-color);">Erro: ${e.message}</td></tr>`;}
+                } else { adminEmpresasTableBody.innerHTML = '<tr><td colspan="4">Nenhuma empresa cadastrada.</td></tr>'; }
+            } catch (e) { 
+                console.error("Error listing companies and their logins:", e); 
+                if(adminEmpresasTableBody) adminEmpresasTableBody.innerHTML = `<tr><td colspan="4" style="color:var(--danger-color);">Erro ao carregar empresas: ${e.message}</td></tr>`;
+            }
             finally { hideLoader(); }
         }
 
@@ -681,9 +690,9 @@
                 if (existing) { alert('Empresa já existe.'); hideLoader(); return; }
                 const { data: novaEmpresa, error } = await _supabaseClient.from('empresas').insert([{ nome_empresa: nomeEmpresa }]).select().single();
                 if (error) throw error;
-                if (novaEmpresa && empresasCache) empresasCache.push(novaEmpresa); // Add to local cache
+                // No need to push to empresasCache here, fetchAndRenderEmpresas will get the latest
                 alert('Empresa adicionada!'); adminNomeEmpresaInput.value = ''; 
-                await fetchAndRenderEmpresas(); // Refresh the table to show the new company
+                await fetchAndRenderEmpresas(); 
             } catch (e) { console.error("Error add company:", e); alert('Falha: ' + e.message); } finally { hideLoader(); }
         }
         
@@ -698,14 +707,17 @@
             adminManageLoginEmpresaContent.innerHTML = '<p>Verificando login existente...</p>';
             manageLoginEmpresaMessage.style.display = 'none'; manageLoginEmpresaMessage.textContent = '';
             adminManageLoginEmpresaSection.style.display = 'block';
+            document.getElementById('adminManageLoginEmpresaContent').scrollIntoView({ behavior: 'smooth' });
+
 
             try {
+                // Fetch the specific main login profile for this company
                 const { data: existingProfile, error: profileError } = await _supabaseClient
                     .from('user_profiles')
                     .select('id, email, full_name') 
                     .eq('empresa_id', empresaId)
-                    .eq('role', 'empresa_login_principal')
-                    .maybeSingle();
+                    .eq('role', 'empresa_login_principal') // Ensure it's the main login
+                    .maybeSingle(); // Use maybeSingle as there should be at most one
 
                 if (profileError) throw profileError;
 
@@ -714,7 +726,7 @@
                 if (existingProfile) {
                     if(userIdHiddenInput) userIdHiddenInput.value = existingProfile.id;
                     adminManageLoginEmpresaContent.innerHTML = `
-                        <p>Login já definido para esta empresa:</p>
+                        <h4>Login Principal Existente</h4>
                         <p><strong>Email:</strong> <span id="currentEmpresaLoginEmailDisplay">${existingProfile.email}</span></p>
                         <p><strong>Nome de Referência:</strong> ${existingProfile.full_name || 'Não definido'}</p>
                         <button class="btn btn-warning" id="btnExecuteResetSenhaEmpresa" style="margin-top:1rem;">Resetar Senha Deste Login</button>
@@ -725,6 +737,7 @@
                     if(userIdHiddenInput) userIdHiddenInput.value = '';
                     adminManageLoginEmpresaContent.innerHTML = `
                         <p>Nenhum login principal definido para esta empresa.</p>
+                        <h4>Criar Novo Login Principal</h4>
                         <div class="form-group">
                             <label for="adminEmpresaLoginEmailNew">Email para Novo Login:</label>
                             <input type="email" id="adminEmpresaLoginEmailNew" placeholder="${nomeEmpresa.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.-_]/gi, '')}@login.sistema">
@@ -781,7 +794,9 @@
             manageLoginEmpresaMessage.style.display = 'none'; manageLoginEmpresaMessage.textContent = '';
 
             try {
-                await _supabaseClient.auth.signOut().catch(()=>{ console.warn("No session to sign out or error in optional signOut.")}); 
+                // It's generally better to let the currently logged-in admin perform actions,
+                // so signOut here might be disruptive unless specifically required by Supabase policies for signUp.
+                // await _supabaseClient.auth.signOut().catch(()=>{ console.warn("No session to sign out or error in optional signOut.")}); 
 
                 const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
                     email, password,
@@ -809,8 +824,8 @@
                     manageLoginEmpresaMessage.style.display = 'block';
                     manageLoginEmpresaMessage.style.color = 'var(--success-color)';
                     
-                    await fetchAndRenderEmpresas(); // Refresh company list to show new login email
-                    await handleShowManageLoginSection(empresaId, empresaNome);
+                    await fetchAndRenderEmpresas(); 
+                    await handleShowManageLoginSection(empresaId, empresaNome); // Refresh the section
 
 
                 } else {
@@ -828,14 +843,15 @@
         }
 
         async function callResetPasswordEdgeFunction(userId, userEmail, nomeEmpresa) {
+            // userId here refers to the auth.users.id for the 'empresa_login_principal'
             if (!userId || !userEmail) { alert("ID do usuário ou email não fornecido para resetar senha."); return; }
-            if (!confirm(`Tem certeza que deseja resetar a senha para o login ${userEmail} da empresa ${nomeEmpresa}? Uma nova senha será gerada (e deve ser de 6 dígitos se sua Edge Function estiver configurada corretamente).`)) return;
+            if (!confirm(`Tem certeza que deseja resetar a senha para o login ${userEmail} da empresa ${nomeEmpresa}? Uma nova senha (idealmente de 6 dígitos) será gerada pela sua Edge Function.`)) return;
             
             showLoader();
             if(manageLoginEmpresaMessage) { manageLoginEmpresaMessage.style.display = 'none'; manageLoginEmpresaMessage.textContent = ''; }
 
             try {
-                console.log(`Invocando Edge Function 'reset-empresa-password' para userId: ${userId}`);
+                console.log(`Invocando Edge Function 'reset-empresa-password' para userId (auth.users.id): ${userId}`);
                 const { data, error } = await _supabaseClient.functions.invoke('reset-empresa-password', {
                     body: JSON.stringify({ target_user_id: userId }) 
                 });
@@ -846,7 +862,7 @@
                 console.log("Response from Edge Function:", data);
                 let successMsg = data.message || `Senha para ${userEmail} resetada!`;
                 if (data.newPassword) { successMsg += `\nNova Senha Gerada: ${data.newPassword}\nInforme ao responsável.`; }
-                else { successMsg += `\nNova senha não retornada pela função. Verifique a Edge Function.`}
+                else { successMsg += `\nNova senha NÃO foi retornada pela função. Verifique a implementação da sua Edge Function para garantir que ela retorne 'newPassword'.`}
                 
                 if(manageLoginEmpresaMessage) {
                     manageLoginEmpresaMessage.innerHTML = successMsg.replace(/\n/g, '<br>');
@@ -864,7 +880,7 @@
         }
         
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.9.10 (MODIFIED) started");
+            console.log("gerarArquivoTXT v2.9.11 (MODIFIED) started");
             showLoader();
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Error: Collaborator selector not found."); hideLoader(); return; }
@@ -905,9 +921,15 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.9.10 started");
+            console.log("gerarPDFContagem v2.9.11 started");
             showLoader();
-            const { jsPDF } = window.jspdf; // Ensure jsPDF is loaded
+            const { jsPDF } = window.jspdf; 
+            if (typeof jsPDF === 'undefined' || typeof jsPDF.API === 'undefined' || typeof jsPDF.API.autoTable === 'undefined') {
+                 alert("Erro: Biblioteca jsPDF ou jsPDF-AutoTable não carregada corretamente. Verifique os links CDN no <head>.");
+                 hideLoader();
+                 return;
+            }
+
 
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Error: Collaborator selector not found."); hideLoader(); return; }
@@ -965,10 +987,10 @@
                     head: [tableColumn],
                     body: tableRows,
                     startY: 50,
-                    theme: 'striped', // 'striped', 'grid', 'plain'
-                    headStyles: { fillColor: [22, 160, 133] }, // Exemplo de cor para cabeçalho
+                    theme: 'striped', 
+                    headStyles: { fillColor: [22, 160, 133] }, 
                     styles: { fontSize: 9, cellPadding: 2 },
-                    columnStyles: { 3: { halign: 'right' } } // Alinha a coluna de quantidade à direita
+                    columnStyles: { 3: { halign: 'right' } } 
                 });
                 
                 const nomeArquivoPDF = `contagem_estoque_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}.pdf`;
@@ -983,7 +1005,7 @@
             }
         }
         
-        // --- SCREEN FUNCTION DEFINITIONS (Implementadas ou Stubs) ---
+        
         async function showAdminCategoriasScreen() {
             if (!currentUser || currentUser?.user_metadata?.user_role !== 'admin_master') { handleLogout(); return; }
             console.log("showAdminCategoriasScreen called");
@@ -1529,10 +1551,10 @@
 
                 
                 
-                const { data: globalData, error: globalError } = await _supabaseClient.from('categorias') // Renamed 'global' to 'globalData' to avoid conflict
+                const { data: globalData, error: globalError } = await _supabaseClient.from('categorias') 
                     .select('id, nome_categoria').is('empresa_id', null).order('nome_categoria');
                 if (globalError) throw globalError;
-                globalCategories = globalData || []; // Use globalData
+                globalCategories = globalData || []; 
 
                 
                 const allCategorias = [];
@@ -1578,7 +1600,7 @@
         
         async function showProductManagementScreen_AdminGlobal() { 
             if (!currentUser || currentUser?.user_metadata?.user_role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.9.10 (corrected) called");
+            console.log("showProductManagementScreen_AdminGlobal v2.9.11 (corrected) called");
             showLoader();
             try {
                 adminSelectedEmpresaId = null; 
@@ -2219,7 +2241,7 @@
 
         
         window.onload = async () => { 
-            console.log("window.onload v2.9.10 (DOM Ready) PDF & UI Enhancements started");
+            console.log("window.onload v2.9.11 (DOM Ready) PDF & UI Enhancements started");
             initializeDOMSelectors(); 
             showLoader(); 
             if (typeof loadQuantities === "function") loadQuantities(); 
@@ -2260,7 +2282,7 @@
             document.getElementById('btnImportXLSX')?.addEventListener('click', handleXLSXImport);
             document.getElementById('btnShowPreviewContagem')?.addEventListener('click', showPreviewContagem);
             document.getElementById('btnGerarTXT')?.addEventListener('click', gerarArquivoTXT);
-            document.getElementById('btnGerarPDF')?.addEventListener('click', gerarPDFContagem); // Listener for new PDF button
+            document.getElementById('btnGerarPDF')?.addEventListener('click', gerarPDFContagem); 
             document.getElementById('btnClearAllQuantities')?.addEventListener('click', clearAllQuantities);
             document.getElementById('btnClosePreviewModal')?.addEventListener('click', closeModalPreviewContagem);
             document.getElementById('btnCloseDetalhesModal')?.addEventListener('click', closeModalDetalhesContagem);
@@ -2302,20 +2324,14 @@
             
             try { 
                 console.log("Loading global caches (companies) in onload...");
-                const empresasPromise = _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
+                // Pre-fetch companies to populate dropdowns and company list quickly
+                const { data: empresasData, error: empresasError } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
+                if (empresasError) console.error("Error pre-loading companies cache (onload):", empresasError);
+                else empresasCache = empresasData || [];
+                console.log("Company cache pre-loaded in onload:", empresasCache.length);
                 
-                
-                
-                
-                const [empresasRes] = await Promise.all([empresasPromise]);
-
-                if (empresasRes.error) console.error("Error loading companies into cache (onload):", empresasRes.error);
-                else empresasCache = empresasRes.data || [];
-
-                console.log("Company cache loaded in onload.");
-
             } catch(e) {
-                console.error("Critical error loading initial data (companies) in onload:", e);
+                console.error("Critical error loading initial company data (onload):", e);
             }
             
             const localPesquisaProdutoInput = document.getElementById('pesquisaProduto');
@@ -2373,7 +2389,7 @@
                             console.log("Session restored for Company User (onload):", currentUser);
                             await showEmpresaDashboardScreen();
                         } else { 
-                            console.warn("Supabase session active, but invalid/incomplete profile or not 'empresa_login_principal' (onload). Signing out. Profile:", profile);
+                            console.warn("Supabase session active, but profile invalid/incomplete or not 'empresa_login_principal' (onload). Signing out. Profile:", profile);
                             await _supabaseClient.auth.signOut(); showScreen('login'); 
                         }
                     }
@@ -2391,7 +2407,7 @@
                 hideLoader(); 
             }
         };
-        console.log("SCRIPT END - v2.9.10 PDF & UI Enhancements");
+        console.log("SCRIPT END - v2.9.11 (UI and Login Fixes)");
     </script>
 </body>
 </html>
