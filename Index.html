@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)</title>
+    <title>Inventory Balance System - v2.9.15 (Scoped Entities & Fixes)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -46,7 +46,7 @@
         }
         body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;margin:0;padding:20px 0;background-color:var(--background-color);color:var(--text-color);display:flex;flex-direction:column;align-items:center;min-height:100vh;line-height:1.5;font-size:1rem}
         .container{width:95%;max-width:600px;background-color:var(--container-bg-color);padding:25px 30px;border-radius:var(--border-radius);box-shadow:var(--box-shadow);margin-top:20px;margin-bottom:20px;border:1px solid var(--border-color)}
-        .content-container{max-width:1140px}
+        .content-container{max-width:1140px} /* Used for wider screens like tables */
         h1,h2,h3{color:var(--text-color);text-align:center;margin-top:0;margin-bottom:1.5rem;font-weight:500}
         h1{font-size:2rem}h2{font-size:1.75rem}h3{font-size:1.5rem;margin-bottom:1rem}
         .screen { display: none !important; opacity: 0 !important; visibility: hidden !important; min-height: 300px; } 
@@ -88,7 +88,7 @@
         .xlsx-import-section input[type=file]{width:auto;margin-right:.5rem}
         .actions-bar{text-align:center;padding:1rem 0; background-color: transparent; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
         .actions-bar .btn{margin:0 .25rem} 
-        #productManagementTable td:last-child,#inventoryTable td:last-child,#adminEmpresasTable td:last-child, #colaboradoresTable td:last-child, #historicoContagensTable td:last-child, #adminCategoriasTable td:last-child {text-align:center} 
+        #productManagementTable td:last-child,#inventoryTable td:last-child,#adminEmpresasTable td:last-child, #colaboradoresTable td:last-child, #historicoContagensTable td:last-child, #categoriasTable td:last-child {text-align:center} 
         #inventoryTable input[type=number]{max-width:80px;text-align:right;padding:.375rem .5rem;font-size:.9rem}
         .back-button{margin-bottom:1.5rem;display:inline-block}
         .modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background-color: rgba(0,0,0,0.4) !important; display: flex !important; justify-content: center !important; align-items: center !important; z-index: 10000 !important; opacity: 0 !important; visibility: hidden !important; transition: opacity 0.2s ease, visibility 0.2s ease !important; }
@@ -141,8 +141,8 @@
             <div class="dashboard-options">
                 <button class="btn btn-primary" id="btnAdminGerenciarEmpresas">Gerenciar Empresas & Seus Logins</button>
                 <button class="btn btn-primary" id="btnAdminGerenciarCategorias">Gerenciar Categorias (Admin)</button> 
-                <button class="btn btn-primary" id="btnAdminGerenciarProdutos">Gerenciar Produtos</button>
-                <button class="btn btn-primary" id="btnAdminContagemEstoque">Contagem de Estoque</button>
+                <button class="btn btn-primary" id="btnAdminGerenciarProdutos">Gerenciar Produtos (Admin)</button>
+                <button class="btn btn-primary" id="btnAdminContagemEstoque">Contagem de Estoque (Admin)</button>
                 <button class="btn btn-info" id="btnAdminHistoricoContagens">Histórico de Contagens (Admin)</button>
                 <button class="btn btn-secondary" id="btnLogoutAdmin">Logout</button>
             </div>
@@ -162,23 +162,23 @@
             </div>
         </div>
         
-        <div id="screenAdminCategorias" class="screen"> {/* Esta tela será usada por Admin e Empresa, com lógica adaptada */}
+        <div id="screenAdminCategorias" class="screen">
             <button class="btn btn-secondary back-button" id="btnCategoriasVoltar"> &larr; Voltar ao Painel</button>
             <h2 id="categoriasTitle">Gerenciar Categorias</h2>
             <div class="card">
                 <div class="card-header"><h3>Adicionar Nova Categoria</h3></div>
                 <div class="card-body">
-                    <div class="form-group" id="adminCategoriaEmpresaSelectContainer"> {/* Container para esconder/mostrar para admin */}
-                        <label for="adminCategoriaEmpresaSelect">Associar Categoria a:</label>
+                    <div class="form-group" id="adminCategoriaEmpresaSelectContainer"> 
+                        <label for="adminCategoriaEmpresaSelect">Gerenciar Categorias Para Empresa:</label>
                         <select id="adminCategoriaEmpresaSelect">
-                            <option value="">-- Categoria Global (para todas empresas) --</option>
+                            <option value="">-- Selecione uma Empresa --</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="nomeCategoriaInput">Nome da Nova Categoria:</label>
                         <input type="text" id="nomeCategoriaInput" placeholder="Ex: Bolos, Salgados, Bebidas">
                     </div>
-                    <button class="btn btn-success" id="btnAddCategoria">Adicionar Categoria</button>
+                    <button class="btn btn-success" id="btnAddCategoria" disabled>Adicionar Categoria</button>
                 </div>
             </div>
             <div class="card">
@@ -186,7 +186,7 @@
                 <div class="card-body">
                     <p id="categoriasContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
                     <table id="categoriasTable">
-                        <thead><tr><th>Nome da Categoria</th><th>Escopo (Empresa / Global)</th><th>Criação</th><th>Ações</th></tr></thead>
+                        <thead><tr><th>Nome da Categoria</th><th id="thCategoriaEmpresaScope">Empresa</th><th>Criação</th><th>Ações</th></tr></thead>
                         <tbody id="categoriasTableBody"></tbody>
                     </table>
                 </div>
@@ -237,7 +237,7 @@
             <h2 id="historicoTitle">Histórico de Contagens (<span id="historicoEmpresaNomeSpan"></span>)</h2> 
             <div id="adminHistoricoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
                 <label for="adminHistoricoEmpresaSelect">Ver Histórico Para Empresa:</label>
-                <select id="adminHistoricoEmpresaSelect"><option value="ALL_EMPRESAS">-- Todas as Empresas --</option></select>
+                <select id="adminHistoricoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
             </div>
             <p id="historicoContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
             <div class="card"><div class="card-header"><h3>Registros de Contagem</h3></div><div class="card-body" style="padding:0;"><table id="historicoContagensTable"><thead><tr><th id="colEmpresaHistorico" style="display:none;">Empresa</th><th>Data</th><th>Colaborador</th><th>Itens Contados</th><th>Ações</th></tr></thead><tbody id="historicoContagensTableBody"></tbody></table></div></div>
@@ -248,7 +248,7 @@
             <h2 id="productManagementTitle">Gerenciar Produtos</h2>
             <div id="adminProdutoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
                 <label for="adminProdutoEmpresaSelect">Gerenciar Produtos Para Empresa:</label>
-                <select id="adminProdutoEmpresaSelect"><option value="">-- Produtos Globais (Sem Empresa) --</option></select>
+                <select id="adminProdutoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
             </div>
             <p id="productManagementContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
             <div class="card"><div class="card-header"><h3>Adicionar Novo Produto</h3></div><div class="card-body">
@@ -257,12 +257,12 @@
                     <div class="form-group"><label for="prodNome">Produto:</label><input type="text" id="prodNome"></div>
                     <div class="form-group">
                         <label for="prodCategoriaSelect">Categoria:</label>
-                        <select id="prodCategoriaSelect"><option value="">-- Sem Categoria --</option></select>
+                        <select id="prodCategoriaSelect"><option value="">-- Selecione uma Categoria --</option></select>
                     </div>
-                    <button class="btn btn-success" id="btnAddProduct">Adicionar</button>
+                    <button class="btn btn-success" id="btnAddProduct" disabled>Adicionar Produto</button>
                 </div>
             </div></div>
-            <div class="card"><div class="card-header"><h3>Importar Produtos via XLSX</h3></div><div class="card-body xlsx-import-section"><input type="file" id="xlsxFile" accept=".xlsx, .xls"><button class="btn btn-info" id="btnImportXLSX">Importar</button><p>Colunas: 'codigo', 'produto', 'categoria'. Categoria vazia = Sem Categoria.</p></div></div>
+            <div class="card"><div class="card-header"><h3>Importar Produtos via XLSX</h3></div><div class="card-body xlsx-import-section"><input type="file" id="xlsxFile" accept=".xlsx, .xls"><button class="btn btn-info" id="btnImportXLSX" disabled>Importar</button><p>Colunas: 'codigo', 'produto', 'categoria'.</p></div></div>
             <div class="card"><div class="card-header"><h3>Produtos Cadastrados</h3></div><div class="card-body" style="padding:0;"><table id="productManagementTable"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Ação</th></tr></thead><tbody id="productManagementTableBody"></tbody></table></div></div>
         </div>
 
@@ -271,7 +271,7 @@
             <h2 id="inventoryCountTitle">Balanço de Estoque</h2>
             <div id="adminContagemEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
                 <label for="adminContagemEmpresaSelect">Realizar Contagem Para Empresa:</label>
-                <select id="adminContagemEmpresaSelect"><option value="">-- Contagem Global (Produtos Sem Empresa) --</option></select>
+                <select id="adminContagemEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
             </div>
             <p id="inventoryCountContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
             <div class="card card-body">
@@ -317,8 +317,8 @@
     </div>
 
     <script>
-        // Script version v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)
-        console.log("SCRIPT START - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)");
+        // Script version v2.9.15 (Scoped Entities & Fixes)
+        console.log("SCRIPT START - v2.9.15 (Scoped Entities & Fixes)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
@@ -326,7 +326,9 @@
 
         let produtosCache = [], categoriasCache = [], empresasCache = [], colaboradoresCache = [], quantidadesDigitadas = {}; 
         const ADMIN_MASTER_EMAIL = "matheus@mtech.com"; 
-        let currentUser = null, adminSelectedEmpresaId = null, adminSelectedEmpresaParaCategoriaId = null;
+        let currentUser = null;
+        let adminSelectedEmpresaContextId = null; // Used by admin to select company context for categories/products/counts
+        
         let userProfilesCache = []; 
 
 
@@ -337,6 +339,7 @@
             
             categoriasTitleEl, adminCategoriaEmpresaSelectContainerEl, adminCategoriaEmpresaSelectEl, 
             nomeCategoriaInputEl, categoriasTableBodyEl, btnCategoriasVoltarEl, btnAddCategoriaEl, categoriasContextEl,
+            thCategoriaEmpresaScopeEl,
 
             colaboradoresEmpresaNomeSpan, colaboradorNomeInput, colaboradoresTableBody, 
             currentPasswordInput, newPasswordInput, confirmNewPasswordInput, changePasswordMessage, 
@@ -344,15 +347,15 @@
             historicoEmpresaNomeSpan, historicoContagensTableBody, modalDetalhesContagem, detalhesContagemConteudo,
             productManagementBackButton, productManagementTitle, productManagementContext,
             adminProdutoEmpresaSelectorContainer, adminProdutoEmpresaSelect, prodCodigoInput, prodNomeInput,
-            prodCategoriaSelect, productManagementTableBody, xlsxFileInput, inventoryCountBackButton,
-            inventoryCountTitle, inventoryCountContext, adminContagemEmpresaSelectorContainer,
+            prodCategoriaSelect, productManagementTableBody, xlsxFileInput, btnAddProductEl, btnImportXLSXEl,
+            inventoryCountBackButton, inventoryCountTitle, inventoryCountContext, adminContagemEmpresaSelectorContainer,
             adminContagemEmpresaSelect, selectColaboradorContagem, pesquisaProdutoInput, pesquisaCodigoInput,
             filtroCategoriaSelect, inventoryTableBody, modalPreviewContagem, previewContagemTableContainer,
             empresaDashboardTitle, empresaUserNameSpan,
             adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico;
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.9.14 called");
+            console.log("initializeDOMSelectors v2.9.15 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
@@ -399,6 +402,7 @@
             btnCategoriasVoltarEl = safeGetElementById('btnCategoriasVoltar');
             btnAddCategoriaEl = safeGetElementById('btnAddCategoria');
             categoriasContextEl = safeGetElementById('categoriasContext');
+            thCategoriaEmpresaScopeEl = safeGetElementById('thCategoriaEmpresaScope');
 
 
             colaboradoresEmpresaNomeSpan = safeGetElementById('colaboradoresEmpresaNome');
@@ -431,6 +435,9 @@
             prodCategoriaSelect = safeGetElementById('prodCategoriaSelect'); 
             productManagementTableBody = safeGetElementById('productManagementTableBody');
             xlsxFileInput = safeGetElementById('xlsxFile');
+            btnAddProductEl = safeGetElementById('btnAddProduct');
+            btnImportXLSXEl = safeGetElementById('btnImportXLSX');
+
             inventoryCountBackButton = safeGetElementById('inventoryCountBackButton');
             inventoryCountTitle = safeGetElementById('inventoryCountTitle');
             inventoryCountContext = safeGetElementById('inventoryCountContext');
@@ -448,13 +455,13 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.14', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.14'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.15', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.15'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
         
-        async function populateEmpresasSelect(selectElement, includeSpecialOption = false, specialOptionText = "-- Select --", specialOptionValue = "") { 
+        async function populateEmpresasSelect(selectElement, includeSpecialOption = false, specialOptionText = "-- Selecione uma Empresa --", specialOptionValue = "") { 
             const selectEl = (typeof selectElement === 'string') ? document.getElementById(selectElement) : selectElement;
 
             if (!selectEl) { console.warn(`Company select element/ID '${selectElement}' not found.`); return; }
@@ -465,15 +472,27 @@
             }
             if (empresasCache.length === 0) { 
                 try {
+                    console.log("Populating empresasCache from DB...");
                     const { data, error } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
                     if (error) throw error; 
                     empresasCache = data || [];
-                } catch (e) { console.error("Error fetching companies for select:", e); if(selectEl) selectEl.innerHTML = '<option value="">Error loading</option>'; return; }
+                    console.log("empresasCache populated:", empresasCache.length);
+                } catch (e) { console.error("Error fetching companies for select:", e); if(selectEl) selectEl.innerHTML = '<option value="">Erro ao carregar</option>'; return; }
             }
             empresasCache.forEach(emp => { const option = document.createElement('option'); option.value = emp.id; option.textContent = emp.nome_empresa; selectEl.appendChild(option); });
-            if (Array.from(selectEl.options).some(opt => opt.value === currentValue)) { selectEl.value = currentValue; } 
-            else if (includeSpecialOption) { selectEl.value = specialOptionValue; }
+            
+            // Try to restore previous selection or default to special option
+            if (currentValue && Array.from(selectEl.options).some(opt => opt.value === currentValue)) {
+                 selectEl.value = currentValue;
+            } else if (adminSelectedEmpresaContextId && Array.from(selectEl.options).some(opt => opt.value === adminSelectedEmpresaContextId)) {
+                 selectEl.value = adminSelectedEmpresaContextId; // Restore context if available
+            } else if (includeSpecialOption) {
+                 selectEl.value = specialOptionValue; 
+            }
+            // Trigger change for dependent elements if a value is set (and not just the placeholder)
+            if(selectEl.value && selectEl.value !== specialOptionValue) selectEl.dispatchEvent(new Event('change'));
         }
+
 
         function showScreen(screenId, screenConfig = {}) {
             hideLoader(); 
@@ -483,7 +502,7 @@
             if (targetScreenElement && targetScreenElement.classList) {
                 targetScreenElement.classList.add('active');
                 if (mainCont) { mainCont.classList.toggle('content-container', ['adminEmpresas', 'adminCategorias', 'productManagement', 'inventoryCount', 'empresaColaboradores', 'historicoContagens'].includes(screenId));}
-                // Hide all admin-specific selectors by default, then show based on context
+                
                 ['adminProdutoEmpresaSelectorContainer', 'adminContagemEmpresaSelectorContainer', 'adminHistoricoEmpresaSelectorContainer', 'adminCategoriaEmpresaSelectContainer', 'colEmpresaHistorico'].forEach(id => { 
                     const el = document.getElementById(id); if(el) el.style.display = 'none';
                 });
@@ -494,6 +513,8 @@
                     if(categoriasTitleEl) categoriasTitleEl.textContent = title || 'Gerenciar Categorias';
                     if(categoriasContextEl) categoriasContextEl.textContent = context || '';
                     if(adminCategoriaEmpresaSelectContainerEl) adminCategoriaEmpresaSelectContainerEl.style.display = isEmpresaContext ? 'none' : 'block';
+                    if(thCategoriaEmpresaScopeEl) thCategoriaEmpresaScopeEl.style.display = isEmpresaContext ? 'none': ''; // Hide scope for empresa user
+
                 }
                 else if (screenId === 'productManagement') {
                     if(document.getElementById('productManagementTitle')) document.getElementById('productManagementTitle').textContent = title || 'Gerenciar Produtos';
@@ -534,7 +555,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.9.14 called");
+            console.log("handleLogin v2.9.15 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Critical error in login form. Try reloading."); hideLoader(); return;
@@ -562,7 +583,7 @@
                     email: signInData.user.email, 
                     user_metadata: signInData.user.user_metadata,
                     full_name: signInData.user.user_metadata?.full_name || signInData.user.email,
-                    role: null // Initialize role
+                    role: null 
                 };
 
                 if (currentUser.user_metadata?.user_role === 'admin_master') {
@@ -602,10 +623,15 @@
                 }
 
                 if (currentUser.role === 'admin_master') {
+                    // Fetch all companies fresh for admin context selectors
+                    const { data: adminEmpresas, error: adminEmpresasError } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
+                    if (adminEmpresasError) console.error("Error fetching companies for admin selects on login:", adminEmpresasError);
+                    else empresasCache = adminEmpresas || []; // Update global cache for admin
+
                     await Promise.all([ 
-                        populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Categoria Global --", ""),
-                        populateEmpresasSelect(adminProdutoEmpresaSelect, true, "-- Produtos Globais (Sem Empresa) --", ""),
-                        populateEmpresasSelect(adminContagemEmpresaSelect, true, "-- Contagem Global (Produtos Sem Empresa) --", ""),
+                        populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Selecione uma Empresa --", ""),
+                        populateEmpresasSelect(adminProdutoEmpresaSelect, true, "-- Selecione uma Empresa --", ""), // Changed from global default
+                        populateEmpresasSelect(adminContagemEmpresaSelect, true, "-- Selecione uma Empresa --", ""), // Changed from global default
                         populateEmpresasSelect(adminHistoricoEmpresaSelect, true, "-- Todas as Empresas --", "ALL_EMPRESAS")
                     ]);
                     await fetchAndRenderEmpresas(); 
@@ -637,16 +663,16 @@
             try {
                 const { error } = await _supabaseClient.auth.signOut();
                 if (error) { console.error("Error in Supabase logout:", error); }
-                currentUser = null; adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null;
+                currentUser = null; adminSelectedEmpresaContextId = null;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
                 produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.14'); 
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.15'); 
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
 
-        function showAdminMasterDashboardScreen() { adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null; showScreen('adminMasterDashboard'); }
-        async function showEmpresaDashboardScreen() { adminSelectedEmpresaId = currentUser?.empresa_id; showScreen('empresaDashboard');}
+        function showAdminMasterDashboardScreen() { adminSelectedEmpresaContextId = null; showScreen('adminMasterDashboard'); }
+        async function showEmpresaDashboardScreen() { adminSelectedEmpresaContextId = currentUser?.empresa_id; showScreen('empresaDashboard');}
         
         async function showAdminEmpresasScreen() { 
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
@@ -662,38 +688,37 @@
             if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); hideLoader(); return;}
             adminEmpresasTableBody.innerHTML = '<tr><td colspan="4">Carregando empresas...</td></tr>';
             showLoader();
-            console.log("fetchAndRenderEmpresas: Fetching companies and profiles...");
+            console.log("DEBUG: fetchAndRenderEmpresas: Fetching companies and profiles...");
             try {
                 const { data: companiesData, error: companiesError } = await _supabaseClient
                     .from('empresas')
                     .select('id, nome_empresa, created_at')
                     .order('nome_empresa'); 
                 if (companiesError) {
-                    console.error("fetchAndRenderEmpresas - Error fetching companies:", companiesError);
+                    console.error("DEBUG: fetchAndRenderEmpresas - Error fetching companies:", companiesError);
                     throw companiesError;
                 }
-                empresasCache = companiesData || []; // Update global cache
-                console.log("fetchAndRenderEmpresas - Companies fetched:", empresasCache.length);
+                empresasCache = companiesData || [];
+                console.log("DEBUG: fetchAndRenderEmpresas - Companies fetched:", empresasCache.length, empresasCache);
 
-                // Ensure userProfilesCache is up-to-date for mapping
                 const { data: profilesData, error: profilesError } = await _supabaseClient
                     .from('user_profiles')
                     .select('empresa_id, email, full_name') 
                     .eq('role', 'empresa_login_principal');
                 if (profilesError) {
-                    console.warn("fetchAndRenderEmpresas - Could not fetch user profiles, emails might be missing in table:", profilesError);
+                    console.warn("DEBUG: fetchAndRenderEmpresas - Could not fetch user profiles for company list, emails might be missing in table:", profilesError);
                     userProfilesCache = []; 
                 } else {
                     userProfilesCache = profilesData || [];
                 }
-                console.log("fetchAndRenderEmpresas - User profiles fetched:", userProfilesCache.length);
+                console.log("DEBUG: fetchAndRenderEmpresas - User profiles fetched:", userProfilesCache.length, userProfilesCache);
 
 
                 const profilesMap = new Map();
                 userProfilesCache.forEach(p => {
                     if(p.empresa_id) profilesMap.set(p.empresa_id, p);
                 });
-                console.log("fetchAndRenderEmpresas - Profiles map created:", profilesMap);
+                console.log("DEBUG: fetchAndRenderEmpresas - Profiles map created:", profilesMap);
 
 
                 adminEmpresasTableBody.innerHTML = ""; 
@@ -931,7 +956,7 @@
         }
         
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.9.14 (MODIFIED) started");
+            console.log("gerarArquivoTXT v2.9.15 started");
             showLoader();
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Error: Collaborator selector not found."); hideLoader(); return; }
@@ -951,9 +976,16 @@
             const dataAtual = new Date();
             const nomeArquivo = `balanco_est_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}_${String(dataAtual.getHours()).padStart(2, '0')}${String(dataAtual.getMinutes()).padStart(2, '0')}.txt`;
             try {
-                const empresaContextoId = (currentUser?.role === 'admin_master' && adminSelectedEmpresaId) ? adminSelectedEmpresaId : (currentUser.empresa_id || null);
+                const empresaContextoId = (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) ? adminSelectedEmpresaContextId : (currentUser.empresa_id || null);
+                if (!empresaContextoId && currentUser?.role !== 'admin_master') { // Safety check: empresa_login_principal should have empresa_id
+                     console.error("gerarArquivoTXT: Empresa ID não encontrado para usuário da empresa.");
+                     alert("Erro: ID da empresa não encontrado para salvar o histórico.");
+                     hideLoader(); return;
+                }
+
                 const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
-                    empresa_id: empresaContextoId, colaborador_id: colaboradorId, colaborador_nome: colaboradorNome,
+                    empresa_id: empresaContextoId, // Could be null for admin if adminSelectedEmpresaContextId is null (counting "all products")
+                    colaborador_id: colaboradorId, colaborador_nome: colaboradorNome,
                     itens_contados: produtosContados.length,
                     dados_contagem: produtosContados.map(p => ({
                         produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto, 
@@ -972,7 +1004,7 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.9.14 started");
+            console.log("gerarPDFContagem v2.9.15 started");
             showLoader();
             const { jsPDF } = window.jspdf; 
             if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
@@ -1006,13 +1038,14 @@
                 const dataAtual = new Date();
                 const dataFormatada = dataAtual.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dataAtual.toLocaleTimeString('pt-BR');
                 
-                let empresaNomeContext = "Contagem Global";
-                if (currentUser?.role === 'admin_master' && adminSelectedEmpresaId) {
-                    const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaId);
+                let empresaNomeContext = "N/A (Contexto Geral/Admin)"; // Default if no specific company context
+                if (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) {
+                    const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
                     if(selectedEmpresa) empresaNomeContext = selectedEmpresa.nome_empresa;
                 } else if (currentUser?.role === 'empresa_login_principal' && currentUser.empresa_nome) {
                     empresaNomeContext = currentUser.empresa_nome;
                 }
+
 
                 pdf.setFontSize(18);
                 pdf.text("Relatório de Contagem de Estoque", 14, 22);
@@ -1062,24 +1095,29 @@
             console.log("showCategoriasScreen_Admin called");
             showLoader();
             try {
-                adminSelectedEmpresaParaCategoriaId = null; 
+                adminSelectedEmpresaContextId = null; // Reset admin context for categories
                 if(adminCategoriaEmpresaSelectEl) {
-                    await populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Categoria Global --", ""); 
+                    await populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Selecione uma Empresa --", ""); 
                     adminCategoriaEmpresaSelectEl.value = ""; 
                     if (!adminCategoriaEmpresaSelectEl.onchangeAttached_cat_admin) {
                         adminCategoriaEmpresaSelectEl.addEventListener('change', async () => {
-                            adminSelectedEmpresaParaCategoriaId = adminCategoriaEmpresaSelectEl.value === "" ? null : adminCategoriaEmpresaSelectEl.value;
-                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaParaCategoriaId);
-                            if(categoriasContextEl) categoriasContextEl.textContent = selectedEmpresa ? `Gerenciando categorias para: ${selectedEmpresa.nome_empresa}` : "Gerenciando categorias Globais";
+                            adminSelectedEmpresaContextId = adminCategoriaEmpresaSelectEl.value === "" ? null : adminCategoriaEmpresaSelectEl.value;
+                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
+                            if(categoriasContextEl) categoriasContextEl.textContent = selectedEmpresa ? `Gerenciando categorias para: ${selectedEmpresa.nome_empresa}` : "Nenhuma empresa selecionada";
+                            if(btnAddCategoriaEl) btnAddCategoriaEl.disabled = !adminSelectedEmpresaContextId; // Enable add only if company selected
                             await fetchAndRenderCategorias();
                         });
                         adminCategoriaEmpresaSelectEl.onchangeAttached_cat_admin = true;
                     }
-                    adminCategoriaEmpresaSelectEl.dispatchEvent(new Event('change'));
+                    // Manually trigger change if a previous context was stored and is valid
+                    if(adminSelectedEmpresaContextId && Array.from(adminCategoriaEmpresaSelectEl.options).some(opt => opt.value === adminSelectedEmpresaContextId)){
+                        adminCategoriaEmpresaSelectEl.value = adminSelectedEmpresaContextId;
+                    }
+                    adminCategoriaEmpresaSelectEl.dispatchEvent(new Event('change')); // Trigger initial load/message
                 } else {
                      await fetchAndRenderCategorias(); 
                 }
-                showScreen('adminCategorias', { title: 'Gerenciar Categorias (Admin)', context: 'Selecione uma empresa ou gerencie categorias globais.', isEmpresaContext: false });
+                showScreen('adminCategorias', { title: 'Gerenciar Categorias (Admin)', context: 'Selecione uma empresa para ver ou adicionar categorias.', isEmpresaContext: false });
             } catch (e) {
                 console.error("Error in showCategoriasScreen_Admin:", e);
                 alert("Erro ao carregar tela de categorias (Admin).");
@@ -1093,13 +1131,14 @@
             console.log("showCategoriasScreen_Empresa called for company:", currentUser.empresa_nome);
             showLoader();
             try {
-                adminSelectedEmpresaParaCategoriaId = currentUser.empresa_id; 
+                adminSelectedEmpresaContextId = currentUser.empresa_id; // Empresa user always manages categories for their own company
                 if (categoriasContextEl) categoriasContextEl.textContent = `Gerenciando categorias para: ${currentUser.empresa_nome || 'sua empresa'}`;
+                if(btnAddCategoriaEl) btnAddCategoriaEl.disabled = false; // Empresa user can always add to their own company
                 
                 await fetchAndRenderCategorias(); 
                 showScreen('adminCategorias', { 
                     title: `Gerenciar Categorias (${currentUser.empresa_nome || 'Sua Empresa'})`,
-                    context: `Adicione ou remova categorias para ${currentUser.empresa_nome || 'sua empresa'}. Categorias globais também são listadas.`,
+                    context: `Adicione ou remova categorias para ${currentUser.empresa_nome || 'sua empresa'}.`,
                     isEmpresaContext: true 
                 });
             } catch (e) {
@@ -1111,30 +1150,36 @@
         }
 
 
-        async function fetchAndRenderCategorias() {
+        async function fetchAndRenderCategorias() { // Unified function
             if (!categoriasTableBodyEl) { console.error("categoriasTableBodyEl not found"); return; }
             categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Carregando categorias...</td></tr>';
             showLoader();
-            console.log(`WorkspaceAndRenderCategorias - Role: ${currentUser?.role}, SelectedEmpresaForCat: ${adminSelectedEmpresaParaCategoriaId}, CurrentUserEmpresaId: ${currentUser?.empresa_id}`);
-            try {
-                let query = _supabaseClient.from('categorias').select('id, nome_categoria, created_at, empresa_id, empresas (nome_empresa)');
-                
-                if (currentUser.role === 'admin_master') {
-                    if (adminSelectedEmpresaParaCategoriaId) { 
-                        query = query.eq('empresa_id', adminSelectedEmpresaParaCategoriaId);
-                    } else { 
-                        query = query.is('empresa_id', null); 
-                    }
-                } else if (currentUser.role === 'empresa_login_principal') {
-                    query = query.or(`empresa_id.eq.${currentUser.empresa_id},empresa_id.is.null`);
-                } else {
-                    categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Permissão negada.</td></tr>';
+            
+            let targetEmpresaIdForFetch = null;
+            if (currentUser.role === 'admin_master') {
+                targetEmpresaIdForFetch = adminSelectedEmpresaContextId;
+                if (!targetEmpresaIdForFetch) { // Admin must select a company
+                    categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Selecione uma empresa para visualizar as categorias.</td></tr>';
+                    if(thCategoriaEmpresaScopeEl) thCategoriaEmpresaScopeEl.style.display = ''; // Show scope for admin if they might see others'
                     hideLoader();
                     return;
                 }
-                query = query.order('nome_categoria');
+            } else if (currentUser.role === 'empresa_login_principal') {
+                targetEmpresaIdForFetch = currentUser.empresa_id;
+                 if(thCategoriaEmpresaScopeEl) thCategoriaEmpresaScopeEl.style.display = 'none'; // Hide scope for empresa user, it's always their company
+            } else {
+                categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Permissão negada.</td></tr>';
+                hideLoader(); return;
+            }
+            
+            console.log(`WorkspaceAndRenderCategorias - Role: ${currentUser?.role}, TargetEmpresaID: ${targetEmpresaIdForFetch}`);
 
-                const { data, error } = await query;
+            try {
+                const { data, error } = await _supabaseClient.from('categorias')
+                    .select('id, nome_categoria, created_at, empresa_id, empresas (nome_empresa)')
+                    .eq('empresa_id', targetEmpresaIdForFetch) // Fetch only for the target company
+                    .order('nome_categoria');
+                
                 if (error) throw error;
 
                 categoriasCache = data || []; 
@@ -1143,30 +1188,28 @@
                     data.forEach(cat => {
                         const row = categoriasTableBodyEl.insertRow();
                         row.insertCell().textContent = cat.nome_categoria;
-                        const escopoCell = row.insertCell();
-                        escopoCell.textContent = cat.empresa_id ? (cat.empresas?.nome_empresa || `Empresa ID: ${cat.empresa_id}`) : "Global";
+                        
+                        const empresaCell = row.insertCell(); // Always show company name for clarity, even if filtered
+                        empresaCell.textContent = cat.empresas?.nome_empresa || `Empresa ID: ${cat.empresa_id}`;
+                        if (currentUser.role === 'empresa_login_principal' && thCategoriaEmpresaScopeEl && thCategoriaEmpresaScopeEl.style.display === 'none') {
+                            // If scope column is hidden for empresa user, don't add this cell or hide it.
+                            // For simplicity, we can keep it and it will just be hidden by CSS on the <th> if needed.
+                            // Or: if(thCategoriaEmpresaScopeEl.style.display !== 'none') { row.insertCell()... }
+                        }
+
+
                         row.insertCell().textContent = new Date(cat.created_at).toLocaleDateString('pt-BR');
                         
                         const actionsCell = row.insertCell();
-                        let canDelete = false;
-                        if (currentUser.role === 'admin_master') { // Admin can delete any category they are viewing
-                            canDelete = true;
-                        } else if (currentUser.role === 'empresa_login_principal' && cat.empresa_id === currentUser.empresa_id) {
-                            canDelete = true; // Empresa user can only delete their own company's category
-                        }
-
-                        if (canDelete) {
-                            const btnDelete = document.createElement('button');
-                            btnDelete.textContent = 'Excluir';
-                            btnDelete.className = 'btn btn-danger table-actions';
-                            btnDelete.onclick = () => handleDeleteCategoria(cat.id, cat.nome_categoria, cat.empresa_id);
-                            actionsCell.appendChild(btnDelete);
-                        } else {
-                            actionsCell.textContent = '-'; 
-                        }
+                        // Both admin (for selected company) and empresa user (for their own) can delete.
+                        const btnDelete = document.createElement('button');
+                        btnDelete.textContent = 'Excluir';
+                        btnDelete.className = 'btn btn-danger table-actions';
+                        btnDelete.onclick = () => handleDeleteCategoria(cat.id, cat.nome_categoria, cat.empresa_id);
+                        actionsCell.appendChild(btnDelete);
                     });
                 } else {
-                    categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Nenhuma categoria encontrada para o filtro selecionado.</td></tr>';
+                    categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Nenhuma categoria cadastrada para esta empresa.</td></tr>';
                 }
             } catch (e) {
                 console.error("Erro ao buscar/renderizar categorias:", e);
@@ -1184,9 +1227,17 @@
             let empresaIdParaNovaCategoria = null;
 
             if (currentUser.role === 'admin_master') {
-                empresaIdParaNovaCategoria = adminSelectedEmpresaParaCategoriaId; 
+                empresaIdParaNovaCategoria = adminSelectedEmpresaContextId; 
+                if (!empresaIdParaNovaCategoria) {
+                    alert("Admin: Selecione uma empresa primeiro para adicionar a categoria.");
+                    return;
+                }
             } else if (currentUser.role === 'empresa_login_principal') {
-                empresaIdParaNovaCategoria = currentUser.empresa_id; // Always their own company
+                empresaIdParaNovaCategoria = currentUser.empresa_id;
+                 if (!empresaIdParaNovaCategoria) { // Should not happen for a logged-in empresa user
+                    alert("Erro: ID da sua empresa não encontrado. Não é possível adicionar categoria.");
+                    return;
+                }
             } else {
                 alert("Permissão negada para adicionar categoria."); return;
             }
@@ -1194,16 +1245,16 @@
             if (!nomeCategoria) { alert('Digite o nome da categoria.'); return; }
             showLoader();
             try {
-                let checkQuery = _supabaseClient.from('categorias').select('id').eq('nome_categoria', nomeCategoria);
-                if (empresaIdParaNovaCategoria) {
-                    checkQuery = checkQuery.eq('empresa_id', empresaIdParaNovaCategoria);
-                } else { 
-                    checkQuery = checkQuery.is('empresa_id', null);
-                }
-                const { data: existing, error: checkError } = await checkQuery.maybeSingle();
+                // Check if category with this name already exists for THIS specific company
+                const { data: existing, error: checkError } = await _supabaseClient.from('categorias')
+                    .select('id')
+                    .eq('nome_categoria', nomeCategoria)
+                    .eq('empresa_id', empresaIdParaNovaCategoria) // Crucial: check only for this company
+                    .maybeSingle();
+
                 if (checkError) throw checkError;
                 if (existing) {
-                    alert(`Uma categoria com este nome já existe para ${empresaIdParaNovaCategoria ? 'esta empresa' : 'o escopo global'}.`);
+                    alert(`Uma categoria com o nome "${nomeCategoria}" já existe para esta empresa.`);
                     hideLoader(); return;
                 }
 
@@ -1226,14 +1277,21 @@
         async function handleDeleteCategoria(categoriaId, nomeCategoria, catEmpresaId) { 
             if (!confirm(`Tem certeza que deseja excluir a categoria "${nomeCategoria}"? Esta ação não pode ser desfeita.`)) return;
             
-            if (currentUser.role === 'empresa_login_principal' && catEmpresaId !== currentUser.empresa_id) {
-                alert("Você não tem permissão para excluir categorias globais ou de outras empresas.");
-                return;
+            let canDelete = false;
+            if (currentUser.role === 'admin_master' && catEmpresaId === adminSelectedEmpresaContextId) {
+                canDelete = true; // Admin can delete category of the currently selected company context
+            } else if (currentUser.role === 'empresa_login_principal' && catEmpresaId === currentUser.empresa_id) {
+                canDelete = true; // Empresa user can only delete their own company's category
+            }
+
+            if (!canDelete) {
+                 alert("Você não tem permissão para excluir esta categoria.");
+                 return;
             }
 
             showLoader();
             try {
-                const { data: productsUsingCategory, error: productCheckError, count } = await _supabaseClient
+                const { count, error: productCheckError } = await _supabaseClient
                     .from('produtos')
                     .select('id', { count: 'exact', head: true }) 
                     .eq('categoria_id', categoriaId);
@@ -1518,19 +1576,19 @@
             showLoader();
             try {
                 const adminHistEmpSelect = document.getElementById('adminHistoricoEmpresaSelect');
-                await populateEmpresasSelect(adminHistEmpSelect, true, "-- Todas as Empresas --", "ALL_EMPRESAS");
+                await populateEmpresasSelect(adminHistEmpSelect, true, "-- Selecione uma Empresa --", ""); // Changed placeholder
                 
                 if (adminHistEmpSelect) {
-                    adminHistEmpSelect.value = "ALL_EMPRESAS"; 
-                    if (!adminHistEmpSelect.onchangeAttached_hist) {
+                    adminHistEmpSelect.value = adminSelectedEmpresaContextId || ""; // Restore or default
+                    if (!adminHistEmpSelect.onchangeAttached_hist_admin) { // Unique listener flag
                         adminHistEmpSelect.addEventListener('change', async () => {
-                            const selectedEmpresaId = adminHistEmpSelect.value === "ALL_EMPRESAS" ? null : adminHistEmpSelect.value;
-                            const selectedEmpresa = empresasCache.find(e => e.id === selectedEmpresaId);
-                            const contextText = selectedEmpresa ? `Empresa: ${selectedEmpresa.nome_empresa}` : "Todas as Empresas";
+                            adminSelectedEmpresaContextId = adminHistEmpSelect.value === "" ? null : adminHistEmpSelect.value;
+                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
+                            const contextText = selectedEmpresa ? `Empresa: ${selectedEmpresa.nome_empresa}` : "Nenhuma empresa selecionada";
                              if(document.getElementById('historicoContext')) document.getElementById('historicoContext').textContent = contextText;
-                            await fetchAndRenderHistoricoContagens(selectedEmpresaId, true);
+                            await fetchAndRenderHistoricoContagens(adminSelectedEmpresaContextId, true);
                         });
-                        adminHistEmpSelect.onchangeAttached_hist = true;
+                        adminHistEmpSelect.onchangeAttached_hist_admin = true;
                     }
                     adminHistEmpSelect.dispatchEvent(new Event('change')); 
                 } else {
@@ -1539,7 +1597,7 @@
 
                 showScreen('historicoContagens', {
                     title: 'Histórico de Contagens (Admin)',
-                    context: 'Selecione uma empresa para filtrar o histórico ou veja todas.',
+                    context: 'Selecione uma empresa para filtrar o histórico.',
                     showEmpresaSelector: true,
                     showEmpresaColumnInTable: true
                 });
@@ -1554,6 +1612,12 @@
         
         async function fetchAndRenderHistoricoContagens(empresaIdFiltro = null, isAdminView = false) {
             if (!historicoContagensTableBody) { console.error("historicoContagensTableBody not found."); return; }
+            
+            if (isAdminView && !empresaIdFiltro) { // Admin view but no company selected for history
+                historicoContagensTableBody.innerHTML = `<tr><td colspan="5">Selecione uma empresa para ver o histórico.</td></tr>`;
+                hideLoader(); return;
+            }
+            
             historicoContagensTableBody.innerHTML = `<tr><td colspan="${isAdminView ? 5 : 4}">Loading history...</td></tr>`;
             showLoader();
             try {
@@ -1561,10 +1625,14 @@
                                          .select('id, created_at, colaborador_nome, itens_contados, dados_contagem, empresa_id, empresas (nome_empresa)')
                                          .order('created_at', { ascending: false });
 
-                if (empresaIdFiltro && empresaIdFiltro !== "ALL_EMPRESAS") {
+                if (empresaIdFiltro) { // This applies to admin selecting a company, or empresa user (id is their own)
                     query = query.eq('empresa_id', empresaIdFiltro);
-                } else if (!isAdminView && currentUser && currentUser.empresa_id) { 
+                } else if (!isAdminView && currentUser?.empresa_id) { // Should not happen if empresaIdFiltro is correctly set for empresa user
                     query = query.eq('empresa_id', currentUser.empresa_id);
+                } else if (isAdminView && !empresaIdFiltro) {
+                     // This case is now handled by the initial check, but as a fallback:
+                    historicoContagensTableBody.innerHTML = `<tr><td colspan="5">Selecione uma empresa.</td></tr>`;
+                    hideLoader(); return;
                 }
                 
 
@@ -1576,7 +1644,7 @@
                     data.forEach(reg => {
                         const row = historicoContagensTableBody.insertRow();
                         if (isAdminView && document.getElementById('colEmpresaHistorico').style.display !== 'none') {
-                             row.insertCell().textContent = reg.empresas?.nome_empresa || (reg.empresa_id ? `ID: ${reg.empresa_id}`: 'Global/N/A');
+                             row.insertCell().textContent = reg.empresas?.nome_empresa || (reg.empresa_id ? `ID: ${reg.empresa_id}`: 'N/A');
                         }
                         row.insertCell().textContent = new Date(reg.created_at).toLocaleString('pt-BR');
                         row.insertCell().textContent = reg.colaborador_nome || "N/A";
@@ -1590,7 +1658,7 @@
                         actionsCell.appendChild(btnDetalhes);
                     });
                 } else {
-                    historicoContagensTableBody.innerHTML = `<tr><td colspan="${isAdminView ? 5 : 4}">No count records found.</td></tr>`;
+                    historicoContagensTableBody.innerHTML = `<tr><td colspan="${isAdminView ? 5 : 4}">Nenhum registro de contagem encontrado para a seleção.</td></tr>`;
                 }
             } catch (e) {
                 console.error("Error fetching/rendering history:", e);
@@ -1635,62 +1703,35 @@
         function closeModalDetalhesContagem() { if(modalDetalhesContagem) modalDetalhesContagem.classList.remove('active'); }
         function closeModalPreviewContagem() { if(modalPreviewContagem) modalPreviewContagem.classList.remove('active'); }
         
-        async function populateCategoriaSelect_ProdutoForm(empresaIdContexto = null) {
+        async function populateCategoriaSelect_ProdutoForm(empresaIdParaCategorias) { // Renamed param for clarity
             if (!prodCategoriaSelect) { console.warn("Product category select (prodCategoriaSelect) not found."); return; }
-            const currentValue = prodCategoriaSelect.value;
-            prodCategoriaSelect.innerHTML = '<option value="">-- Sem Categoria --</option>';
+            prodCategoriaSelect.innerHTML = '<option value="">-- Carregando Categorias... --</option>';
+            
+            if (!empresaIdParaCategorias) {
+                prodCategoriaSelect.innerHTML = '<option value="">-- Selecione uma Empresa Primeiro --</option>';
+                console.warn("populateCategoriaSelect_ProdutoForm: empresaIdParaCategorias não fornecido.");
+                return;
+            }
+
+            const currentValue = prodCategoriaSelect.value; // Save current value if any
             showLoader();
             try {
-                let query = _supabaseClient.from('categorias').select('id, nome_categoria').order('nome_categoria');
+                const { data, error } = await _supabaseClient.from('categorias')
+                    .select('id, nome_categoria')
+                    .eq('empresa_id', empresaIdParaCategorias) // Only categories for the specific company
+                    .order('nome_categoria');
                 
+                if (error) throw error;
                 
-                
-                let specificCategories = [];
-                let globalCategories = [];
-
-                if (empresaIdContexto) { 
-                    const { data: specific, error: specificError } = await _supabaseClient.from('categorias')
-                        .select('id, nome_categoria').eq('empresa_id', empresaIdContexto).order('nome_categoria');
-                    if (specificError) throw specificError;
-                    specificCategories = specific || [];
-                }
-
-                
-                
-                const { data: globalData, error: globalError } = await _supabaseClient.from('categorias') 
-                    .select('id, nome_categoria').is('empresa_id', null).order('nome_categoria');
-                if (globalError) throw globalError;
-                globalCategories = globalData || []; 
-
-                
-                const allCategorias = [];
-                const addedIds = new Set();
-
-                specificCategories.forEach(cat => {
-                    if (!addedIds.has(cat.id)) {
-                        allCategorias.push({...cat, display_name: `${cat.nome_categoria} (Empresa)`});
-                        addedIds.add(cat.id);
-                    }
-                });
-                 globalCategories.forEach(cat => {
-                    if (!addedIds.has(cat.id)) {
-                        allCategorias.push({...cat, display_name: `${cat.nome_categoria} (Global)`});
-                        addedIds.add(cat.id);
-                    }
-                });
-                
-                
-                allCategorias.sort((a,b) => a.display_name.localeCompare(b.display_name));
-
-
-                allCategorias.forEach(cat => {
+                prodCategoriaSelect.innerHTML = '<option value="">-- Sem Categoria --</option>'; // Reset with default
+                (data || []).forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat.id;
-                    option.textContent = cat.display_name;
+                    option.textContent = cat.nome_categoria;
                     prodCategoriaSelect.appendChild(option);
                 });
 
-                if (Array.from(prodCategoriaSelect.options).some(opt => opt.value === currentValue)) {
+                if (currentValue && Array.from(prodCategoriaSelect.options).some(opt => opt.value === currentValue)) {
                     prodCategoriaSelect.value = currentValue;
                 } else {
                     prodCategoriaSelect.value = ""; 
@@ -1698,7 +1739,7 @@
 
             } catch (e) {
                 console.error("Error populating product category select:", e);
-                prodCategoriaSelect.innerHTML = '<option value="">Error loading categories</option>';
+                prodCategoriaSelect.innerHTML = '<option value="">Erro ao carregar categorias</option>';
             } finally {
                 hideLoader();
             }
@@ -1706,48 +1747,61 @@
         
         async function showProductManagementScreen_AdminGlobal() { 
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.9.14 (corrected) called");
+            console.log("showProductManagementScreen_AdminGlobal v2.9.15 called");
             showLoader();
             try {
-                adminSelectedEmpresaId = null; 
-                const adminProdEmpSelect = document.getElementById('adminProdutoEmpresaSelect');
-                await populateEmpresasSelect(adminProdEmpSelect, true, "-- Produtos Globais (Sem Empresa) --", "");
-                if (adminProdEmpSelect) {
-                    adminProdEmpSelect.value = ""; 
-                    if (!adminProdEmpSelect.onchangeAttached_prod) { 
-                        adminProdEmpSelect.addEventListener('change', async () => {
-                            adminSelectedEmpresaId = adminProdEmpSelect.value === "" ? null : adminProdEmpSelect.value;
-                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaId);
-                            const empresaNomeContext = selectedEmpresa ? selectedEmpresa.nome_empresa : "Produtos Globais";
+                adminSelectedEmpresaContextId = null; // Reset context
+                if(adminProdutoEmpresaSelect) {
+                    await populateEmpresasSelect(adminProdutoEmpresaSelect, true, "-- Selecione uma Empresa --", "");
+                    adminProdutoEmpresaSelect.value = ""; 
+                    if (!adminProdutoEmpresaSelect.onchangeAttached_prod_admin) { 
+                        adminProdutoEmpresaSelect.addEventListener('change', async () => {
+                            adminSelectedEmpresaContextId = adminProdutoEmpresaSelect.value === "" ? null : adminProdutoEmpresaSelect.value;
+                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
+                            const empresaNomeContext = selectedEmpresa ? selectedEmpresa.nome_empresa : "Nenhuma empresa selecionada";
                             if(document.getElementById('productManagementContext')) document.getElementById('productManagementContext').textContent = `Gerenciando para: ${empresaNomeContext}`;
-                            await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaId); 
-                            await fetchProductsFromSupabase(adminSelectedEmpresaId); 
+                            
+                            if(btnAddProductEl) btnAddProductEl.disabled = !adminSelectedEmpresaContextId;
+                            if(btnImportXLSXEl) btnImportXLSXEl.disabled = !adminSelectedEmpresaContextId;
+
+                            if (adminSelectedEmpresaContextId) {
+                                await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaContextId); 
+                                await fetchProductsFromSupabase(adminSelectedEmpresaContextId); 
+                            } else { // No company selected
+                                if(prodCategoriaSelect) prodCategoriaSelect.innerHTML = '<option value="">-- Selecione uma Empresa Primeiro --</option>';
+                                produtosCache = []; // Clear product cache
+                            }
                             renderProductManagementTable(); 
                         });
-                        adminProdEmpSelect.onchangeAttached_prod = true;
+                        adminProdutoEmpresaSelect.onchangeAttached_prod_admin = true;
                     }
-                    adminProdEmpSelect.dispatchEvent(new Event('change')); 
+                    adminProdutoEmpresaSelect.dispatchEvent(new Event('change')); 
                 } else { 
-                    await populateCategoriaSelect_ProdutoForm(null); await fetchProductsFromSupabase(null); renderProductManagementTable();
+                    // Fallback if select not found, though it should be there
+                    produtosCache = []; renderProductManagementTable();
+                    if(prodCategoriaSelect) prodCategoriaSelect.innerHTML = '<option value="">-- Selecione uma Empresa --</option>';
                 }
-                showScreen('productManagement', { title: 'Gerenciar Produtos (Admin)', context: 'Selecione uma empresa ou gerencie produtos globais.', showEmpresaSelector: true });
+                showScreen('productManagement', { title: 'Gerenciar Produtos (Admin)', context: 'Selecione uma empresa para ver ou adicionar produtos.', showEmpresaSelector: true });
                 
             } catch (e) { console.error("Error showProductManagementScreen_AdminGlobal:", e); alert("Error admin products screen."); } 
             finally { hideLoader(); }
         }
 
         async function showProductManagementScreen_Empresa() {
-            if (!currentUser || currentUser.role !== 'empresa_login_principal') { handleLogout(); return; }
+            if (!currentUser || currentUser.role !== 'empresa_login_principal' || !currentUser.empresa_id) { handleLogout(); return; }
             console.log("showProductManagementScreen_Empresa called");
             showLoader();
             try {
-                adminSelectedEmpresaId = currentUser.empresa_id; 
-                await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaId);
-                await fetchProductsFromSupabase(adminSelectedEmpresaId);
+                adminSelectedEmpresaContextId = currentUser.empresa_id; 
+                if(btnAddProductEl) btnAddProductEl.disabled = false; // Empresa user can always add
+                if(btnImportXLSXEl) btnImportXLSXEl.disabled = false;
+
+                await populateCategoriaSelect_ProdutoForm(adminSelectedEmpresaContextId);
+                await fetchProductsFromSupabase(adminSelectedEmpresaContextId);
                 renderProductManagementTable();
                 showScreen('productManagement', {
                     title: `Gerenciar Produtos (${currentUser.empresa_nome || 'Sua Empresa'})`,
-                    context: `Gerenciando produtos para ${currentUser.empresa_nome || 'sua empresa'}. Produtos globais também podem estar visíveis para contagem.`,
+                    context: `Gerenciando produtos para ${currentUser.empresa_nome || 'sua empresa'}.`,
                     showEmpresaSelector: false 
                 });
                  
@@ -1759,26 +1813,23 @@
             }
         }
         
-        async function fetchProductsFromSupabase(empresaIdFiltro = null) {
+        async function fetchProductsFromSupabase(empresaIdFiltro) { // Now always requires a company ID
             showLoader();
+            if (!empresaIdFiltro) {
+                console.warn("fetchProductsFromSupabase: empresaIdFiltro é nulo/vazio. Nenhum produto será carregado.");
+                produtosCache = [];
+                hideLoader();
+                return;
+            }
             try {
-                let query = _supabaseClient.from('produtos').select('*, categorias(nome_categoria)');
-
-                if (empresaIdFiltro) { 
-                    query = query.eq('empresa_id', empresaIdFiltro);
-                } else if (currentUser?.role === 'admin_master' && !empresaIdFiltro) { 
-                    query = query.is('empresa_id', null);
-                } else if (currentUser?.role === 'empresa_login_principal' && !empresaIdFiltro) { 
-                     console.warn("fetchProductsFromSupabase: Company user with null empresaIdFiltro. Using currentUser.empresa_id");
-                     query = query.eq('empresa_id', currentUser.empresa_id);
-                }
-                
-                query = query.order('nome_produto');
-                const { data, error } = await query;
+                const { data, error } = await _supabaseClient.from('produtos')
+                    .select('*, categorias(nome_categoria)')
+                    .eq('empresa_id', empresaIdFiltro) // Products are always company-specific now
+                    .order('nome_produto');
 
                 if (error) throw error;
                 produtosCache = data || []; 
-                console.log(`Products loaded for company ID ${empresaIdFiltro || 'Global'}:`, produtosCache.length);
+                console.log(`Products loaded for company ID ${empresaIdFiltro}:`, produtosCache.length);
             } catch (e) {
                 console.error("Error fetching products:", e);
                 produtosCache = []; 
@@ -1793,7 +1844,7 @@
             productManagementTableBody.innerHTML = ""; 
 
             if (produtosCache.length === 0) {
-                productManagementTableBody.innerHTML = '<tr><td colspan="4">No products registered for the current filter.</td></tr>';
+                productManagementTableBody.innerHTML = `<tr><td colspan="4">Nenhum produto cadastrado para a empresa selecionada.</td></tr>`;
                 return;
             }
 
@@ -1801,13 +1852,13 @@
                 const row = productManagementTableBody.insertRow();
                 row.insertCell().textContent = produto.codigo_produto;
                 row.insertCell().textContent = produto.nome_produto;
-                row.insertCell().textContent = produto.categorias ? produto.categorias.nome_categoria : (produto.categoria_id ? 'Category not found' : 'Sem Categoria');
+                row.insertCell().textContent = produto.categorias ? produto.categorias.nome_categoria : (produto.categoria_id ? 'Categoria Inválida' : 'Sem Categoria');
                 
                 const actionsCell = row.insertCell();
                 const btnRemove = document.createElement('button');
                 btnRemove.textContent = 'Remover';
                 btnRemove.className = 'btn btn-danger table-actions';
-                btnRemove.onclick = () => handleRemoveProduct(produto.id, produto.nome_produto);
+                btnRemove.onclick = () => handleRemoveProduct(produto.id, produto.nome_produto, produto.empresa_id);
                 actionsCell.appendChild(btnRemove);
             });
         }
@@ -1822,26 +1873,36 @@
             
             let empresaParaProdutoId = null;
             if (currentUser?.role === 'admin_master') {
-                empresaParaProdutoId = adminSelectedEmpresaId; 
+                empresaParaProdutoId = adminSelectedEmpresaContextId; 
+                if (!empresaParaProdutoId) {
+                    alert("Admin: Selecione uma empresa primeiro para adicionar o produto.");
+                    return;
+                }
             } else if (currentUser?.role === 'empresa_login_principal') {
                 empresaParaProdutoId = currentUser.empresa_id;
+                 if (!empresaParaProdutoId) {
+                    alert("Erro: ID da sua empresa não encontrado."); return;
+                }
+            } else {
+                alert("Permissão negada."); return;
             }
+
 
             if (!codigo) { alert("Product code is required."); prodCodigoInput.focus(); return; }
             if (!nome) { alert("Product name is required."); prodNomeInput.focus(); return; }
 
             showLoader();
             try {
-                let checkQuery = _supabaseClient.from('produtos').select('id').eq('codigo_produto', codigo);
-                if (empresaParaProdutoId) {
-                    checkQuery = checkQuery.eq('empresa_id', empresaParaProdutoId);
-                } else {
-                    checkQuery = checkQuery.is('empresa_id', null); 
-                }
-                const { data: existing, error: checkError } = await checkQuery.maybeSingle();
+                // Check for existing product with same code for THIS specific company
+                const { data: existing, error: checkError } = await _supabaseClient.from('produtos')
+                    .select('id')
+                    .eq('codigo_produto', codigo)
+                    .eq('empresa_id', empresaParaProdutoId) // Products are now always company-specific
+                    .maybeSingle();
+
                 if (checkError) throw checkError;
                 if (existing) {
-                    alert(`A product with code "${codigo}" already exists for ${empresaParaProdutoId ? 'this company' : 'the global scope'}.`);
+                    alert(`Um produto com o código "${codigo}" já existe para esta empresa.`);
                     hideLoader(); return;
                 }
 
@@ -1855,7 +1916,7 @@
                 ]).select().single();
 
                 if (error) throw error;
-                alert(`Product "${nome}" added successfully!`);
+                alert(`Produto "${nome}" adicionado com sucesso!`);
                 prodCodigoInput.value = '';
                 prodNomeInput.value = '';
                 prodCategoriaSelect.value = '';
@@ -1865,32 +1926,37 @@
 
             } catch (e) {
                 console.error("Error adding product:", e);
-                alert('Failed to add product: ' + e.message);
+                alert('Falha ao adicionar produto: ' + e.message);
             } finally {
                 hideLoader();
             }
         }
 
-        async function handleRemoveProduct(produtoId, nomeProduto) {
-            if (!confirm(`Are you sure you want to remove product "${nomeProduto}"? This action cannot be undone.`)) return;
+        async function handleRemoveProduct(produtoId, nomeProduto, produtoEmpresaId) {
+            if (!confirm(`Tem certeza que deseja remover o produto "${nomeProduto}"? Esta ação não pode ser desfeita.`)) return;
+            
+            let canDelete = false;
+            if (currentUser?.role === 'admin_master' && produtoEmpresaId === adminSelectedEmpresaContextId) {
+                canDelete = true;
+            } else if (currentUser?.role === 'empresa_login_principal' && produtoEmpresaId === currentUser.empresa_id) {
+                canDelete = true;
+            }
+            if(!canDelete){
+                alert("Você não tem permissão para remover este produto."); return;
+            }
+
             showLoader();
             try {
                 const { error } = await _supabaseClient.from('produtos').delete().eq('id', produtoId);
                 if (error) throw error;
-                alert(`Product "${nomeProduto}" removed successfully!`);
+                alert(`Produto "${nomeProduto}" removido com sucesso!`);
                 
-                 let currentEmpresaContextId = null;
-                if (currentUser?.role === 'admin_master') {
-                    currentEmpresaContextId = adminSelectedEmpresaId; 
-                } else if (currentUser?.role === 'empresa_login_principal') {
-                    currentEmpresaContextId = currentUser.empresa_id;
-                }
-                await fetchProductsFromSupabase(currentEmpresaContextId);
+                await fetchProductsFromSupabase(produtoEmpresaId); // Refresh for the same company context
                 renderProductManagementTable();
 
             } catch (e) {
                 console.error("Error removing product:", e);
-                alert('Failed to remove product: ' + e.message);
+                alert('Falha ao remover produto: ' + e.message);
             } finally {
                 hideLoader();
             }
@@ -1900,6 +1966,24 @@
             if (!xlsxFileInput || !xlsxFileInput.files || xlsxFileInput.files.length === 0) {
                 alert("Por favor, selecione um arquivo XLSX."); return;
             }
+
+            let empresaParaImportacaoId = null;
+            if (currentUser?.role === 'admin_master') {
+                empresaParaImportacaoId = adminSelectedEmpresaContextId; 
+                if (!empresaParaImportacaoId) {
+                    alert("Admin: Por favor, selecione uma empresa primeiro na tela de 'Gerenciar Produtos' antes de importar.");
+                    return;
+                }
+            } else if (currentUser?.role === 'empresa_login_principal') {
+                empresaParaImportacaoId = currentUser.empresa_id;
+                if (!empresaParaImportacaoId) {
+                    alert("Erro: ID da sua empresa não encontrado. Não é possível importar."); return;
+                }
+            } else {
+                alert("Permissão negada para importar."); return;
+            }
+
+
             const file = xlsxFileInput.files[0];
             const reader = new FileReader();
 
@@ -1940,38 +2024,27 @@
                         hideLoader(); return;
                     }
                     
-                    let empresaParaImportacaoId = null;
-                    if (currentUser?.role === 'admin_master') {
-                        empresaParaImportacaoId = adminSelectedEmpresaId; 
-                    } else if (currentUser?.role === 'empresa_login_principal') {
-                        empresaParaImportacaoId = currentUser.empresa_id;
-                    }
-
-                    // Fetch all relevant categories once to build a comprehensive map for this import session
-                    let allCategoriesForContextAndGlobal = [];
-                    const {data: globalCats, error: globErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').is('empresa_id', null);
-                    if(globErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias globais para o mapa", globErr); }
-                    else { allCategoriesForContextAndGlobal = allCategoriesForContextAndGlobal.concat(globalCats || []); }
-
-                    if (empresaParaImportacaoId) { 
-                        const {data: compCats, error: compErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').eq('empresa_id', empresaParaImportacaoId);
-                        if(compErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias da empresa para o mapa", compErr); }
-                        else { allCategoriesForContextAndGlobal = allCategoriesForContextAndGlobal.concat(compCats || []); }
+                    // Fetch categories ONLY for the target company for this import session
+                    const {data: companyCategories, error: catErr} = await _supabaseClient.from('categorias')
+                        .select('id, nome_categoria')
+                        .eq('empresa_id', empresaParaImportacaoId);
+                    
+                    if(catErr) { 
+                        console.warn("DEBUG XLSX: Erro ao buscar categorias da empresa para o mapa de importação", catErr);
+                        throw new Error("Erro ao carregar categorias da empresa para importação.");
                     }
                     
                     const categoriaMap = new Map(); 
-                    allCategoriesForContextAndGlobal.forEach(cat => {
+                    (companyCategories || []).forEach(cat => {
                         if (cat.nome_categoria) { 
-                           // Key by name_lowercase + scope (empresa_id or 'global') to differentiate
-                           const mapKey = `${String(cat.nome_categoria).toLowerCase().trim()}_${cat.empresa_id || 'global'}`;
-                           categoriaMap.set(mapKey, cat.id);
+                           categoriaMap.set(String(cat.nome_categoria).toLowerCase().trim(), cat.id);
                         }
                     });
-                    console.log("DEBUG XLSX: Mapa de categorias consolidado criado:", categoriaMap);
+                    console.log(`DEBUG XLSX: Mapa de categorias para empresa ${empresaParaImportacaoId}:`, categoriaMap);
 
                     const produtosParaInserir = [];
                     let produtosIgnoradosCount = 0;
-                    let categoriasCriadasNestaSessao = new Map(); // Para evitar criar a mesma categoria múltiplas vezes nesta importação
+                    let categoriasCriadasNestaSessao = new Map(); 
 
                     for (let i = 1; i < jsonData.length; i++) {
                         const row = jsonData[i];
@@ -1997,51 +2070,45 @@
                         let categoriaIdParaProduto = null;
                         if (nomeCategoriaXLSX) { 
                             const nomeCategoriaLower = nomeCategoriaXLSX.toLowerCase();
-                            // Chave para buscar no mapa: nome + scope (empresa ou global)
-                            const mapKeyForLookup = `${nomeCategoriaLower}_${empresaParaImportacaoId || 'global'}`;
-                            categoriaIdParaProduto = categoriaMap.get(mapKeyForLookup);
+                            categoriaIdParaProduto = categoriaMap.get(nomeCategoriaLower); // Check existing map for this company
 
-                            if (!categoriaIdParaProduto) { // Não achou no mapa inicial (nem global, nem da empresa, se aplicável)
-                                 // Verifica se já criamos nesta sessão
-                                if (categoriasCriadasNestaSessao.has(mapKeyForLookup)) {
-                                    categoriaIdParaProduto = categoriasCriadasNestaSessao.get(mapKeyForLookup);
-                                     console.log(`DEBUG XLSX: Usando categoria "${nomeCategoriaXLSX}" criada anteriormente nesta sessão (ID: ${categoriaIdParaProduto}).`);
+                            if (!categoriaIdParaProduto) { 
+                                if (categoriasCriadasNestaSessao.has(nomeCategoriaLower)) {
+                                    categoriaIdParaProduto = categoriasCriadasNestaSessao.get(nomeCategoriaLower);
+                                     console.log(`DEBUG XLSX: Usando categoria "${nomeCategoriaXLSX}" criada anteriormente nesta sessão (ID: ${categoriaIdParaProduto}) para empresa ${empresaParaImportacaoId}.`);
                                 } else {
-                                    console.warn(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" não no mapa. Tentando criar para empresa_id: ${empresaParaImportacaoId || 'Global'}...`);
+                                    console.warn(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" não no mapa. Criando para empresa_id: ${empresaParaImportacaoId}...`);
                                     
                                     const { data: novaCategoria, error: createCatErr } = await _supabaseClient
                                         .from('categorias')
-                                        .insert({ nome_categoria: nomeCategoriaXLSX, empresa_id: empresaParaImportacaoId })
+                                        .insert({ nome_categoria: nomeCategoriaXLSX, empresa_id: empresaParaImportacaoId }) // Always scoped to the import company
                                         .select('id')
                                         .single();
                                     
                                     if (createCatErr) {
-                                        console.error(`DEBUG XLSX: Erro ao criar nova categoria "${nomeCategoriaXLSX}":`, createCatErr);
+                                        console.error(`DEBUG XLSX: Erro ao criar nova categoria "${nomeCategoriaXLSX}" para empresa ${empresaParaImportacaoId}:`, createCatErr);
                                     } else if (novaCategoria) {
                                         categoriaIdParaProduto = novaCategoria.id;
-                                        console.log(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" criada com ID: ${categoriaIdParaProduto}. Atualizando mapas.`);
-                                        categoriaMap.set(mapKeyForLookup, categoriaIdParaProduto); // Adiciona ao mapa principal
-                                        categoriasCriadasNestaSessao.set(mapKeyForLookup, categoriaIdParaProduto); // Adiciona ao mapa da sessão
+                                        console.log(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" criada com ID: ${categoriaIdParaProduto} para empresa ${empresaParaImportacaoId}. Atualizando mapas.`);
+                                        categoriaMap.set(nomeCategoriaLower, categoriaIdParaProduto); 
+                                        categoriasCriadasNestaSessao.set(nomeCategoriaLower, categoriaIdParaProduto); 
                                     }
                                 }
                             }
                         }
                         
-                        let checkExistingQuery = _supabaseClient.from('produtos').select('id', { count: 'exact', head: true }).eq('codigo_produto', codigo);
-                        if(empresaParaImportacaoId) {
-                            checkExistingQuery = checkExistingQuery.eq('empresa_id', empresaParaImportacaoId);
-                        } else {
-                            checkExistingQuery = checkExistingQuery.is('empresa_id', null);
-                        }
-                        const { count: existingProdCount, error: checkProdError} = await checkExistingQuery;
+                        const { count: existingProdCount, error: checkProdError} = await _supabaseClient.from('produtos')
+                            .select('id', { count: 'exact', head: true })
+                            .eq('codigo_produto', codigo)
+                            .eq('empresa_id', empresaParaImportacaoId); // Products are company-specific
                         
                         if(checkProdError) {
-                            console.error(`DEBUG XLSX: Erro ao verificar produto existente (código: ${codigo}):`, checkProdError);
+                            console.error(`DEBUG XLSX: Erro ao verificar produto existente (código: ${codigo}) para empresa ${empresaParaImportacaoId}:`, checkProdError);
                             throw checkProdError; 
                         }
 
                         if(existingProdCount && existingProdCount > 0) {
-                            console.warn(`DEBUG XLSX: Produto com código "${codigo}" já existe para o escopo. Linha ${i+1} ignorada.`);
+                            console.warn(`DEBUG XLSX: Produto com código "${codigo}" já existe para a empresa ${empresaParaImportacaoId}. Linha ${i+1} ignorada.`);
                             produtosIgnoradosCount++;
                             continue;
                         }
@@ -2101,35 +2168,39 @@
             console.log("showInventoryCountScreen_AdminGlobal called");
             showLoader();
             try {
-                adminSelectedEmpresaId = null; 
+                adminSelectedEmpresaContextId = null; 
                 const adminCountEmpSelect = document.getElementById('adminContagemEmpresaSelect');
-                await populateEmpresasSelect(adminCountEmpSelect, true, "-- Contagem Global (Produtos Sem Empresa) --", "");
+                await populateEmpresasSelect(adminCountEmpSelect, true, "-- Selecione uma Empresa --", ""); // Admin must select company
                 
                 if (adminCountEmpSelect) {
                     adminCountEmpSelect.value = ""; 
-                    if (!adminCountEmpSelect.onchangeAttached_count) {
+                    if (!adminCountEmpSelect.onchangeAttached_count_admin) { // Unique listener flag
                         adminCountEmpSelect.addEventListener('change', async () => {
-                            adminSelectedEmpresaId = adminCountEmpSelect.value === "" ? null : adminCountEmpSelect.value;
-                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaId);
-                            const empresaNomeContext = selectedEmpresa ? selectedEmpresa.nome_empresa : "Contagem Global";
+                            adminSelectedEmpresaContextId = adminCountEmpSelect.value === "" ? null : adminCountEmpSelect.value;
+                            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
+                            const empresaNomeContext = selectedEmpresa ? selectedEmpresa.nome_empresa : "Nenhuma empresa selecionada";
                             if(document.getElementById('inventoryCountContext')) document.getElementById('inventoryCountContext').textContent = `Realizando contagem para: ${empresaNomeContext}`;
                             
-                            await loadColaboradoresParaContagem(adminSelectedEmpresaId, true); 
-                            await loadProductsForInventory(adminSelectedEmpresaId); 
+                            if(adminSelectedEmpresaContextId){
+                                await loadColaboradoresParaContagem(adminSelectedEmpresaContextId, true); 
+                                await loadProductsForInventory(adminSelectedEmpresaContextId); 
+                            } else {
+                                if(selectColaboradorContagem) selectColaboradorContagem.innerHTML = '<option value="">-- Selecione Empresa Primeiro --</option>';
+                                produtosCache = [];
+                            }
                             populateCategoryFilter(); 
                             displayInventoryProducts(produtosCache); 
                         });
-                        adminCountEmpSelect.onchangeAttached_count = true;
+                        adminCountEmpSelect.onchangeAttached_count_admin = true;
                     }
                     adminCountEmpSelect.dispatchEvent(new Event('change')); 
                 } else { 
-                    await loadColaboradoresParaContagem(null, true);
-                    await loadProductsForInventory(null);
-                    populateCategoryFilter();
-                    displayInventoryProducts(produtosCache);
+                     produtosCache = []; displayInventoryProducts(produtosCache);
+                    if(selectColaboradorContagem) selectColaboradorContagem.innerHTML = '<option value="">-- Selecione Empresa Primeiro --</option>';
+
                 }
 
-                showScreen('inventoryCount', { title: 'Balanço de Estoque (Admin)', context: 'Selecione uma empresa ou realize uma contagem global.', showEmpresaSelector: true });
+                showScreen('inventoryCount', { title: 'Balanço de Estoque (Admin)', context: 'Selecione uma empresa para realizar a contagem.', showEmpresaSelector: true });
             } catch (e) {
                 console.error("Error in showInventoryCountScreen_AdminGlobal:", e);
                 alert("Error loading admin count screen.");
@@ -2139,16 +2210,16 @@
         }
         
         async function showInventoryCountScreen_Empresa() {
-            if (!currentUser || currentUser.role !== 'empresa_login_principal') { handleLogout(); return; }
+            if (!currentUser || currentUser.role !== 'empresa_login_principal' || !currentUser.empresa_id) { handleLogout(); return; }
             console.log("showInventoryCountScreen_Empresa called");
             showLoader();
             try {
-                adminSelectedEmpresaId = currentUser.empresa_id; 
+                adminSelectedEmpresaContextId = currentUser.empresa_id; 
                 const empresaNomeContext = currentUser.empresa_nome || 'Sua Empresa';
                 if(document.getElementById('inventoryCountContext')) document.getElementById('inventoryCountContext').textContent = `Realizando contagem para: ${empresaNomeContext}`;
 
-                await loadColaboradoresParaContagem(adminSelectedEmpresaId, false);
-                await loadProductsForInventory(adminSelectedEmpresaId);
+                await loadColaboradoresParaContagem(adminSelectedEmpresaContextId, false);
+                await loadProductsForInventory(adminSelectedEmpresaContextId);
                 populateCategoryFilter();
                 displayInventoryProducts(produtosCache);
 
@@ -2161,53 +2232,23 @@
             }
         }
 
-        async function loadProductsForInventory(empresaIdContexto = null) {
-            
+        async function loadProductsForInventory(empresaIdContexto) { // Now always requires a company ID
             showLoader();
+             if (!empresaIdContexto) {
+                console.warn("loadProductsForInventory: empresaIdContexto é nulo/vazio. Nenhum produto será carregado.");
+                produtosCache = [];
+                hideLoader();
+                return;
+            }
             try {
-                let companyProducts = [];
-                let globalProducts = [];
-
-                
-                if (empresaIdContexto) {
-                    const { data: cProds, error: cErr } = await _supabaseClient.from('produtos')
-                        .select('*, categorias(nome_categoria)')
-                        .eq('empresa_id', empresaIdContexto)
-                        .order('nome_produto');
-                    if (cErr) throw cErr;
-                    companyProducts = cProds || [];
-                }
-
-                
-                const { data: gProds, error: gErr } = await _supabaseClient.from('produtos')
+                const { data, error } = await _supabaseClient.from('produtos')
                     .select('*, categorias(nome_categoria)')
-                    .is('empresa_id', null)
+                    .eq('empresa_id', empresaIdContexto) // Products are always company-specific
                     .order('nome_produto');
-                if (gErr) throw gErr;
-                globalProducts = gProds || [];
                 
-                
-                const combinedProducts = [];
-                const productIds = new Set();
-
-                companyProducts.forEach(p => {
-                    if(!productIds.has(p.id)){
-                        combinedProducts.push(p);
-                        productIds.add(p.id);
-                    }
-                });
-                globalProducts.forEach(p => {
-                     if(!productIds.has(p.id)){
-                        combinedProducts.push(p);
-                        productIds.add(p.id);
-                    }
-                });
-                
-                
-                combinedProducts.sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || ""));
-
-                produtosCache = combinedProducts; 
-                console.log(`Products loaded for count (Context Company ID: ${empresaIdContexto || 'Global'}): ${produtosCache.length}`);
+                if (error) throw error;
+                produtosCache = data || []; 
+                console.log(`Products loaded for inventory (Company ID: ${empresaIdContexto}): ${produtosCache.length}`);
 
             } catch (e) {
                 console.error("Error fetching products for count:", e);
@@ -2218,20 +2259,19 @@
             }
         }
 
-        async function loadColaboradoresParaContagem(empresaId, isAdminContextGlobalCount = false) {
-            
-            
-            
-            
+        async function loadColaboradoresParaContagem(empresaId, isAdminAlsoCounter = false) { // isAdminAlsoCounter if admin is doing count for a company
             if (!selectColaboradorContagem) { console.warn("Collaborator select for count not found."); return; }
             selectColaboradorContagem.innerHTML = '<option value="">-- Selecione Colaborador --</option>';
+            
+            if (!empresaId && !isAdminAlsoCounter) { // If no empresaId and not admin doing a global count (which is now per company)
+                 selectColaboradorContagem.innerHTML = '<option value="">-- Selecione Empresa Primeiro --</option>';
+                 return;
+            }
             showLoader();
 
             try {
                 let colaboradoresParaSelect = [];
-                if (isAdminContextGlobalCount && !empresaId) { 
-                      colaboradoresParaSelect.push({id: currentUser.id, nome_colaborador: `${currentUser.full_name || currentUser.email} (Admin Global)`});
-                } else if (empresaId) { 
+                if (empresaId) { 
                     const { data, error } = await _supabaseClient.from('colaboradores')
                         .select('id, nome_colaborador')
                         .eq('empresa_id', empresaId)
@@ -2240,9 +2280,11 @@
                     if (error) throw error;
                     colaboradoresParaSelect = data || [];
                     
-                    if (currentUser?.role === 'admin_master' && empresaId) {
+                    if (currentUser?.role === 'admin_master' && isAdminAlsoCounter) { // If admin is doing count for a specific company
                          colaboradoresParaSelect.unshift({id: `admin_${currentUser.id}`, nome_colaborador: `${currentUser.full_name || currentUser.email} (Admin)`});
                     }
+                } else if (currentUser?.role === 'admin_master' && isAdminAlsoCounter) { // Admin doing a general count, implies they are the counter
+                     colaboradoresParaSelect.push({id: currentUser.id, nome_colaborador: `${currentUser.full_name || currentUser.email} (Admin)`});
                 }
                 
 
@@ -2253,8 +2295,8 @@
                         option.textContent = colab.nome_colaborador;
                         selectColaboradorContagem.appendChild(option);
                     });
-                } else if (!isAdminContextGlobalCount || empresaId) { 
-                    selectColaboradorContagem.innerHTML = '<option value="">Nenhum colaborador ativo encontrado</option>';
+                } else { 
+                    selectColaboradorContagem.innerHTML = '<option value="">Nenhum colaborador ativo encontrado para esta empresa</option>';
                 }
 
             } catch (e) {
@@ -2273,6 +2315,7 @@
             filterSelect.innerHTML = '<option value="">Todas</option>';
             
             const uniqueCategories = new Map();
+            // produtosCache for inventory count should now only contain products of the selected company
             produtosCache.forEach(produto => { 
                 if (produto.categoria_id && produto.categorias?.nome_categoria) {
                     if (!uniqueCategories.has(produto.categoria_id)) {
@@ -2312,7 +2355,7 @@
             loadQuantities(); 
 
             if (!listaProdutos || listaProdutos.length === 0) {
-                inventoryTableBody.innerHTML = '<tr><td colspan="4">No products to display. Check filters or register products.</td></tr>';
+                inventoryTableBody.innerHTML = `<tr><td colspan="4">Nenhum produto para exibir. ${currentUser.role === 'admin_master' && !adminSelectedEmpresaContextId ? 'Selecione uma empresa para carregar produtos.' : 'Verifique os filtros ou cadastre produtos para esta empresa.'}</td></tr>`;
                 return;
             }
 
@@ -2403,7 +2446,7 @@
 
         
         window.onload = async () => { 
-            console.log("window.onload v2.9.14 (DOM Ready) Auto-Cat Create, Login Fix, XLSX Robust started");
+            console.log("window.onload v2.9.15 (DOM Ready) Scoped Entities & Fixes started");
             initializeDOMSelectors(); 
             showLoader(); 
             if (typeof loadQuantities === "function") loadQuantities(); 
@@ -2444,8 +2487,8 @@
 
             document.getElementById('btnAddColaborador')?.addEventListener('click', handleAddColaborador);
             document.getElementById('btnSalvarNovaSenha')?.addEventListener('click', handleChangePassword);
-            document.getElementById('btnAddProduct')?.addEventListener('click', handleAddProduct);
-            document.getElementById('btnImportXLSX')?.addEventListener('click', handleXLSXImport);
+            btnAddProductEl?.addEventListener('click', handleAddProduct);
+            btnImportXLSXEl?.addEventListener('click', handleXLSXImport);
             document.getElementById('btnShowPreviewContagem')?.addEventListener('click', showPreviewContagem);
             document.getElementById('btnGerarTXT')?.addEventListener('click', gerarArquivoTXT);
             document.getElementById('btnGerarPDF')?.addEventListener('click', gerarPDFContagem); 
@@ -2557,11 +2600,16 @@
                     
                     
                     if (currentUser.role === 'admin_master') {
+                        // Fetch all companies fresh for admin context selectors
+                        const { data: adminEmpresas, error: adminEmpresasError } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
+                        if (adminEmpresasError) console.error("Error fetching companies for admin selects on login (onload):", adminEmpresasError);
+                        else empresasCache = adminEmpresas || [];
+
                         await Promise.all([
-                            populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Categoria Global --", ""),
-                            populateEmpresasSelect(adminProdutoEmpresaSelect, true, "-- Produtos Globais (Sem Empresa) --", ""),
-                            populateEmpresasSelect(adminContagemEmpresaSelect, true, "-- Contagem Global (Produtos Sem Empresa) --", ""),
-                            populateEmpresasSelect(adminHistoricoEmpresaSelect, true, "-- Todas as Empresas --", "ALL_EMPRESAS")
+                            populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Selecione uma Empresa --", ""),
+                            populateEmpresasSelect(adminProdutoEmpresaSelect, true, "-- Selecione uma Empresa --", ""),
+                            populateEmpresasSelect(adminContagemEmpresaSelect, true, "-- Selecione uma Empresa --", ""),
+                            populateEmpresasSelect(adminHistoricoEmpresaSelect, true, "-- Todas as Empresas --", "ALL_EMPRESAS") // "Todas as Empresas" is valid for admin history view
                         ]);
                          await fetchAndRenderEmpresas(); 
                         showAdminMasterDashboardScreen();
@@ -2588,7 +2636,7 @@
                 hideLoader(); 
             }
         };
-        console.log("SCRIPT END - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)");
+        console.log("SCRIPT END - v2.9.15 (Scoped Entities & Fixes)");
     </script>
 </body>
 </html>
