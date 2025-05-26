@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.9.13 (Empresa Categorias & XLSX Fix)</title>
+    <title>Inventory Balance System - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -153,7 +153,7 @@
             <p style="text-align: center;">Logado como: <span id="empresaUserName"></span></p>
             <div class="dashboard-options">
                 <button class="btn btn-primary" id="btnEmpresaGerenciarColaboradores">Gerenciar Colaboradores</button>
-                <button class="btn btn-primary" id="btnEmpresaGerenciarCategorias">Gerenciar Categorias da Empresa</button> {/* Novo Botão */}
+                <button class="btn btn-primary" id="btnEmpresaGerenciarCategorias">Gerenciar Categorias da Empresa</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarProdutos">Gerenciar Produtos da Empresa</button>
                 <button class="btn btn-primary" id="btnEmpresaContagemEstoque">Iniciar Contagem da Empresa</button>
                 <button class="btn btn-info" id="btnEmpresaHistoricoContagens">Ver Histórico de Contagens</button>
@@ -168,7 +168,7 @@
             <div class="card">
                 <div class="card-header"><h3>Adicionar Nova Categoria</h3></div>
                 <div class="card-body">
-                    <div class="form-group" id="adminCategoriaEmpresaSelectContainer"> {/* Container para esconder/mostrar */}
+                    <div class="form-group" id="adminCategoriaEmpresaSelectContainer"> {/* Container para esconder/mostrar para admin */}
                         <label for="adminCategoriaEmpresaSelect">Associar Categoria a:</label>
                         <select id="adminCategoriaEmpresaSelect">
                             <option value="">-- Categoria Global (para todas empresas) --</option>
@@ -317,8 +317,8 @@
     </div>
 
     <script>
-        // Script version v2.9.13 (Empresa Categorias & XLSX Fix)
-        console.log("SCRIPT START - v2.9.13 (Empresa Categorias & XLSX Fix)");
+        // Script version v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)
+        console.log("SCRIPT START - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
@@ -335,7 +335,6 @@
             adminManageLoginEmpresaSection, adminManageLoginEmpresaTitle, selectedEmpresaIdForLoginManage, 
             selectedEmpresaUserIdForLoginManage, adminManageLoginEmpresaContent, manageLoginEmpresaMessage,
             
-            // Elementos da tela de categorias (reusados)
             categoriasTitleEl, adminCategoriaEmpresaSelectContainerEl, adminCategoriaEmpresaSelectEl, 
             nomeCategoriaInputEl, categoriasTableBodyEl, btnCategoriasVoltarEl, btnAddCategoriaEl, categoriasContextEl,
 
@@ -353,14 +352,14 @@
             adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico;
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.9.13 called");
+            console.log("initializeDOMSelectors v2.9.14 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
                 adminMasterDashboard: document.getElementById('screenAdminMasterDashboard'),
                 empresaDashboard: document.getElementById('screenEmpresaDashboard'),
                 adminEmpresas: document.getElementById('screenAdminEmpresas'),
-                adminCategorias: document.getElementById('screenAdminCategorias'), // Tela unificada
+                adminCategorias: document.getElementById('screenAdminCategorias'), 
                 empresaColaboradores: document.getElementById('screenEmpresaColaboradores'),
                 changePassword: document.getElementById('screenChangePassword'), 
                 historicoContagens: document.getElementById('screenHistoricoContagens'),
@@ -392,10 +391,9 @@
             adminManageLoginEmpresaContent = safeGetElementById('adminManageLoginEmpresaContent');
             manageLoginEmpresaMessage = safeGetElementById('manageLoginEmpresaMessage');
             
-            // Seletores para tela de Categorias (reusada)
             categoriasTitleEl = safeGetElementById('categoriasTitle');
             adminCategoriaEmpresaSelectContainerEl = safeGetElementById('adminCategoriaEmpresaSelectContainer');
-            adminCategoriaEmpresaSelectEl = safeGetElementById('adminCategoriaEmpresaSelect'); // Usado por admin
+            adminCategoriaEmpresaSelectEl = safeGetElementById('adminCategoriaEmpresaSelect'); 
             nomeCategoriaInputEl = safeGetElementById('nomeCategoriaInput');
             categoriasTableBodyEl = safeGetElementById('categoriasTableBody');
             btnCategoriasVoltarEl = safeGetElementById('btnCategoriasVoltar');
@@ -450,14 +448,13 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.13', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.13'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.9.14', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.9.14'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
         
         async function populateEmpresasSelect(selectElement, includeSpecialOption = false, specialOptionText = "-- Select --", specialOptionValue = "") { 
-            // Modificado para aceitar o elemento DOM diretamente ou o ID
             const selectEl = (typeof selectElement === 'string') ? document.getElementById(selectElement) : selectElement;
 
             if (!selectEl) { console.warn(`Company select element/ID '${selectElement}' not found.`); return; }
@@ -486,11 +483,14 @@
             if (targetScreenElement && targetScreenElement.classList) {
                 targetScreenElement.classList.add('active');
                 if (mainCont) { mainCont.classList.toggle('content-container', ['adminEmpresas', 'adminCategorias', 'productManagement', 'inventoryCount', 'empresaColaboradores', 'historicoContagens'].includes(screenId));}
-                ['adminProdutoEmpresaSelectorContainer', 'adminContagemEmpresaSelectorContainer', 'adminHistoricoEmpresaSelectorContainer', 'colEmpresaHistorico'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none';});
+                // Hide all admin-specific selectors by default, then show based on context
+                ['adminProdutoEmpresaSelectorContainer', 'adminContagemEmpresaSelectorContainer', 'adminHistoricoEmpresaSelectorContainer', 'adminCategoriaEmpresaSelectContainer', 'colEmpresaHistorico'].forEach(id => { 
+                    const el = document.getElementById(id); if(el) el.style.display = 'none';
+                });
                 
                 const { title, context, showEmpresaSelector, showEmpresaColumnInTable, isEmpresaContext = false } = screenConfig;
                 
-                if (screenId === 'adminCategorias') { // Tela de categorias unificada
+                if (screenId === 'adminCategorias') { 
                     if(categoriasTitleEl) categoriasTitleEl.textContent = title || 'Gerenciar Categorias';
                     if(categoriasContextEl) categoriasContextEl.textContent = context || '';
                     if(adminCategoriaEmpresaSelectContainerEl) adminCategoriaEmpresaSelectContainerEl.style.display = isEmpresaContext ? 'none' : 'block';
@@ -534,8 +534,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.9.13 called");
-            // ... (código de login como na v2.9.12, mas com currentUser.role sendo setado corretamente)
+            console.log("handleLogin v2.9.14 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Critical error in login form. Try reloading."); hideLoader(); return;
@@ -562,36 +561,42 @@
                     id: signInData.user.id, 
                     email: signInData.user.email, 
                     user_metadata: signInData.user.user_metadata,
-                    full_name: signInData.user.user_metadata?.full_name || signInData.user.email
+                    full_name: signInData.user.user_metadata?.full_name || signInData.user.email,
+                    role: null // Initialize role
                 };
 
                 if (currentUser.user_metadata?.user_role === 'admin_master') {
                     currentUser.role = 'admin_master';
                     console.log("Admin Master Logged In via Supabase Auth JWT role:", currentUser);
                 } else {
+                    console.log("Fetching profile for user:", currentUser.id);
                     const { data: profile, error: profileError } = await _supabaseClient
                         .from('user_profiles')
                         .select('empresa_id, role, full_name, empresas (id, nome_empresa)')
                         .eq('id', signInData.user.id)
                         .single();
 
+                    console.log("Profile fetch result - Data:", profile, "Error:", profileError);
+
                     if (profileError && profileError.code !== 'PGRST116') { 
                         console.error("Error fetching profile:", profileError); 
                         await _supabaseClient.auth.signOut(); 
+                        currentUser = null;
                         throw profileError;
                     }
                     if (!profile && signInData.user.email === ADMIN_MASTER_EMAIL) { 
                          currentUser.role = 'admin_master';
-                         console.warn("Admin Master identified by email, profile missing in user_profiles table.", currentUser);
+                         console.warn("Admin Master identified by email, profile missing in user_profiles table for:", currentUser.id);
                     } else if (profile) {
                         currentUser.role = profile.role;
                         currentUser.empresa_id = profile.empresa_id;
-                        currentUser.empresa_nome = profile.empresas ? profile.empresas.nome_empresa : 'Empresa Associada';
+                        currentUser.empresa_nome = profile.empresas ? profile.empresas.nome_empresa : (profile.empresa_id ? 'Empresa Associada (Nome não carregado)' : 'N/A');
                         currentUser.full_name = profile.full_name || currentUser.full_name; 
-                        console.log("User profile fetched:", currentUser);
+                        console.log("User profile fetched and merged:", currentUser);
                     } else {
-                        console.error("User profile not found and not admin_master by email. User:", signInData.user.id);
+                        console.error("User profile not found and not admin_master by email. User ID:", signInData.user.id);
                         await _supabaseClient.auth.signOut();
+                        currentUser = null;
                         throw new Error("Perfil do usuário não encontrado ou função não definida.");
                     }
                 }
@@ -608,8 +613,9 @@
                 } else if (currentUser.role === 'empresa_login_principal' && currentUser.empresa_id) {
                     await showEmpresaDashboardScreen();
                 } else {
-                    console.warn("Login successful but role unclear or company data missing:", currentUser);
+                    console.warn("Login successful but role unclear or company data missing after profile check:", currentUser);
                     await _supabaseClient.auth.signOut();
+                    currentUser = null;
                     throw new Error("Função do usuário não definida ou dados da empresa ausentes.");
                 }
 
@@ -634,7 +640,7 @@
                 currentUser = null; adminSelectedEmpresaId = null; adminSelectedEmpresaParaCategoriaId = null;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
                 produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.13'); 
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.9.14'); 
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
@@ -666,9 +672,10 @@
                     console.error("fetchAndRenderEmpresas - Error fetching companies:", companiesError);
                     throw companiesError;
                 }
-                empresasCache = companiesData || [];
+                empresasCache = companiesData || []; // Update global cache
                 console.log("fetchAndRenderEmpresas - Companies fetched:", empresasCache.length);
 
+                // Ensure userProfilesCache is up-to-date for mapping
                 const { data: profilesData, error: profilesError } = await _supabaseClient
                     .from('user_profiles')
                     .select('empresa_id, email, full_name') 
@@ -760,17 +767,17 @@
                     .maybeSingle(); 
 
                 if (profileError) {
-                    console.error("DEBUG: Profile fetch error:", profileError);
+                    console.error("DEBUG: Profile fetch error in handleShowManageLoginSection:", profileError);
                     throw profileError;
                 }
-                console.log("DEBUG: Existing profile data:", existingProfile);
+                console.log("DEBUG: Existing profile data in handleShowManageLoginSection:", existingProfile);
 
 
                 const userIdHiddenInput = document.getElementById('selectedEmpresaUserIdForLoginManage');
 
                 if (existingProfile) {
                     if(userIdHiddenInput) userIdHiddenInput.value = existingProfile.id; 
-                    console.log(`DEBUG: Login principal encontrado - Email: ${existingProfile.email}, Auth User ID: ${existingProfile.id}`);
+                    console.log(`DEBUG: Login principal encontrado - Email: ${existingProfile.email}, Auth User ID (from profile.id): ${existingProfile.id}`);
                     adminManageLoginEmpresaContent.innerHTML = `
                         <h4>Login Principal Existente</h4>
                         <p><strong>Email:</strong> <span id="currentEmpresaLoginEmailDisplay">${existingProfile.email}</span></p>
@@ -781,7 +788,7 @@
                     
                     if(btnReset) btnReset.onclick = () => callResetPasswordEdgeFunction(existingProfile.id, existingProfile.email, nomeEmpresa);
                 } else {
-                    console.log("DEBUG: Nenhum login principal encontrado para esta empresa.");
+                    console.log("DEBUG: Nenhum login principal encontrado para esta empresa em handleShowManageLoginSection.");
                     if(userIdHiddenInput) userIdHiddenInput.value = '';
                     adminManageLoginEmpresaContent.innerHTML = `
                         <p>Nenhum login principal definido para esta empresa.</p>
@@ -924,7 +931,7 @@
         }
         
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.9.13 (MODIFIED) started");
+            console.log("gerarArquivoTXT v2.9.14 (MODIFIED) started");
             showLoader();
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Error: Collaborator selector not found."); hideLoader(); return; }
@@ -965,7 +972,7 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.9.13 started");
+            console.log("gerarPDFContagem v2.9.14 started");
             showLoader();
             const { jsPDF } = window.jspdf; 
             if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
@@ -1055,10 +1062,10 @@
             console.log("showCategoriasScreen_Admin called");
             showLoader();
             try {
-                adminSelectedEmpresaParaCategoriaId = null; // Admin starts with global or can select
+                adminSelectedEmpresaParaCategoriaId = null; 
                 if(adminCategoriaEmpresaSelectEl) {
                     await populateEmpresasSelect(adminCategoriaEmpresaSelectEl, true, "-- Categoria Global --", ""); 
-                    adminCategoriaEmpresaSelectEl.value = ""; // Default to global for admin
+                    adminCategoriaEmpresaSelectEl.value = ""; 
                     if (!adminCategoriaEmpresaSelectEl.onchangeAttached_cat_admin) {
                         adminCategoriaEmpresaSelectEl.addEventListener('change', async () => {
                             adminSelectedEmpresaParaCategoriaId = adminCategoriaEmpresaSelectEl.value === "" ? null : adminCategoriaEmpresaSelectEl.value;
@@ -1070,9 +1077,9 @@
                     }
                     adminCategoriaEmpresaSelectEl.dispatchEvent(new Event('change'));
                 } else {
-                     await fetchAndRenderCategorias(); // Load global if select somehow not found
+                     await fetchAndRenderCategorias(); 
                 }
-                showScreen('adminCategorias', { title: 'Gerenciar Categorias (Admin)', isEmpresaContext: false });
+                showScreen('adminCategorias', { title: 'Gerenciar Categorias (Admin)', context: 'Selecione uma empresa ou gerencie categorias globais.', isEmpresaContext: false });
             } catch (e) {
                 console.error("Error in showCategoriasScreen_Admin:", e);
                 alert("Erro ao carregar tela de categorias (Admin).");
@@ -1083,17 +1090,17 @@
 
         async function showCategoriasScreen_Empresa() {
             if (!currentUser || currentUser.role !== 'empresa_login_principal') { handleLogout(); return; }
-            console.log("showCategoriasScreen_Empresa called");
+            console.log("showCategoriasScreen_Empresa called for company:", currentUser.empresa_nome);
             showLoader();
             try {
-                // Empresa user always manages categories for their own company
                 adminSelectedEmpresaParaCategoriaId = currentUser.empresa_id; 
                 if (categoriasContextEl) categoriasContextEl.textContent = `Gerenciando categorias para: ${currentUser.empresa_nome || 'sua empresa'}`;
                 
-                await fetchAndRenderCategorias(); // Will use currentUser.empresa_id context
+                await fetchAndRenderCategorias(); 
                 showScreen('adminCategorias', { 
                     title: `Gerenciar Categorias (${currentUser.empresa_nome || 'Sua Empresa'})`,
-                    isEmpresaContext: true // This will hide the company selector for categories
+                    context: `Adicione ou remova categorias para ${currentUser.empresa_nome || 'sua empresa'}. Categorias globais também são listadas.`,
+                    isEmpresaContext: true 
                 });
             } catch (e) {
                 console.error("Error in showCategoriasScreen_Empresa:", e);
@@ -1108,18 +1115,17 @@
             if (!categoriasTableBodyEl) { console.error("categoriasTableBodyEl not found"); return; }
             categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Carregando categorias...</td></tr>';
             showLoader();
+            console.log(`WorkspaceAndRenderCategorias - Role: ${currentUser?.role}, SelectedEmpresaForCat: ${adminSelectedEmpresaParaCategoriaId}, CurrentUserEmpresaId: ${currentUser?.empresa_id}`);
             try {
                 let query = _supabaseClient.from('categorias').select('id, nome_categoria, created_at, empresa_id, empresas (nome_empresa)');
                 
                 if (currentUser.role === 'admin_master') {
-                    // Admin uses the dropdown selection (adminSelectedEmpresaParaCategoriaId)
-                    if (adminSelectedEmpresaParaCategoriaId) { // Specific company selected by admin
+                    if (adminSelectedEmpresaParaCategoriaId) { 
                         query = query.eq('empresa_id', adminSelectedEmpresaParaCategoriaId);
-                    } else { // Global categories selected by admin
+                    } else { 
                         query = query.is('empresa_id', null); 
                     }
                 } else if (currentUser.role === 'empresa_login_principal') {
-                    // Empresa user sees their own categories AND global categories
                     query = query.or(`empresa_id.eq.${currentUser.empresa_id},empresa_id.is.null`);
                 } else {
                     categoriasTableBodyEl.innerHTML = '<tr><td colspan="4">Permissão negada.</td></tr>';
@@ -1142,12 +1148,11 @@
                         row.insertCell().textContent = new Date(cat.created_at).toLocaleDateString('pt-BR');
                         
                         const actionsCell = row.insertCell();
-                        // Deletion logic: Admin can delete any category shown. Empresa user can only delete their own.
                         let canDelete = false;
-                        if (currentUser.role === 'admin_master') {
+                        if (currentUser.role === 'admin_master') { // Admin can delete any category they are viewing
                             canDelete = true;
                         } else if (currentUser.role === 'empresa_login_principal' && cat.empresa_id === currentUser.empresa_id) {
-                            canDelete = true; // Can delete own company's category
+                            canDelete = true; // Empresa user can only delete their own company's category
                         }
 
                         if (canDelete) {
@@ -1157,7 +1162,7 @@
                             btnDelete.onclick = () => handleDeleteCategoria(cat.id, cat.nome_categoria, cat.empresa_id);
                             actionsCell.appendChild(btnDelete);
                         } else {
-                            actionsCell.textContent = '-'; // No action if not deletable by current user
+                            actionsCell.textContent = '-'; 
                         }
                     });
                 } else {
@@ -1171,7 +1176,7 @@
             }
         }
 
-        async function handleAddCategoria() { // Unified add category function
+        async function handleAddCategoria() { 
             if (!nomeCategoriaInputEl) {
                  alert("Erro: Campo de nome da categoria não encontrado."); return;
             }
@@ -1179,12 +1184,9 @@
             let empresaIdParaNovaCategoria = null;
 
             if (currentUser.role === 'admin_master') {
-                // Admin uses the dropdown. adminSelectedEmpresaParaCategoriaId is already set by its onchange.
-                // If adminCategoriaEmpresaSelectEl.value is "", it means global, so null.
-                empresaIdParaNovaCategoria = adminSelectedEmpresaParaCategoriaId; // This is already null for global
+                empresaIdParaNovaCategoria = adminSelectedEmpresaParaCategoriaId; 
             } else if (currentUser.role === 'empresa_login_principal') {
-                // Empresa user always adds to their own company
-                empresaIdParaNovaCategoria = currentUser.empresa_id;
+                empresaIdParaNovaCategoria = currentUser.empresa_id; // Always their own company
             } else {
                 alert("Permissão negada para adicionar categoria."); return;
             }
@@ -1195,7 +1197,7 @@
                 let checkQuery = _supabaseClient.from('categorias').select('id').eq('nome_categoria', nomeCategoria);
                 if (empresaIdParaNovaCategoria) {
                     checkQuery = checkQuery.eq('empresa_id', empresaIdParaNovaCategoria);
-                } else { // Global category check
+                } else { 
                     checkQuery = checkQuery.is('empresa_id', null);
                 }
                 const { data: existing, error: checkError } = await checkQuery.maybeSingle();
@@ -1221,10 +1223,9 @@
             }
         }
 
-        async function handleDeleteCategoria(categoriaId, nomeCategoria, catEmpresaId) { // Unified delete category function
+        async function handleDeleteCategoria(categoriaId, nomeCategoria, catEmpresaId) { 
             if (!confirm(`Tem certeza que deseja excluir a categoria "${nomeCategoria}"? Esta ação não pode ser desfeita.`)) return;
             
-            // Permission check
             if (currentUser.role === 'empresa_login_principal' && catEmpresaId !== currentUser.empresa_id) {
                 alert("Você não tem permissão para excluir categorias globais ou de outras empresas.");
                 return;
@@ -1232,15 +1233,15 @@
 
             showLoader();
             try {
-                const { data: productsUsingCategory, error: productCheckError } = await _supabaseClient
+                const { data: productsUsingCategory, error: productCheckError, count } = await _supabaseClient
                     .from('produtos')
-                    .select('id', { count: 'exact', head: true }) // More efficient count
+                    .select('id', { count: 'exact', head: true }) 
                     .eq('categoria_id', categoriaId);
 
                 if (productCheckError) throw productCheckError;
 
-                if (productsUsingCategory && productsUsingCategory.count > 0) { // Check count property
-                     alert(`Não é possível excluir a categoria "${nomeCategoria}" pois ela está sendo utilizada por ${productsUsingCategory.count} produto(s). Remova ou altere a categoria desses produtos primeiro.`);
+                if (count && count > 0) { 
+                     alert(`Não é possível excluir a categoria "${nomeCategoria}" pois ela está sendo utilizada por ${count} produto(s). Remova ou altere a categoria desses produtos primeiro.`);
                      hideLoader();
                      return;
                 }
@@ -1705,7 +1706,7 @@
         
         async function showProductManagementScreen_AdminGlobal() { 
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.9.13 (corrected) called");
+            console.log("showProductManagementScreen_AdminGlobal v2.9.14 (corrected) called");
             showLoader();
             try {
                 adminSelectedEmpresaId = null; 
@@ -1759,10 +1760,6 @@
         }
         
         async function fetchProductsFromSupabase(empresaIdFiltro = null) {
-            
-            
-            
-            
             showLoader();
             try {
                 let query = _supabaseClient.from('produtos').select('*, categorias(nome_categoria)');
@@ -1776,8 +1773,6 @@
                      query = query.eq('empresa_id', currentUser.empresa_id);
                 }
                 
-                
-
                 query = query.order('nome_produto');
                 const { data, error } = await query;
 
@@ -1814,7 +1809,6 @@
                 btnRemove.className = 'btn btn-danger table-actions';
                 btnRemove.onclick = () => handleRemoveProduct(produto.id, produto.nome_produto);
                 actionsCell.appendChild(btnRemove);
-                
             });
         }
 
@@ -1826,10 +1820,6 @@
             const nome = prodNomeInput.value.trim();
             const categoriaId = prodCategoriaSelect.value === "" ? null : prodCategoriaSelect.value;
             
-            
-            
-            
-            
             let empresaParaProdutoId = null;
             if (currentUser?.role === 'admin_master') {
                 empresaParaProdutoId = adminSelectedEmpresaId; 
@@ -1837,13 +1827,11 @@
                 empresaParaProdutoId = currentUser.empresa_id;
             }
 
-
             if (!codigo) { alert("Product code is required."); prodCodigoInput.focus(); return; }
             if (!nome) { alert("Product name is required."); prodNomeInput.focus(); return; }
 
             showLoader();
             try {
-                
                 let checkQuery = _supabaseClient.from('produtos').select('id').eq('codigo_produto', codigo);
                 if (empresaParaProdutoId) {
                     checkQuery = checkQuery.eq('empresa_id', empresaParaProdutoId);
@@ -1856,7 +1844,6 @@
                     alert(`A product with code "${codigo}" already exists for ${empresaParaProdutoId ? 'this company' : 'the global scope'}.`);
                     hideLoader(); return;
                 }
-
 
                 const { data, error } = await _supabaseClient.from('produtos').insert([
                     { 
@@ -1872,7 +1859,6 @@
                 prodCodigoInput.value = '';
                 prodNomeInput.value = '';
                 prodCategoriaSelect.value = '';
-                
                 
                 await fetchProductsFromSupabase(empresaParaProdutoId); 
                 renderProductManagementTable();
@@ -1892,7 +1878,6 @@
                 const { error } = await _supabaseClient.from('produtos').delete().eq('id', produtoId);
                 if (error) throw error;
                 alert(`Product "${nomeProduto}" removed successfully!`);
-                
                 
                  let currentEmpresaContextId = null;
                 if (currentUser?.role === 'admin_master') {
@@ -1925,7 +1910,7 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }); // Use raw: false, defval: ""
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" }); 
                     
                     console.log("DEBUG XLSX: jsonData cru obtido da planilha:", JSON.parse(JSON.stringify(jsonData)));
 
@@ -1934,22 +1919,15 @@
                         hideLoader(); return;
                     }
                     
-                    console.log("DEBUG XLSX: Linha de cabeçalho crua (jsonData[0]):", JSON.parse(JSON.stringify(jsonData[0])));
-
                     const headerRow = jsonData[0];
                     if (!Array.isArray(headerRow)) {
                         alert("Formato de cabeçalho inesperado. A primeira linha não é uma lista de células.");
                         hideLoader(); return;
                     }
 
-                    const header = headerRow.map((h, index) => {
-                        // console.log(`DEBUG XLSX: Processando célula do cabeçalho [${index}]: Valor='${h}', Tipo=${typeof h}`);
-                        if (h === null || typeof h === 'undefined') {
-                            // console.warn(`DEBUG XLSX: Célula do cabeçalho [${index}] é nula ou indefinida. Usando string vazia.`);
-                            return ""; 
-                        }
-                        let cellValue = String(h); 
-                        return cellValue.toLowerCase().trim();
+                    const header = headerRow.map((h) => {
+                        if (h === null || typeof h === 'undefined') return ""; 
+                        return String(h).toLowerCase().trim();
                     });
                     console.log("DEBUG XLSX: Cabeçalho processado:", header);
 
@@ -1969,60 +1947,83 @@
                         empresaParaImportacaoId = currentUser.empresa_id;
                     }
 
-                    let allCategoriesForContext = [];
+                    // Fetch all relevant categories once to build a comprehensive map for this import session
+                    let allCategoriesForContextAndGlobal = [];
+                    const {data: globalCats, error: globErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').is('empresa_id', null);
+                    if(globErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias globais para o mapa", globErr); }
+                    else { allCategoriesForContextAndGlobal = allCategoriesForContextAndGlobal.concat(globalCats || []); }
+
                     if (empresaParaImportacaoId) { 
-                        const {data: compCat, error: compErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').eq('empresa_id', empresaParaImportacaoId);
-                        if(compErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias da empresa", compErr); }
-                        else { allCategoriesForContext = allCategoriesForContext.concat(compCat || []); }
+                        const {data: compCats, error: compErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').eq('empresa_id', empresaParaImportacaoId);
+                        if(compErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias da empresa para o mapa", compErr); }
+                        else { allCategoriesForContextAndGlobal = allCategoriesForContextAndGlobal.concat(compCats || []); }
                     }
-                    const {data: globalCat, error: globErr} = await _supabaseClient.from('categorias').select('id, nome_categoria, empresa_id').is('empresa_id', null);
-                    if(globErr) { console.warn("DEBUG XLSX: Erro ao buscar categorias globais", globErr); }
-                    else { allCategoriesForContext = allCategoriesForContext.concat(globalCat || []); }
                     
                     const categoriaMap = new Map(); 
-                    allCategoriesForContext.forEach(cat => {
+                    allCategoriesForContextAndGlobal.forEach(cat => {
                         if (cat.nome_categoria) { 
-                           categoriaMap.set(String(cat.nome_categoria).toLowerCase().trim(), cat.id);
+                           // Key by name_lowercase + scope (empresa_id or 'global') to differentiate
+                           const mapKey = `${String(cat.nome_categoria).toLowerCase().trim()}_${cat.empresa_id || 'global'}`;
+                           categoriaMap.set(mapKey, cat.id);
                         }
                     });
-                    console.log("DEBUG XLSX: Mapa de categorias criado:", categoriaMap);
-
+                    console.log("DEBUG XLSX: Mapa de categorias consolidado criado:", categoriaMap);
 
                     const produtosParaInserir = [];
                     let produtosIgnoradosCount = 0;
-                    
+                    let categoriasCriadasNestaSessao = new Map(); // Para evitar criar a mesma categoria múltiplas vezes nesta importação
+
                     for (let i = 1; i < jsonData.length; i++) {
                         const row = jsonData[i];
                         if (!row || !Array.isArray(row) || row.every(cell => cell === "" || cell === null || typeof cell === 'undefined') ) { 
-                            console.warn(`DEBUG XLSX: Linha ${i+1} ignorada: formato de linha inválido ou completamente vazia.`, row);
-                            // Não incrementa produtosIgnoradosCount para linhas totalmente vazias, pois pode ser o final da planilha.
                             continue; 
                         }
-                        // console.log(`DEBUG XLSX: Processando linha de dados [${i}]:`, JSON.parse(JSON.stringify(row)));
                         
                         const codigoValue = row[codigoIndex];
                         const nomeProdutoValue = row[produtoIndex];
-                        const categoriaValue = (categoriaIndex !== -1) ? row[categoriaIndex] : ""; // Default to empty string if not present
-
-                        // console.log(`DEBUG XLSX: Linha ${i} - Valor cru codigo: '${codigoValue}', Tipo: ${typeof codigoValue}`);
-                        // console.log(`DEBUG XLSX: Linha ${i} - Valor cru nomeProduto: '${nomeProdutoValue}', Tipo: ${typeof nomeProdutoValue}`);
-                        // console.log(`DEBUG XLSX: Linha ${i} - Valor cru categoria: '${categoriaValue}', Tipo: ${typeof categoriaValue}`);
+                        const categoriaValue = (categoriaIndex !== -1 && typeof row[categoriaIndex] !== 'undefined') ? row[categoriaIndex] : ""; 
 
                         const codigo = (codigoValue !== null && typeof codigoValue !== 'undefined') ? String(codigoValue).trim() : null;
                         const nomeProduto = (nomeProdutoValue !== null && typeof nomeProdutoValue !== 'undefined') ? String(nomeProdutoValue).trim() : null;
-                        const nomeCategoria = (categoriaValue !== null && typeof categoriaValue !== 'undefined') ? String(categoriaValue).trim() : null;
+                        let nomeCategoriaXLSX = (categoriaValue !== null && typeof categoriaValue !== 'undefined') ? String(categoriaValue).trim() : null;
+                        if (nomeCategoriaXLSX === "") nomeCategoriaXLSX = null;
 
                         if (!codigo || !nomeProduto) {
-                            console.warn(`DEBUG XLSX: Linha ${i+1} ignorada: código ou nome do produto ausente após trim. Código: '${codigo}', Produto: '${nomeProduto}'`);
+                            console.warn(`DEBUG XLSX: Linha ${i+1} ignorada (após trim): código ('${codigo}') ou nome ('${nomeProduto}') do produto ausente.`);
                             produtosIgnoradosCount++;
                             continue;
                         }
                         
                         let categoriaIdParaProduto = null;
-                        if (nomeCategoria) { // Only try to map if nomeCategoria is not empty
-                            categoriaIdParaProduto = categoriaMap.get(nomeCategoria.toLowerCase());
-                            if (!categoriaIdParaProduto) {
-                                console.warn(`DEBUG XLSX: Categoria "${nomeCategoria}" não encontrada no mapa para o produto "${nomeProduto}". Será salvo sem categoria.`);
+                        if (nomeCategoriaXLSX) { 
+                            const nomeCategoriaLower = nomeCategoriaXLSX.toLowerCase();
+                            // Chave para buscar no mapa: nome + scope (empresa ou global)
+                            const mapKeyForLookup = `${nomeCategoriaLower}_${empresaParaImportacaoId || 'global'}`;
+                            categoriaIdParaProduto = categoriaMap.get(mapKeyForLookup);
+
+                            if (!categoriaIdParaProduto) { // Não achou no mapa inicial (nem global, nem da empresa, se aplicável)
+                                 // Verifica se já criamos nesta sessão
+                                if (categoriasCriadasNestaSessao.has(mapKeyForLookup)) {
+                                    categoriaIdParaProduto = categoriasCriadasNestaSessao.get(mapKeyForLookup);
+                                     console.log(`DEBUG XLSX: Usando categoria "${nomeCategoriaXLSX}" criada anteriormente nesta sessão (ID: ${categoriaIdParaProduto}).`);
+                                } else {
+                                    console.warn(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" não no mapa. Tentando criar para empresa_id: ${empresaParaImportacaoId || 'Global'}...`);
+                                    
+                                    const { data: novaCategoria, error: createCatErr } = await _supabaseClient
+                                        .from('categorias')
+                                        .insert({ nome_categoria: nomeCategoriaXLSX, empresa_id: empresaParaImportacaoId })
+                                        .select('id')
+                                        .single();
+                                    
+                                    if (createCatErr) {
+                                        console.error(`DEBUG XLSX: Erro ao criar nova categoria "${nomeCategoriaXLSX}":`, createCatErr);
+                                    } else if (novaCategoria) {
+                                        categoriaIdParaProduto = novaCategoria.id;
+                                        console.log(`DEBUG XLSX: Categoria "${nomeCategoriaXLSX}" criada com ID: ${categoriaIdParaProduto}. Atualizando mapas.`);
+                                        categoriaMap.set(mapKeyForLookup, categoriaIdParaProduto); // Adiciona ao mapa principal
+                                        categoriasCriadasNestaSessao.set(mapKeyForLookup, categoriaIdParaProduto); // Adiciona ao mapa da sessão
+                                    }
+                                }
                             }
                         }
                         
@@ -2045,19 +2046,38 @@
                             continue;
                         }
 
-                        produtosParaInserir.push({
-                            codigo_produto: codigo,
-                            nome_produto: nomeProduto,
-                            categoria_id: categoriaIdParaProduto,
-                            empresa_id: empresaParaImportacaoId
-                        });
+                        const produtoParaInserir = {
+                            codigo_produto: String(codigo), 
+                            nome_produto: String(nomeProduto), 
+                            categoria_id: categoriaIdParaProduto, 
+                            empresa_id: empresaParaImportacaoId  
+                        };
+                        produtosParaInserir.push(produtoParaInserir);
                     }
-                    console.log("DEBUG XLSX: Produtos para inserir:", produtosParaInserir);
+                    
+                    console.log("DEBUG XLSX: Produtos formatados para inserir:", JSON.parse(JSON.stringify(produtosParaInserir)));
 
                     if (produtosParaInserir.length > 0) {
-                        const { error: insertError, count } = await _supabaseClient.from('produtos').insert(produtosParaInserir).select({count: 'exact'});
-                        if (insertError) throw insertError;
-                        alert(`${count || 0} produtos importados com sucesso! ${produtosIgnoradosCount > 0 ? `${produtosIgnoradosCount} produtos foram ignorados (já existentes, dados inválidos ou linhas em branco).` : ''}`);
+                        console.log("DEBUG XLSX: Tentando inserir produtos...");
+                        const { data: insertedData, error: insertError } = await _supabaseClient
+                            .from('produtos')
+                            .insert(produtosParaInserir)
+                            .select(); 
+
+                        console.log("DEBUG XLSX: Resultado da operação de inserção - data:", insertedData);
+                        console.log("DEBUG XLSX: Resultado da operação de inserção - error:", insertError);
+
+                        if (insertError) {
+                            console.error("DEBUG XLSX: Erro durante a operação de INSERT:", insertError);
+                            let detailedMessage = insertError.message;
+                            if (insertError.details) detailedMessage += `\nDetalhes: ${insertError.details}`;
+                            if (insertError.hint) detailedMessage += `\nHint: ${insertError.hint}`;
+                            alert("Falha ao importar produtos (durante inserção): " + detailedMessage);
+                            throw insertError; 
+                        }
+                        
+                        const successfulInserts = insertedData ? insertedData.length : 0; 
+                        alert(`${successfulInserts} produtos importados com sucesso! ${produtosIgnoradosCount > 0 ? `${produtosIgnoradosCount} produtos foram ignorados (já existentes, dados inválidos ou linhas em branco).` : ''}`);
                     } else {
                         alert(`Nenhum produto novo para importar. ${produtosIgnoradosCount > 0 ? `${produtosIgnoradosCount} produtos foram ignorados (já existentes, dados inválidos ou linhas em branco).` : ''}`);
                     }
@@ -2383,7 +2403,7 @@
 
         
         window.onload = async () => { 
-            console.log("window.onload v2.9.13 (DOM Ready) Empresa Categorias & XLSX Fix started");
+            console.log("window.onload v2.9.14 (DOM Ready) Auto-Cat Create, Login Fix, XLSX Robust started");
             initializeDOMSelectors(); 
             showLoader(); 
             if (typeof loadQuantities === "function") loadQuantities(); 
@@ -2395,28 +2415,28 @@
             document.getElementById('btnLogoutAdmin')?.addEventListener('click', handleLogout);
             document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
 
-            // Admin Master Panel Listeners
+            
             document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', showAdminEmpresasScreen);
             document.getElementById('btnAdminGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Admin); 
             document.getElementById('btnAdminGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_AdminGlobal);
             document.getElementById('btnAdminContagemEstoque')?.addEventListener('click', showInventoryCountScreen_AdminGlobal);
             document.getElementById('btnAdminHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen_Admin);
             
-            // Company Panel Listeners
+            
             document.getElementById('btnEmpresaGerenciarColaboradores')?.addEventListener('click', () => showEmpresaColaboradoresScreen(null, null, false)); 
-            document.getElementById('btnEmpresaGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Empresa); // New button listener
+            document.getElementById('btnEmpresaGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Empresa); 
             document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_Empresa);
             document.getElementById('btnEmpresaContagemEstoque')?.addEventListener('click', showInventoryCountScreen_Empresa);
             document.getElementById('btnEmpresaHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen);
             document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', showChangePasswordScreen_Empresa);
             
-            // Screen Actions and Back Listeners (Unified category screen buttons)
+            
             btnCategoriasVoltarEl?.addEventListener('click', () => {
                 if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
                 else if (currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                 else showScreen('login');
             });
-            btnAddCategoriaEl?.addEventListener('click', handleAddCategoria); // Unified add category
+            btnAddCategoriaEl?.addEventListener('click', handleAddCategoria); 
 
             document.getElementById('btnAdminEmpresasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
             document.getElementById('btnAdminAddEmpresa')?.addEventListener('click', handleAdminAddEmpresa);
@@ -2498,7 +2518,8 @@
                         id: session.user.id, 
                         email: session.user.email, 
                         user_metadata: session.user.user_metadata,
-                        full_name: session.user.user_metadata?.full_name || session.user.email
+                        full_name: session.user.user_metadata?.full_name || session.user.email,
+                        role: null 
                     };
                      
                     if (currentUser.user_metadata?.user_role === 'admin_master') {
@@ -2567,7 +2588,7 @@
                 hideLoader(); 
             }
         };
-        console.log("SCRIPT END - v2.9.13 (Empresa Categorias & XLSX Fix)");
+        console.log("SCRIPT END - v2.9.14 (Auto-Cat Create, Login Fix, XLSX Robust)");
     </script>
 </body>
 </html>
