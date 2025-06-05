@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.10.1 (Fix User List)</title>
+    <title>Inventory Balance System - v2.10.2 (User Role Fixes)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -117,7 +117,7 @@
         .admin-context-selector select { display: inline-block; width: auto; min-width: 250px; margin-right: 10px; }
         .loader { border: 5px solid #e9ecef; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
         @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-        #adminManageUsersEmpresaContent { margin-top: 1rem; }
+        #adminManageUsersEmpresaContent { margin-top: 1rem; } /* Renamed from adminManageLoginEmpresaContent */
         #adminManageUsersEmpresaContent p { margin-bottom: 0.5rem; }
         #adminManageUsersEmpresaContent .form-group { margin-top: 1rem; }
         #adminEmpresaUsersTable th, #adminEmpresaUsersTable td { font-size: 0.9em; padding: 0.5rem;}
@@ -157,7 +157,8 @@
                 <button class="btn btn-primary" id="btnEmpresaGerenciarColaboradores" data-role-req="empresa_manager">Gerenciar Colaboradores</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarCategorias" data-role-req="empresa_manager">Gerenciar Categorias da Empresa</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarProdutos" data-role-req="empresa_manager">Gerenciar Produtos da Empresa</button>
-                <button class="btn btn-primary" id="btnEmpresaContagemEstoque">Iniciar Contagem da Empresa</button> <button class="btn btn-info" id="btnEmpresaHistoricoContagens" data-role-req="empresa_manager">Ver Histórico de Contagens</button>
+                <button class="btn btn-primary" id="btnEmpresaContagemEstoque">Iniciar Contagem da Empresa</button>
+                <button class="btn btn-info" id="btnEmpresaHistoricoContagens" data-role-req="empresa_manager">Ver Histórico de Contagens</button>
                 <button class="btn btn-info" id="btnEmpresaAlterarSenha" data-role-req="empresa_manager">Alterar Senha Pessoal</button>
                 <button class="btn btn-secondary" id="btnLogoutEmpresa">Logout</button>
             </div>
@@ -208,7 +209,7 @@
                     <h4>Usuários Existentes</h4>
                     <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem;">
                         <table id="adminEmpresaUsersTable" class="table table-sm">
-                            <thead><tr><th>Email</th><th>Função</th><th>Ações</th></tr></thead> {/* Coluna "Criação (Perfil)" removida */}
+                            <thead><tr><th>Email</th><th>Função</th><th>Ações</th></tr></thead>
                             <tbody id="adminEmpresaUsersTableBody"></tbody>
                         </table>
                     </div>
@@ -345,19 +346,19 @@
     </div>
 
     <script>
-        // Script version v2.10.1 (Fix User List)
-        console.log("SCRIPT START - v2.10.1 (Fix User List)");
+        // Script version v2.10.2 (User Role Fixes)
+        console.log("SCRIPT START - v2.10.2 (User Role Fixes)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
         const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let produtosCache = [], categoriasCache = [], empresasCache = [], colaboradoresCache = [], quantidadesDigitadas = {};
-        const ADMIN_MASTER_EMAIL = "matheus@mtech.com"; // Hardcoded for initial admin check fallback
+        const ADMIN_MASTER_EMAIL = "matheus@mtech.com";
         let currentUser = null;
-        let adminSelectedEmpresaContextId = null; // Used by admin to select company context
+        let adminSelectedEmpresaContextId = null;
 
-        let userProfilesCache = []; // Cache for user_profiles table entries related to companies
+        let userProfilesCache = [];
 
         let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
             adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody,
@@ -385,7 +386,7 @@
 
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.10.1 called");
+            console.log("initializeDOMSelectors v2.10.2 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
@@ -496,8 +497,8 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.1', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.1'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.2', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.2'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
@@ -511,7 +512,7 @@
             if (includeSpecialOption) {
                 const opt = document.createElement('option'); opt.value = specialOptionValue; opt.textContent = specialOptionText; selectEl.appendChild(opt);
             }
-            if (empresasCache.length === 0) { // Populate global cache if empty
+            if (empresasCache.length === 0) {
                 try {
                     console.log("Populating global empresasCache from DB...");
                     const { data, error } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
@@ -525,11 +526,11 @@
             if (currentValue && Array.from(selectEl.options).some(opt => opt.value === currentValue)) {
                  selectEl.value = currentValue;
             } else if (adminSelectedEmpresaContextId && Array.from(selectEl.options).some(opt => opt.value === adminSelectedEmpresaContextId)) {
-                 selectEl.value = adminSelectedEmpresaContextId; // Restore context if available
+                 selectEl.value = adminSelectedEmpresaContextId;
             } else if (includeSpecialOption) {
                  selectEl.value = specialOptionValue;
             }
-            if(selectEl.value && selectEl.value !== specialOptionValue) selectEl.dispatchEvent(new Event('change')); // Trigger change for dependent elements
+            if(selectEl.value && selectEl.value !== specialOptionValue) selectEl.dispatchEvent(new Event('change'));
         }
 
 
@@ -568,7 +569,7 @@
                     updateExportButtonStates();
                 } else if (screenId === 'historicoContagens') {
                     if(document.getElementById('historicoTitle')) document.getElementById('historicoTitle').textContent = title || 'Histórico de Contagens';
-                    if(document.getElementById('historicoEmpresaNomeSpan') && (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter')) document.getElementById('historicoEmpresaNomeSpan').textContent = currentUser.empresa_nome || '';
+                    if(document.getElementById('historicoEmpresaNomeSpan') && (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal')) document.getElementById('historicoEmpresaNomeSpan').textContent = currentUser.empresa_nome || '';
                     else if(document.getElementById('historicoEmpresaNomeSpan')) document.getElementById('historicoEmpresaNomeSpan').textContent = '';
 
                     if(document.getElementById('historicoContext') && context !== undefined) document.getElementById('historicoContext').textContent = context;
@@ -579,22 +580,30 @@
                 } else if (screenId === 'empresaDashboard' && currentUser) {
                     if(empresaDashboardTitle) empresaDashboardTitle.textContent = `Painel: ${currentUser.empresa_nome || 'Minha Empresa'}`;
                     if(empresaUserNameSpan) empresaUserNameSpan.textContent = currentUser.full_name || currentUser.email;
-                    if(empresaUserRoleDisplaySpan) empresaUserRoleDisplaySpan.textContent = currentUser.role === 'empresa_manager' ? 'Gerente' : (currentUser.role === 'empresa_counter' ? 'Contador' : currentUser.role);
+
+                    if(empresaUserRoleDisplaySpan) {
+                        let displayRole = currentUser.role;
+                        if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') displayRole = 'Gerente';
+                        else if (currentUser.role === 'empresa_counter') displayRole = 'Contador';
+                        empresaUserRoleDisplaySpan.textContent = displayRole;
+                    }
 
                     const dashboardButtons = document.querySelectorAll('#screenEmpresaDashboard .dashboard-options .btn');
                     dashboardButtons.forEach(btn => {
                         const roleReq = btn.dataset.roleReq; // e.g., 'empresa_manager'
-                        if (roleReq) { // If button has a role requirement
-                            btn.style.display = (currentUser.role === roleReq) ? 'block' : 'none';
-                        } else { // Buttons without roleReq are visible to all roles on this dashboard (manager, counter)
-                            btn.style.display = 'block';
+                        let canAccess = false;
+                        if (roleReq) {
+                            canAccess = (currentUser.role === roleReq) || (roleReq === 'empresa_manager' && currentUser.role === 'empresa_login_principal');
+                        } else { // Buttons without roleReq are generally visible
+                            canAccess = true;
                         }
+                        btn.style.display = canAccess ? 'block' : 'none';
                     });
                 } else if (screenId === 'adminMasterDashboard' && currentUser && adminMasterNameDisplay) {
                      adminMasterNameDisplay.textContent = currentUser.full_name || currentUser.email;
                 } else if (screenId === 'changePassword' && currentUser) {
                     if(changingPasswordForUserDisplay) changingPasswordForUserDisplay.textContent = currentUser.email;
-                    const isChangingOwnPasswordAsManager = currentUser?.role === 'empresa_manager';
+                    const isChangingOwnPasswordAsManager = (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal');
                     if(currentPasswordGroup) currentPasswordGroup.style.display = isChangingOwnPasswordAsManager ? 'block' : 'none';
                 }
             } else {
@@ -607,7 +616,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.10.1 called");
+            console.log("handleLogin v2.10.2 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Erro crítico no formulário de login. Tente recarregar."); hideLoader(); return;
@@ -638,15 +647,13 @@
                     role: null
                 };
 
-                if (currentUser.user_metadata?.user_role) { // Check JWT first
+                if (currentUser.user_metadata?.user_role) {
                      currentUser.role = currentUser.user_metadata.user_role;
                      console.log("Role assigned from JWT user_metadata:", currentUser.role);
                 }
 
-                // Fetch profile for additional details (empresa_nome) or if role not in JWT
-                // Only fetch if it's a company user or role is still unknown
-                if (!currentUser.role || ['empresa_manager', 'empresa_counter'].includes(currentUser.role)) {
-                     console.log("Fetching profile for user:", currentUser.id);
+                if (!currentUser.role || ['empresa_manager', 'empresa_counter', 'empresa_login_principal'].includes(currentUser.role) || !currentUser.empresa_id) { // Also fetch profile if empresa_id is missing
+                     console.log("Fetching profile for user (or to get empresa_id/nome):", currentUser.id);
                      const { data: profile, error: profileError } = await _supabaseClient
                         .from('user_profiles')
                         .select('empresa_id, role, full_name, empresas (id, nome_empresa)')
@@ -654,7 +661,7 @@
                         .single();
                     console.log("Profile fetch result - Data:", profile, "Error:", profileError);
 
-                    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means 0 rows, not an error if admin has no profile
+                    if (profileError && profileError.code !== 'PGRST116') {
                         console.error("Error fetching profile:", profileError);
                         await _supabaseClient.auth.signOut();
                         currentUser = null;
@@ -662,15 +669,15 @@
                     }
 
                     if (profile) {
-                        currentUser.role = profile.role; // This should match JWT or be the source
+                        currentUser.role = profile.role; // This is the source of truth from DB
                         currentUser.empresa_id = profile.empresa_id;
                         currentUser.empresa_nome = profile.empresas ? profile.empresas.nome_empresa : (profile.empresa_id ? 'Empresa Associada (Nome não carregado)' : 'N/A');
                         currentUser.full_name = profile.full_name || currentUser.full_name;
                         console.log("User profile fetched and merged:", currentUser);
-                    } else if (currentUser.email === ADMIN_MASTER_EMAIL && !currentUser.role) { // Fallback if admin has no profile and role not in JWT
+                    } else if (currentUser.email === ADMIN_MASTER_EMAIL && !currentUser.role) {
                         currentUser.role = 'admin_master';
                         console.warn("Admin Master identified by email (profile/JWT role missing):", currentUser.id);
-                    } else if (!currentUser.role) { // No role from JWT and no profile
+                    } else if (!currentUser.role) {
                         console.error("User profile not found and not admin_master by email; no role in JWT. User ID:", signInData.user.id);
                         await _supabaseClient.auth.signOut();
                         currentUser = null;
@@ -692,7 +699,7 @@
                     ]);
                     await fetchAndRenderEmpresas();
                     showAdminMasterDashboardScreen();
-                } else if (currentUser.role === 'empresa_manager' && currentUser.empresa_id) {
+                } else if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') && currentUser.empresa_id) { // Treat empresa_login_principal as manager
                     await showEmpresaDashboardScreen();
                 } else if (currentUser.role === 'empresa_counter' && currentUser.empresa_id) {
                     await showInventoryCountScreen_Empresa();
@@ -725,7 +732,7 @@
                 currentUser = null; adminSelectedEmpresaContextId = null;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
                 produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.1');
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.2');
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
@@ -743,9 +750,9 @@
             } catch (e) { console.error("Error showAdminEmpresasScreen:", e); alert("Erro ao carregar tela de empresas."); hideLoader(); }
         }
 
-        async function fetchAndRenderEmpresas() { // Admin only
+        async function fetchAndRenderEmpresas() {
             if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); hideLoader(); return;}
-            adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando empresas...</td></tr>'; // Adjusted colspan
+            adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando empresas...</td></tr>';
             showLoader();
             try {
                 const { data: companiesData, error: companiesError } = await _supabaseClient
@@ -753,7 +760,7 @@
                     .select('id, nome_empresa, created_at')
                     .order('nome_empresa');
                 if (companiesError) throw companiesError;
-                empresasCache = companiesData || []; // Update global cache
+                empresasCache = companiesData || [];
 
                 adminEmpresasTableBody.innerHTML = "";
                 if (empresasCache.length > 0) {
@@ -795,7 +802,6 @@
 
                 alert('Empresa adicionada! Agora adicione usuários para ela em "Gerenciar Usuários".'); adminNomeEmpresaInput.value = '';
                 await fetchAndRenderEmpresas();
-                // Also refresh global empresasCache used by selects after adding a new one
                 const { data: allEmpresas, error: refreshError } = await _supabaseClient.from('empresas').select('id, nome_empresa').order('nome_empresa');
                 if (refreshError) console.error("Error refreshing global empresasCache after add:", refreshError);
                 else empresasCache = allEmpresas || [];
@@ -812,7 +818,7 @@
             selectedEmpresaIdForUserManage.value = empresaId;
             if(selectedEmpresaNameForUserManage) selectedEmpresaNameForUserManage.value = nomeEmpresa;
             addUserNameForEmpresaDisplayEl.textContent = nomeEmpresa;
-            adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Verificando usuários existentes...</td></tr>'; // Colspan updated
+            adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Verificando usuários existentes...</td></tr>';
             manageUsersEmpresaMessage.style.display = 'none'; manageUsersEmpresaMessage.textContent = '';
             adminManageUsersEmpresaSection.style.display = 'block';
             adminManageUsersEmpresaSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -821,27 +827,30 @@
                 console.log(`DEBUG: Fetching profiles for empresa_id: ${empresaId}`);
                 const { data: existingProfiles, error: profileError } = await _supabaseClient
                     .from('user_profiles')
-                    .select('id, email, full_name, role') // Removed created_at
+                    .select('id, email, full_name, role') // id here is the auth.users.id
                     .eq('empresa_id', empresaId)
-                    .in('role', ['empresa_manager', 'empresa_counter']);
+                    .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal']); // Include old role
 
                 if (profileError) {
                     console.error("DEBUG: Profile fetch error in handleShowManageUsersEmpresaSection:", profileError);
                     throw profileError;
                 }
                 console.log("DEBUG: Existing profiles data in handleShowManageUsersEmpresaSection:", existingProfiles);
-                userProfilesCache = existingProfiles || [];
+                userProfilesCache = existingProfiles || []; // Update cache specifically for this view
 
                 adminEmpresaUsersTableBody.innerHTML = "";
                 if (userProfilesCache.length > 0) {
                     userProfilesCache.forEach(profile => {
                         const row = adminEmpresaUsersTableBody.insertRow();
                         row.insertCell().textContent = profile.email;
+
                         let roleDisplay = profile.role;
-                        if (profile.role === 'empresa_manager') roleDisplay = 'Gerente';
-                        if (profile.role === 'empresa_counter') roleDisplay = 'Contador';
+                        if (profile.role === 'empresa_manager' || profile.role === 'empresa_login_principal') {
+                            roleDisplay = 'Gerente';
+                        } else if (profile.role === 'empresa_counter') {
+                            roleDisplay = 'Contador';
+                        }
                         row.insertCell().textContent = roleDisplay;
-                        // Removed cell for created_at
 
                         const actionsCell = row.insertCell();
                         const btnResetPass = document.createElement('button');
@@ -849,17 +858,16 @@
                         btnResetPass.className = 'btn btn-warning table-actions';
                         btnResetPass.onclick = () => callResetPasswordEdgeFunction(profile.id, profile.email, nomeEmpresa);
                         actionsCell.appendChild(btnResetPass);
-                        // TODO: Add delete user button functionality if needed
                     });
                 } else {
-                    adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Nenhum usuário (gerente ou contador) cadastrado para esta empresa.</td></tr>'; // Colspan updated
+                    adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Nenhum usuário cadastrado para esta empresa.</td></tr>';
                 }
                 if(adminEmpresaNewUserEmailEl) adminEmpresaNewUserEmailEl.value = '';
                 if(adminEmpresaNewUserFullNameEl) adminEmpresaNewUserFullNameEl.value = '';
 
             } catch(e) {
                 console.error("Error in handleShowManageUsersEmpresaSection:", e);
-                adminEmpresaUsersTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color)">Erro ao verificar/gerenciar usuários: ${e.message}</td></tr>`; // Colspan updated
+                adminEmpresaUsersTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color)">Erro ao verificar/gerenciar usuários: ${e.message}</td></tr>`;
             } finally {
                 hideLoader();
             }
@@ -895,7 +903,7 @@
                     options: {
                         data: {
                             empresa_id: empresaId,
-                            user_role: role,
+                            user_role: role, // This will be in raw_user_meta_data for the trigger
                             full_name: fullName
                         }
                     }
@@ -910,6 +918,9 @@
 
                 if (authData.user) {
                     console.log("New user created in Auth:", authData.user.id, authData.user.email);
+                    // Assuming the Supabase trigger 'on_auth_user_created' correctly populates 'user_profiles.role'
+                    // from 'auth.users.raw_user_meta_data.user_role'.
+
                     let successMsg = `Novo usuário (${role}) para ${empresaNome} (${email}) criado com sucesso!`;
                     successMsg += `\nSenha Gerada: ${password}\nInforme ao responsável.`;
                     if (authData.user.email_confirmed_at === null && !authData.user.phone_confirmed_at) {
@@ -920,7 +931,10 @@
                     manageUsersEmpresaMessage.style.display = 'block';
                     manageUsersEmpresaMessage.style.color = 'var(--success-color)';
 
-                    await handleShowManageUsersEmpresaSection(empresaId, empresaNome); // Refresh user list
+                    // Crucial: Short delay to allow Supabase trigger to complete before refetching profiles
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Delay of 1.5 seconds
+
+                    await handleShowManageUsersEmpresaSection(empresaId, empresaNome);
                     adminEmpresaNewUserEmailEl.value = '';
                     adminEmpresaNewUserFullNameEl.value = '';
                 } else {
@@ -942,7 +956,7 @@
             if (!confirm(`Tem certeza que deseja resetar a senha para o login ${userEmail} (associado à empresa ${nomeEmpresaContext})? Uma nova senha será gerada e exibida.`)) return;
 
             showLoader();
-            const messageDisplay = document.getElementById('manageUsersEmpresaMessage'); // Primary message display for this section
+            const messageDisplay = document.getElementById('manageUsersEmpresaMessage');
             if(messageDisplay) { messageDisplay.style.display = 'none'; messageDisplay.textContent = ''; }
 
             try {
@@ -983,7 +997,7 @@
         }
 
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.10.1 started");
+            console.log("gerarArquivoTXT v2.10.2 started");
             showLoader();
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
@@ -1032,7 +1046,7 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.10.1 started");
+            console.log("gerarPDFContagem v2.10.2 started");
             showLoader();
             const { jsPDF } = window.jspdf;
             if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
@@ -1066,7 +1080,7 @@
                 if (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) {
                     const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
                     if(selectedEmpresa) empresaNomeContext = selectedEmpresa.nome_empresa;
-                } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter') && currentUser.empresa_nome) {
+                } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') && currentUser.empresa_nome) {
                     empresaNomeContext = currentUser.empresa_nome;
                 }
 
@@ -1081,10 +1095,17 @@
                 const tableRows = [];
 
                 produtosContados.sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || "")).forEach(produto => {
+                    let categoriaNome = 'Sem Categoria';
+                    if (produto.categorias?.nome_categoria) {
+                        categoriaNome = produto.categorias.nome_categoria;
+                    } else if (produto.categoria_id) {
+                        const foundCat = categoriasCache.find(c => c.id === produto.categoria_id);
+                        categoriaNome = foundCat ? foundCat.nome_categoria : 'Inválida';
+                    }
                     const produtoData = [
                         produto.codigo_produto || produto.id,
                         produto.nome_produto || "N/A",
-                        produto.categorias ? produto.categorias.nome_categoria : (produto.categoria_id ? (categoriasCache.find(c=>c.id === produto.categoria_id)?.nome_categoria || 'N/A') : 'Sem Categoria'),
+                        categoriaNome,
                         quantidadesDigitadas[produto.id]
                     ];
                     tableRows.push(produtoData);
@@ -1148,7 +1169,7 @@
         }
 
         async function showCategoriasScreen_Empresa() {
-            if (!currentUser || currentUser.role !== 'empresa_manager') {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal')) {
                 alert("Acesso negado à gestão de categorias.");
                 showEmpresaDashboardScreen();
                 return;
@@ -1189,7 +1210,7 @@
                     hideLoader();
                     return;
                 }
-            } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter') {
+            } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter' || currentUser.role === 'empresa_login_principal') {
                 targetEmpresaIdForFetch = currentUser.empresa_id;
                 if(thCategoriaEmpresaScopeEl) thCategoriaEmpresaScopeEl.style.display = 'none';
             } else {
@@ -1216,13 +1237,13 @@
 
                         const empresaCell = row.insertCell();
                         empresaCell.textContent = cat.empresas?.nome_empresa || `Empresa ID: ${cat.empresa_id}`;
-                        if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter') && thCategoriaEmpresaScopeEl && thCategoriaEmpresaScopeEl.style.display === 'none') {
+                        if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter' || currentUser.role === 'empresa_login_principal') && thCategoriaEmpresaScopeEl && thCategoriaEmpresaScopeEl.style.display === 'none') {
                             // Cell hidden by CSS
                         }
                         row.insertCell().textContent = new Date(cat.created_at).toLocaleDateString('pt-BR');
 
                         const actionsCell = row.insertCell();
-                        if (currentUser.role === 'admin_master' || currentUser.role === 'empresa_manager') {
+                        if (currentUser.role === 'admin_master' || currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') {
                             const btnDelete = document.createElement('button');
                             btnDelete.textContent = 'Excluir';
                             btnDelete.className = 'btn btn-danger table-actions';
@@ -1256,7 +1277,7 @@
                     alert("Admin: Selecione uma empresa primeiro para adicionar a categoria.");
                     return;
                 }
-            } else if (currentUser.role === 'empresa_manager') {
+            } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') {
                 empresaIdParaNovaCategoria = currentUser.empresa_id;
                  if (!empresaIdParaNovaCategoria) {
                     alert("Erro: ID da sua empresa não encontrado. Não é possível adicionar categoria.");
@@ -1303,7 +1324,7 @@
             let canDelete = false;
             if (currentUser.role === 'admin_master' && catEmpresaId === adminSelectedEmpresaContextId) {
                 canDelete = true;
-            } else if (currentUser.role === 'empresa_manager' && catEmpresaId === currentUser.empresa_id) {
+            } else if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') && catEmpresaId === currentUser.empresa_id) {
                 canDelete = true;
             }
 
@@ -1352,13 +1373,13 @@
                 }
                 targetEmpresaId = empresaIdParaAdmin;
                 targetEmpresaNome = nomeEmpresaParaAdmin || `Empresa ID: ${empresaIdParaAdmin}`;
-            } else if (!isAdminCalling && currentUser?.role === 'empresa_manager') {
+            } else if (!isAdminCalling && (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal')) {
                 targetEmpresaId = currentUser.empresa_id;
                 targetEmpresaNome = currentUser.empresa_nome;
             } else {
                 alert("Acesso negado à gestão de colaboradores.");
                 if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter') showEmpresaDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                 else handleLogout();
                 return;
             }
@@ -1517,7 +1538,7 @@
         }
 
         function showChangePasswordScreen_Empresa() {
-            if (!currentUser || currentUser.role !== 'empresa_manager') {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal')) {
                 alert("Apenas Gerentes da Empresa podem alterar a própria senha por esta tela.");
                 if(currentUser.role === 'admin_master') showAdminMasterDashboardScreen();
                 else if (currentUser.role === 'empresa_counter') showInventoryCountScreen_Empresa();
@@ -1549,7 +1570,7 @@
             if (newPassword !== confirmPassword) {
                 changePasswordMessage.textContent = "As novas senhas não coincidem."; return;
             }
-            if (currentUser.role !== 'empresa_manager') {
+            if (!(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal')) {
                 alert("Operação não permitida para esta função de usuário."); return;
             }
             if (!currentPwd) {
@@ -1562,10 +1583,10 @@
                 if (error) {
                     if (error.message.includes("same as the existing password") || error.message.includes("New password should be different from the old password.")) {
                          changePasswordMessage.textContent = 'A nova senha deve ser diferente da senha atual.';
-                    } else if (error.message.includes("Error changing user password") || error.message.includes("Current password is not correct")) { // Hypothetical, Supabase might not give this specific msg for updateUser
+                    } else if (error.message.includes("Error changing user password") || error.message.includes("Current password is not correct")) {
                          changePasswordMessage.textContent = 'Erro ao alterar senha. Verifique sua senha atual ou tente logar novamente.';
                     } else {
-                        throw error; // Rethrow for generic handling
+                        throw error;
                     }
                 } else {
                     console.log("Password changed successfully for:", currentUser.email, data);
@@ -1584,7 +1605,7 @@
         }
 
         async function showHistoricoContagensScreen() { // Empresa Manager
-            if (!currentUser || currentUser.role !== 'empresa_manager') {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal')) {
                 alert("Acesso negado ao histórico de contagens.");
                 showEmpresaDashboardScreen();
                 return;
@@ -1784,7 +1805,7 @@
 
         async function showProductManagementScreen_AdminGlobal() {
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.10.1 called");
+            console.log("showProductManagementScreen_AdminGlobal v2.10.2 called");
             showLoader();
             try {
                 adminSelectedEmpresaContextId = null;
@@ -1824,7 +1845,7 @@
         }
 
         async function showProductManagementScreen_Empresa() {
-            if (!currentUser || currentUser.role !== 'empresa_manager' || !currentUser.empresa_id) {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') || !currentUser.empresa_id) {
                  alert("Acesso negado à gestão de produtos.");
                  showEmpresaDashboardScreen();
                  return;
@@ -1856,7 +1877,7 @@
         async function fetchProductsFromSupabase(empresaIdFiltro) {
             showLoader();
              if (!empresaIdFiltro) {
-                console.warn("fetchProductsFromSupabase: empresaIdFiltro é nulo/vazio. Nenhum produto será carregado.");
+                console.warn("fetchProductsFromSupabase: empresaIdFiltro é nulo/vazio.");
                 produtosCache = [];
                 hideLoader();
                 return;
@@ -1918,7 +1939,7 @@
                     alert("Admin: Selecione uma empresa primeiro para adicionar o produto.");
                     return;
                 }
-            } else if (currentUser?.role === 'empresa_manager') {
+            } else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') {
                 empresaParaProdutoId = currentUser.empresa_id;
                  if (!empresaParaProdutoId) {
                     alert("Erro: ID da sua empresa não encontrado."); return;
@@ -1977,7 +1998,7 @@
             let canDelete = false;
             if (currentUser?.role === 'admin_master' && produtoEmpresaId === adminSelectedEmpresaContextId) {
                 canDelete = true;
-            } else if (currentUser?.role === 'empresa_manager' && produtoEmpresaId === currentUser.empresa_id) {
+            } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') && produtoEmpresaId === currentUser.empresa_id) {
                 canDelete = true;
             }
             if(!canDelete){
@@ -2013,7 +2034,7 @@
                     alert("Admin: Por favor, selecione uma empresa primeiro na tela de 'Gerenciar Produtos' antes de importar.");
                     return;
                 }
-            } else if (currentUser?.role === 'empresa_manager') {
+            } else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') {
                 empresaParaImportacaoId = currentUser.empresa_id;
                 if (!empresaParaImportacaoId) {
                     alert("Erro: ID da sua empresa não encontrado. Não é possível importar."); return;
@@ -2207,7 +2228,6 @@
                             }
                             await populateCategoryFilter();
                             displayInventoryProducts(produtosCache);
-                            // updateExportButtonStates(); // Called within displayInventoryProducts
                         });
                         adminCountEmpSelect.onchangeAttached_count_admin = true;
                     }
@@ -2227,9 +2247,9 @@
         }
 
         async function showInventoryCountScreen_Empresa() {
-            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter') || !currentUser.empresa_id) {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter' || currentUser.role === 'empresa_login_principal') || !currentUser.empresa_id) {
                  alert("Acesso negado à contagem de estoque.");
-                 if(currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                 if(currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                  else handleLogout();
                  return;
             }
@@ -2244,7 +2264,6 @@
                 await loadProductsForInventory(adminSelectedEmpresaContextId);
                 await populateCategoryFilter();
                 displayInventoryProducts(produtosCache);
-                // updateExportButtonStates(); // Called within displayInventoryProducts
 
                 showScreen('inventoryCount', { title: `Balanço de Estoque (${empresaNomeContext})`, context: `Contagem para ${empresaNomeContext}`, showEmpresaSelector: false });
             } catch (e) {
@@ -2272,7 +2291,7 @@
                 console.log(`Products loaded for inventory (CID: ${empresaIdContexto}): ${produtosCache.length}`);
 
                 const { data: categoriesData, error: categoriesError } = await _supabaseClient.from('categorias')
-                    .select('id, nome_categoria, empresa_id') // Added empresa_id for check
+                    .select('id, nome_categoria, empresa_id')
                     .eq('empresa_id', empresaIdContexto)
                     .order('nome_categoria');
                 if (categoriesError) {
@@ -2313,9 +2332,8 @@
 
                     if (currentUser?.role === 'admin_master' && isAdminAlsoCounter) {
                          colaboradoresParaSelect.unshift({id: `admin_${currentUser.id}`, nome_colaborador: `${currentUser.full_name || currentUser.email} (Admin)`});
-                    } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter') && !isAdminAlsoCounter) {
+                    } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') && !isAdminAlsoCounter) {
                         const loggedInUserName = currentUser.full_name || currentUser.email;
-                        // Check if the logged-in user is already in the list (e.g., if they are also a 'colaborador')
                         if (!colaboradoresParaSelect.some(c => c.nome_colaborador === loggedInUserName && c.id !== `user_${currentUser.id}`)) {
                              colaboradoresParaSelect.unshift({id: `user_${currentUser.id}`, nome_colaborador: `${loggedInUserName} (Usuário Logado)`});
                         }
@@ -2329,7 +2347,7 @@
                         option.textContent = colab.nome_colaborador;
                         selectColaboradorContagem.appendChild(option);
                     });
-                    if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter') && !isAdminAlsoCounter) {
+                    if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') && !isAdminAlsoCounter) {
                         const loggedInUserOption = Array.from(selectColaboradorContagem.options).find(opt => opt.value === `user_${currentUser.id}`);
                         if (loggedInUserOption) loggedInUserOption.selected = true;
                     } else if (currentUser?.role === 'admin_master' && isAdminAlsoCounter) {
@@ -2357,7 +2375,7 @@
             let relevantEmpresaId = null;
             if (currentUser.role === 'admin_master') {
                 relevantEmpresaId = adminSelectedEmpresaContextId;
-            } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter') {
+            } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter' || currentUser.role === 'empresa_login_principal') {
                 relevantEmpresaId = currentUser.empresa_id;
             }
 
@@ -2365,17 +2383,14 @@
                 filterSelect.innerHTML = '<option value="">-- Selecione Empresa Primeiro --</option>';
                 return;
             }
-            // Use categoriasCache which should be correctly populated by loadProductsForInventory for the current context
             const uniqueCategories = new Map();
-            (categoriasCache || []).filter(c => c.empresa_id === relevantEmpresaId).forEach(cat => { // Ensure we only use categories for the current company context
+            (categoriasCache || []).filter(c => c.empresa_id === relevantEmpresaId).forEach(cat => {
                 if (cat.id && cat.nome_categoria) {
                     if (!uniqueCategories.has(cat.id)) {
                         uniqueCategories.set(cat.id, cat.nome_categoria);
                     }
                 }
             });
-
-            // Add "Sem Categoria" if there are products in produtosCache for the current company that have no categoria_id
             if (produtosCache.filter(p => p.empresa_id === relevantEmpresaId).some(p => !p.categoria_id)) {
                  if (!uniqueCategories.has("NO_CATEGORY_ID_FILTER_VAL")) {
                     uniqueCategories.set("NO_CATEGORY_ID_FILTER_VAL", "Sem Categoria");
@@ -2416,7 +2431,6 @@
                 const row = inventoryTableBody.insertRow();
                 row.insertCell().textContent = produto.codigo_produto;
                 row.insertCell().textContent = produto.nome_produto;
-                // Attempt to find category name from categoriasCache if produto.categorias is missing
                 let categoriaNome = 'Sem Categoria';
                 if (produto.categorias?.nome_categoria) {
                     categoriaNome = produto.categorias.nome_categoria;
@@ -2437,7 +2451,7 @@
                     const val = e.target.value;
                     if (val === '' || parseFloat(val) < 0) {
                         delete quantidadesDigitadas[produto.id];
-                        if(parseFloat(val) < 0) e.target.value = ''; // Clear if negative was typed
+                        if(parseFloat(val) < 0) e.target.value = '';
                     } else {
                         quantidadesDigitadas[produto.id] = parseFloat(val);
                     }
@@ -2445,7 +2459,7 @@
                     updateExportButtonStates();
                 };
                 qtdInput.addEventListener('change', handleQtyChange);
-                qtdInput.addEventListener('input', updateExportButtonStates); // Update on input for button state only
+                qtdInput.addEventListener('input', updateExportButtonStates);
                  qtdInput.addEventListener('focus', (e) => e.target.select());
                 qtdCell.appendChild(qtdInput);
             });
@@ -2521,7 +2535,7 @@
 
 
         window.onload = async () => {
-            console.log("window.onload v2.10.1 (Fix User List) started");
+            console.log("window.onload v2.10.2 (User Role Fixes) started");
             initializeDOMSelectors();
             showLoader();
             if (typeof loadQuantities === "function") loadQuantities();
@@ -2551,7 +2565,7 @@
 
             btnCategoriasVoltarEl?.addEventListener('click', () => {
                 if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                else if (currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                 else showScreen('login');
             });
             btnAddCategoriaEl?.addEventListener('click', handleAddCategoria);
@@ -2577,7 +2591,7 @@
             if(changePassBackBtn) {
                 changePassBackBtn.addEventListener('click', () => {
                     if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                    else if (currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                    else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                     else showScreen('login');
                 });
             }
@@ -2585,7 +2599,7 @@
             if(prodMgmtBackBtn) {
                 prodMgmtBackBtn.addEventListener('click', () => {
                     if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                    else if (currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                    else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                     else showScreen('login');
                 });
             }
@@ -2593,7 +2607,7 @@
             if(invCountBackBtn) {
                 invCountBackBtn.addEventListener('click', () => {
                     if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                    else if (currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                    else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                     else if (currentUser?.role === 'empresa_counter') handleLogout();
                     else showScreen('login');
                 });
@@ -2602,7 +2616,7 @@
               if(histBackBtn) {
                 histBackBtn.addEventListener('click', () => {
                     if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
-                    else if (currentUser?.role === 'empresa_manager') showEmpresaDashboardScreen();
+                    else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
                     else showScreen('login');
                 });
             }
@@ -2648,7 +2662,7 @@
                         console.log("Session: Role assigned from JWT user_metadata:", currentUser.role);
                     }
 
-                    if (!currentUser.role || ['empresa_manager', 'empresa_counter'].includes(currentUser.role)) {
+                    if (!currentUser.role || ['empresa_manager', 'empresa_counter', 'empresa_login_principal'].includes(currentUser.role) || !currentUser.empresa_id) {
                         const { data: profile, error: profileError } = await _supabaseClient
                             .from('user_profiles')
                             .select('empresa_id, role, full_name, empresas (id, nome_empresa)')
@@ -2692,7 +2706,7 @@
                         ]);
                          await fetchAndRenderEmpresas();
                         showAdminMasterDashboardScreen();
-                    } else if (currentUser.role === 'empresa_manager' && currentUser.empresa_id) {
+                    } else if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') && currentUser.empresa_id) {
                         await showEmpresaDashboardScreen();
                     } else if (currentUser.role === 'empresa_counter' && currentUser.empresa_id) {
                         await showInventoryCountScreen_Empresa();
@@ -2718,7 +2732,7 @@
                 hideLoader();
             }
         };
-        console.log("SCRIPT END - v2.10.1 (Fix User List)");
+        console.log("SCRIPT END - v2.10.2 (User Role Fixes)");
     </script>
 </body>
 </html>
