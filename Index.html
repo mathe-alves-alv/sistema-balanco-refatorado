@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.10.5 (Manager View & Data Integrity Check)</title>
+    <title>Inventory Balance System - v2.10.6 (User List & Create Fix)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -173,10 +173,12 @@
 
         <div id="screenManageEmpresaUsers" class="screen">
             <button class="btn btn-secondary back-button" id="btnManageEmpresaUsersVoltar">&larr; Voltar</button>
-            <h2 id="manageEmpresaUsersScreenTitle">Gerenciar Usuários da Empresa</h2> <div id="manageUsersEmpresaSection" class="card" style="margin-top: 1rem;">
+            <h2 id="manageEmpresaUsersScreenTitle">Gerenciar Usuários da Empresa</h2>
+            <div id="manageUsersEmpresaSection" class="card" style="margin-top: 1rem;">
                 <div class="card-header"><h3 id="manageUsersEmpresaTitle">Gerenciar Usuários para Empresa: <span id="contextEmpresaNameForUserManage"></span></h3></div>
                 <div class="card-body">
                     <input type="hidden" id="selectedEmpresaIdForUserManage">
+                    <div id="manageUsersEmpresaMessage" class="generated-password-display" style="display:none; margin-bottom:1.5rem;"></div>
                     <h4>Usuários Existentes</h4>
                     <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem;">
                         <table id="adminEmpresaUsersTable" class="table table-sm">
@@ -202,7 +204,6 @@
                         </select>
                     </div>
                     <button class="btn btn-success" id="btnExecuteCreateNewEmpresaUser">Criar Novo Usuário e Gerar Senha</button>
-                    <div id="manageUsersEmpresaMessage" class="generated-password-display" style="display:none; margin-top:1rem;"></div>
                 </div>
             </div>
         </div>
@@ -349,8 +350,8 @@
     </div>
 
     <script>
-        // Script version v2.10.5 (Manager View & Data Integrity Check)
-        console.log("SCRIPT START - v2.10.5 (Manager View & Data Integrity Check)");
+        // Script version v2.10.6 (User List & Create Fix)
+        console.log("SCRIPT START - v2.10.6 (User List & Create Fix)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
@@ -363,7 +364,8 @@
         let isEmpresaManagerManagingOwnUsers = false;
 
 
-        let userProfilesCache = [];
+        // Cache for profiles of ONE company being managed at a time. Cleared when context changes.
+        let managedUsersCache = [];
 
         let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
             adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody, adminEmpresasTitleEl,
@@ -392,7 +394,7 @@
 
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.10.5 called");
+            console.log("initializeDOMSelectors v2.10.6 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
@@ -507,8 +509,8 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.5', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.5'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.6', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.6'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
@@ -629,7 +631,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.10.5 called");
+            console.log("handleLogin v2.10.6 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Erro crítico no formulário de login. Tente recarregar."); hideLoader(); return;
@@ -744,8 +746,8 @@
                 if (error) { console.error("Error in Supabase logout:", error); }
                 currentUser = null; adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
-                produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.5');
+                produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; managedUsersCache = [];
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.6');
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
@@ -882,32 +884,11 @@
                     console.error("DEBUG: Profile fetch error in prepareAndShowManageUsersSection:", profileError);
                     throw profileError;
                 }
-                // CRUCIAL LOG PARA DEBUG:
                 console.log("DEBUG: Fetched existingProfiles from Supabase:", JSON.stringify(existingProfiles, null, 2));
+                managedUsersCache = existingProfiles || []; // Update local cache for this specific context
 
-                adminEmpresaUsersTableBody.innerHTML = "";
-                if (existingProfiles && existingProfiles.length > 0) {
-                    existingProfiles.forEach(profile => {
-                        const row = adminEmpresaUsersTableBody.insertRow();
-                        row.insertCell().textContent = profile.email;
-                        let roleDisplay = profile.role;
-                        if (profile.role === 'empresa_manager' || profile.role === 'empresa_login_principal') {
-                            roleDisplay = 'Gerente';
-                        } else if (profile.role === 'empresa_counter') {
-                            roleDisplay = 'Contador';
-                        }
-                        row.insertCell().textContent = roleDisplay;
+                renderManagedUsersTable(nomeEmpresa); // Use a dedicated render function
 
-                        const actionsCell = row.insertCell();
-                        const btnResetPass = document.createElement('button');
-                        btnResetPass.textContent = 'Resetar Senha';
-                        btnResetPass.className = 'btn btn-warning table-actions';
-                        btnResetPass.onclick = () => callResetPasswordEdgeFunction(profile.id, profile.email, nomeEmpresa);
-                        actionsCell.appendChild(btnResetPass);
-                    });
-                } else {
-                    adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Nenhum usuário cadastrado para esta empresa. Verifique os dados na tabela user_profiles (empresa_id e role) se você espera ver usuários aqui.</td></tr>';
-                }
                 if(adminEmpresaNewUserEmailEl) adminEmpresaNewUserEmailEl.value = '';
                 if(adminEmpresaNewUserFullNameEl) adminEmpresaNewUserFullNameEl.value = '';
 
@@ -916,6 +897,26 @@
                 adminEmpresaUsersTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color)">Erro ao verificar/gerenciar usuários: ${e.message}</td></tr>`;
             } finally {
                 hideLoader();
+            }
+        }
+        function renderManagedUsersTable(nomeEmpresaContext) {
+            if (!adminEmpresaUsersTableBody) return;
+            adminEmpresaUsersTableBody.innerHTML = "";
+            if (managedUsersCache && managedUsersCache.length > 0) {
+                managedUsersCache.forEach(profile => {
+                    const row = adminEmpresaUsersTableBody.insertRow();
+                    row.insertCell().textContent = profile.email;
+                    row.insertCell().textContent = roleDisplay(profile.role);
+
+                    const actionsCell = row.insertCell();
+                    const btnResetPass = document.createElement('button');
+                    btnResetPass.textContent = 'Resetar Senha';
+                    btnResetPass.className = 'btn btn-warning table-actions';
+                    btnResetPass.onclick = () => callResetPasswordEdgeFunction(profile.id, profile.email, nomeEmpresaContext);
+                    actionsCell.appendChild(btnResetPass);
+                });
+            } else {
+                adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Nenhum usuário cadastrado para esta empresa. Verifique os dados na tabela user_profiles (empresa_id e role) se você espera ver usuários aqui.</td></tr>';
             }
         }
 
@@ -990,9 +991,17 @@
                     manageUsersEmpresaMessage.style.display = 'block';
                     manageUsersEmpresaMessage.style.color = 'var(--success-color)';
 
-                    await new Promise(resolve => setTimeout(resolve, 2000)); // Aumentei um pouco o delay para o trigger
+                    // **CORREÇÃO LÓGICA:** Adicionar o novo usuário ao cache local e redesenhar a tabela, em vez de refazer a query
+                    const newUserProfile = {
+                        id: authData.user.id,
+                        email: authData.user.email,
+                        full_name: fullName,
+                        role: roleToCreate
+                    };
+                    managedUsersCache.push(newUserProfile);
+                    renderManagedUsersTable(empresaNome);
 
-                    await prepareAndShowManageUsersSection(empresaId, nomeEmpresa);
+
                     adminEmpresaNewUserEmailEl.value = '';
                     adminEmpresaNewUserFullNameEl.value = '';
                 } else {
@@ -1061,25 +1070,19 @@
             const qtyInputs = inventoryTableBody.querySelectorAll('input[type="number"]');
 
             if (produtosCache.length > 0 && qtyInputs.length === 0 && (pesquisaProdutoInput.value || pesquisaCodigoInput.value || filtroCategoriaSelect.value)) {
-                // Products exist for the company, but current filters show none.
-                // This implies user has filtered to an empty set, so technically "all visible" (zero) are "filled".
-                // For export button enabling, this state means no items to export, so disable.
                 return false;
             }
-            if (qtyInputs.length === 0 && produtosCache.length === 0) { // No products at all for this company
-                 return true; // Or false, depending on if an empty list is "valid" for export. Let's say true for enabling, but export will be empty.
-                               // For the "fill all items" rule, if there are no items, the condition is met.
+            if (qtyInputs.length === 0 && produtosCache.length === 0) {
+                 return true;
             }
              if (qtyInputs.length === 0 && produtosCache.length > 0 && !pesquisaProdutoInput.value && !pesquisaCodigoInput.value && !filtroCategoriaSelect.value) {
-                // This means products are loaded, but the table itself is somehow empty without filters. This is an error state.
                 return false;
             }
 
 
             for (const input of qtyInputs) {
                 const valueStr = input.value.trim();
-                if (valueStr === '' || isNaN(parseFloat(valueStr))) { // Check if empty or not a number
-                    // Allow 0, so only fail if empty or not a number.
+                if (valueStr === '' || isNaN(parseFloat(valueStr))) {
                     return false;
                 }
             }
@@ -1093,7 +1096,7 @@
         }
 
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.10.5 started");
+            console.log("gerarArquivoTXT v2.10.6 started");
             if (!areAllVisibleQuantitiesFilled()) {
                  alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
                  return;
@@ -1106,15 +1109,25 @@
             const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
             if (!colaboradorId) { alert("Selecione o colaborador."); hideLoader(); return; }
 
-            // Filter for products that are currently visible AND have a quantity > 0 for TXT export
             const produtosContadosComQtdMaiorZero = produtosCache.filter(p => {
-                const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`); // Check if product is visible
+                const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`);
                 return inputEl && quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])) && parseFloat(quantidadesDigitadas[p.id]) > 0;
             });
 
+
             if (produtosContadosComQtdMaiorZero.length === 0) {
-                 alert("Nenhum produto com quantidade maior que zero para incluir no arquivo TXT. O histórico será salvo com as quantidades preenchidas (incluindo zeros).");
-                 // Continue to save history even if TXT is empty of items > 0
+                const todosPreenchidos = areAllVisibleQuantitiesFilled();
+                if(todosPreenchidos && Object.keys(quantidadesDigitadas).length > 0) {
+                     if (!confirm("Todas as quantidades são zero. Deseja gerar um arquivo TXT (que estará vazio de itens com quantidade > 0) e salvar este histórico?")) {
+                        hideLoader(); return;
+                    }
+                } else if (!todosPreenchidos) {
+                     alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados antes de gerar o arquivo.");
+                     hideLoader(); return;
+                } else {
+                    alert("Nenhum produto com quantidade maior que zero para incluir no arquivo TXT.");
+                    hideLoader(); return;
+                }
             }
 
 
@@ -1136,10 +1149,7 @@
                 }
 
                 const todosOsItensVisiveisComQuantidadePreenchida = produtosCache
-                    .filter(p => {
-                        const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`);
-                        return inputEl; // Only products currently rendered in the table
-                    })
+                    .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
                     .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
                     .map(p => ({
                         produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto,
@@ -1170,7 +1180,7 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.10.5 started");
+            console.log("gerarPDFContagem v2.10.6 started");
             if (!areAllVisibleQuantitiesFilled()) {
                  alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
                  return;
@@ -1194,10 +1204,7 @@
             }
 
             const produtosParaPDF = produtosCache
-                .filter(p => {
-                    const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`);
-                    return inputEl;
-                })
+                .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
                 .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
                 .map(p => ({...p, quantidade_digitada: parseFloat(quantidadesDigitadas[p.id]) }))
                 .sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || ""));
@@ -1942,7 +1949,7 @@
 
         async function showProductManagementScreen_AdminGlobal() {
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.10.5 called");
+            console.log("showProductManagementScreen_AdminGlobal v2.10.6 called");
             showLoader();
             try {
                 adminSelectedEmpresaContextId = null;
@@ -2680,7 +2687,7 @@
 
 
         window.onload = async () => {
-            console.log("window.onload v2.10.5 (Manager View & Data Integrity Check) started");
+            console.log("window.onload v2.10.6 (User List & Create Fix) started");
             initializeDOMSelectors();
             showLoader();
             if (typeof loadQuantities === "function") loadQuantities();
@@ -2878,7 +2885,7 @@
                 hideLoader();
             }
         };
-        console.log("SCRIPT END - v2.10.5 (Manager View & Data Integrity Check)");
+        console.log("SCRIPT END - v2.10.6 (User List & Create Fix)");
     </script>
 </body>
 </html>
