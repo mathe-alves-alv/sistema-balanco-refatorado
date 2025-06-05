@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v2.10.2 (User Role Fixes)</title>
+    <title>Inventory Balance System - v2.10.3 (Full Fill & Mgr Users)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -117,7 +117,7 @@
         .admin-context-selector select { display: inline-block; width: auto; min-width: 250px; margin-right: 10px; }
         .loader { border: 5px solid #e9ecef; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
         @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-        #adminManageUsersEmpresaContent { margin-top: 1rem; } /* Renamed from adminManageLoginEmpresaContent */
+        #adminManageUsersEmpresaContent { margin-top: 1rem; }
         #adminManageUsersEmpresaContent p { margin-bottom: 0.5rem; }
         #adminManageUsersEmpresaContent .form-group { margin-top: 1rem; }
         #adminEmpresaUsersTable th, #adminEmpresaUsersTable td { font-size: 0.9em; padding: 0.5rem;}
@@ -154,6 +154,7 @@
             <h2 id="empresaDashboardTitle">Painel da Empresa</h2>
             <p style="text-align: center;">Logado como: <span id="empresaUserName"></span> (<span id="empresaUserRoleDisplay"></span>)</p>
             <div class="dashboard-options">
+                <button class="btn btn-warning" id="btnEmpresaGerenciarUsuarios" data-role-context="empresa_manager_self">Gerenciar Usuários da Empresa</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarColaboradores" data-role-req="empresa_manager">Gerenciar Colaboradores</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarCategorias" data-role-req="empresa_manager">Gerenciar Categorias da Empresa</button>
                 <button class="btn btn-primary" id="btnEmpresaGerenciarProdutos" data-role-req="empresa_manager">Gerenciar Produtos da Empresa</button>
@@ -195,14 +196,18 @@
             </div>
         </div>
 
-        <div id="screenAdminEmpresas" class="screen">
+        <div id="screenAdminEmpresas" class="screen"> {/* Admin Master: Gerenciar Todas Empresas e seus usuários */}
              <button class="btn btn-secondary back-button" id="btnAdminEmpresasVoltar">&larr; Painel Admin</button>
-            <h2>Gerenciar Empresas e Seus Usuários</h2>
+            <h2 id="adminEmpresasTitle">Gerenciar Empresas e Seus Usuários</h2>
             <div class="card"><div class="card-header"><h3>Adicionar Nova Empresa</h3></div><div class="card-body"><div class="form-group"><label for="adminNomeEmpresa">Nome da Empresa:</label><input type="text" id="adminNomeEmpresa" placeholder="Nome da nova empresa"></div><button class="btn btn-success" id="btnAdminAddEmpresa">Adicionar Empresa</button></div></div>
             <div class="card"><div class="card-header"><h3>Empresas Cadastradas</h3></div><div class="card-body"><table id="adminEmpresasTable"><thead><tr><th>Nome da Empresa</th><th>Criação</th><th style="min-width: 280px;">Ações da Empresa</th></tr></thead><tbody id="adminEmpresasTableBody"></tbody></table></div></div>
+        </div>
 
-            <div id="adminManageUsersEmpresaSection" class="card" style="display:none; margin-top: 2rem;">
-                <div class="card-header"><h3 id="adminManageUsersEmpresaTitle">Gerenciar Usuários para Empresa</h3></div>
+        <div id="screenManageEmpresaUsers" class="screen"> {/* Tela para Admin Master ou Empresa Manager gerenciarem usuários de UMA empresa */}
+            <button class="btn btn-secondary back-button" id="btnManageEmpresaUsersVoltar">&larr; Voltar</button>
+            <h2 id="manageEmpresaUsersScreenTitle">Gerenciar Usuários da Empresa</h2>
+            <div id="manageUsersEmpresaSection" class="card" style="margin-top: 1rem;">
+                <div class="card-header"><h3 id="manageUsersEmpresaTitle">Gerenciar Usuários para Empresa</h3></div>
                 <div class="card-body">
                     <input type="hidden" id="selectedEmpresaIdForUserManage">
                     <input type="hidden" id="selectedEmpresaNameForUserManage">
@@ -233,9 +238,9 @@
                     <button class="btn btn-success" id="btnExecuteCreateNewEmpresaUser">Criar Novo Usuário e Gerar Senha</button>
                     <div id="manageUsersEmpresaMessage" class="generated-password-display" style="display:none; margin-top:1rem;"></div>
                 </div>
-                <button class="btn btn-secondary" id="btnCancelarManageUsersEmpresa" style="margin: 0 1.25rem 1.25rem;">Fechar Gerenciamento de Usuários</button>
             </div>
         </div>
+
 
         <div id="screenEmpresaColaboradores" class="screen">
             <button class="btn btn-secondary back-button" id="colaboradoresBackButton">&larr; Voltar</button>
@@ -346,8 +351,8 @@
     </div>
 
     <script>
-        // Script version v2.10.2 (User Role Fixes)
-        console.log("SCRIPT START - v2.10.2 (User Role Fixes)");
+        // Script version v2.10.3 (Full Fill & Mgr Users)
+        console.log("SCRIPT START - v2.10.3 (Full Fill & Mgr Users)");
         const SUPABASE_URL = 'https://daeocsintrbdfqclvteg.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhZW9jc2ludHJiZGZxY2x2dGVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0ODMxNDEsImV4cCI6MjA1OTA1OTE0MX0.BJ61kSxTDiEFway590hoTvVH4yu0FxLnjecqQsYdwK4';
         const { createClient } = supabase;
@@ -356,15 +361,17 @@
         let produtosCache = [], categoriasCache = [], empresasCache = [], colaboradoresCache = [], quantidadesDigitadas = {};
         const ADMIN_MASTER_EMAIL = "matheus@mtech.com";
         let currentUser = null;
-        let adminSelectedEmpresaContextId = null;
+        let adminSelectedEmpresaContextId = null; // Admin Master: ID da empresa que ele está gerenciando no momento
+        let isEmpresaManagerManagingOwnUsers = false; // Flag para contexto da tela de gerenciamento de usuários
 
         let userProfilesCache = [];
 
         let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
-            adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody,
-            adminManageUsersEmpresaSection, adminManageUsersEmpresaTitle, selectedEmpresaIdForUserManage,
+            adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody, adminEmpresasTitleEl,
+            manageUsersEmpresaSection, manageUsersEmpresaTitleEl, selectedEmpresaIdForUserManage,
             selectedEmpresaNameForUserManage, adminEmpresaUsersTableBody, manageUsersEmpresaMessage,
             adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, addUserNameForEmpresaDisplayEl,
+            manageEmpresaUsersScreenTitleEl, btnManageEmpresaUsersVoltarEl,
 
             categoriasTitleEl, adminCategoriaEmpresaSelectContainerEl, adminCategoriaEmpresaSelectEl,
             nomeCategoriaInputEl, categoriasTableBodyEl, btnCategoriasVoltarEl, btnAddCategoriaEl, categoriasContextEl,
@@ -386,13 +393,14 @@
 
 
         function initializeDOMSelectors() {
-            console.log("initializeDOMSelectors v2.10.2 called");
+            console.log("initializeDOMSelectors v2.10.3 called");
             mainContainer = document.getElementById('mainContainer');
             screens = {
                 login: document.getElementById('screenLogin'),
                 adminMasterDashboard: document.getElementById('screenAdminMasterDashboard'),
                 empresaDashboard: document.getElementById('screenEmpresaDashboard'),
-                adminEmpresas: document.getElementById('screenAdminEmpresas'),
+                adminEmpresas: document.getElementById('screenAdminEmpresas'), // Admin: Lista de todas empresas
+                manageEmpresaUsers: document.getElementById('screenManageEmpresaUsers'), // Admin ou Empresa Manager: Gerencia usuários de UMA empresa
                 adminCategorias: document.getElementById('screenAdminCategorias'),
                 empresaColaboradores: document.getElementById('screenEmpresaColaboradores'),
                 changePassword: document.getElementById('screenChangePassword'),
@@ -418,9 +426,11 @@
             adminMasterNameDisplay = safeGetElementById('adminMasterNameDisplay');
             adminNomeEmpresaInput = safeGetElementById('adminNomeEmpresa');
             adminEmpresasTableBody = safeGetElementById('adminEmpresasTableBody');
+            adminEmpresasTitleEl = safeGetElementById('adminEmpresasTitle');
 
-            adminManageUsersEmpresaSection = safeGetElementById('adminManageUsersEmpresaSection');
-            adminManageUsersEmpresaTitle = safeGetElementById('adminManageUsersEmpresaTitle');
+
+            manageUsersEmpresaSection = safeGetElementById('manageUsersEmpresaSection'); // A seção dentro da tela screenManageEmpresaUsers
+            manageUsersEmpresaTitleEl = safeGetElementById('manageUsersEmpresaTitle'); // O H3 dentro do card-header da seção
             selectedEmpresaIdForUserManage = safeGetElementById('selectedEmpresaIdForUserManage');
             selectedEmpresaNameForUserManage = safeGetElementById('selectedEmpresaNameForUserManage');
             adminEmpresaUsersTableBody = safeGetElementById('adminEmpresaUsersTableBody');
@@ -429,6 +439,8 @@
             adminEmpresaNewUserFullNameEl = safeGetElementById('adminEmpresaNewUserFullName');
             adminEmpresaNewUserRoleEl = safeGetElementById('adminEmpresaNewUserRole');
             addUserNameForEmpresaDisplayEl = safeGetElementById('addUserNameForEmpresaDisplay');
+            manageEmpresaUsersScreenTitleEl = safeGetElementById('manageEmpresaUsersScreenTitle'); // O H2 da tela
+            btnManageEmpresaUsersVoltarEl = safeGetElementById('btnManageEmpresaUsersVoltar');
 
 
             categoriasTitleEl = safeGetElementById('categoriasTitle');
@@ -497,8 +509,8 @@
             console.log("DOM Selectors initialization complete.");
         }
 
-        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.2', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
-        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.2'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
+        function saveQuantities() { try { localStorage.setItem('balancoQuantities_v2.10.3', JSON.stringify(quantidadesDigitadas)); } catch (e) { console.error("Error saving quantities to localStorage:", e); }}
+        function loadQuantities() { try { const stored = localStorage.getItem('balancoQuantities_v2.10.3'); quantidadesDigitadas = stored ? JSON.parse(stored) : {}; } catch (e) { console.error("Error loading quantities:", e); quantidadesDigitadas = {}; }}
         function showLoader() { if (loadingIndicator) loadingIndicator.style.display = 'block'; }
         function hideLoader() { if (loadingIndicator) loadingIndicator.style.display = 'none'; }
         function generateNumericPassword(length = 6) { let pw = ''; for (let i = 0; i < length; i++) { pw += Math.floor(Math.random() * 10); } return pw; }
@@ -541,7 +553,7 @@
             Object.values(screens).forEach(sE => { if (sE && sE.classList) sE.classList.remove('active');});
             if (targetScreenElement && targetScreenElement.classList) {
                 targetScreenElement.classList.add('active');
-                if (mainCont) { mainCont.classList.toggle('content-container', ['adminEmpresas', 'adminCategorias', 'productManagement', 'inventoryCount', 'empresaColaboradores', 'historicoContagens'].includes(screenId));}
+                if (mainCont) { mainCont.classList.toggle('content-container', ['adminEmpresas', 'manageEmpresaUsers', 'adminCategorias', 'productManagement', 'inventoryCount', 'empresaColaboradores', 'historicoContagens'].includes(screenId));}
 
                 ['adminProdutoEmpresaSelectorContainer', 'adminContagemEmpresaSelectorContainer', 'adminHistoricoEmpresaSelectorContainer', 'adminCategoriaEmpresaSelectContainer', 'colEmpresaHistorico'].forEach(id => {
                     const el = document.getElementById(id); if(el) el.style.display = 'none';
@@ -554,7 +566,6 @@
                     if(categoriasContextEl) categoriasContextEl.textContent = context || '';
                     if(adminCategoriaEmpresaSelectContainerEl) adminCategoriaEmpresaSelectContainerEl.style.display = isEmpresaContext ? 'none' : 'block';
                     if(thCategoriaEmpresaScopeEl) thCategoriaEmpresaScopeEl.style.display = isEmpresaContext ? 'none': '';
-
                 }
                 else if (screenId === 'productManagement') {
                     if(document.getElementById('productManagementTitle')) document.getElementById('productManagementTitle').textContent = title || 'Gerenciar Produtos';
@@ -590,11 +601,16 @@
 
                     const dashboardButtons = document.querySelectorAll('#screenEmpresaDashboard .dashboard-options .btn');
                     dashboardButtons.forEach(btn => {
-                        const roleReq = btn.dataset.roleReq; // e.g., 'empresa_manager'
+                        const roleReq = btn.dataset.roleReq;
+                        const roleContext = btn.dataset.roleContext; // e.g., 'empresa_manager_self'
                         let canAccess = false;
-                        if (roleReq) {
+
+                        if (roleReq) { // Buttons with specific role requirement
                             canAccess = (currentUser.role === roleReq) || (roleReq === 'empresa_manager' && currentUser.role === 'empresa_login_principal');
-                        } else { // Buttons without roleReq are generally visible
+                        } else if (roleContext === 'empresa_manager_self') { // Button "Gerenciar Usuários da Empresa"
+                            canAccess = (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal');
+                        }
+                        else { // Buttons without roleReq are visible to all roles on this dashboard (manager, counter, old principal)
                             canAccess = true;
                         }
                         btn.style.display = canAccess ? 'block' : 'none';
@@ -605,6 +621,8 @@
                     if(changingPasswordForUserDisplay) changingPasswordForUserDisplay.textContent = currentUser.email;
                     const isChangingOwnPasswordAsManager = (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal');
                     if(currentPasswordGroup) currentPasswordGroup.style.display = isChangingOwnPasswordAsManager ? 'block' : 'none';
+                } else if (screenId === 'manageEmpresaUsers' && manageEmpresaUsersScreenTitleEl) {
+                    // Title for this screen is set in showManageEmpresaUsersScreen_Admin or showManageEmpresaUsersScreen_Empresa
                 }
             } else {
                 console.error(`CRITICAL: Screen '${screenId}' not found. Fallback to login.`);
@@ -616,7 +634,7 @@
         function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
         async function handleLogin() {
-            console.log("handleLogin v2.10.2 called");
+            console.log("handleLogin v2.10.3 called");
             if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage) {
                 console.error("handleLogin: Login form elements not found!");
                 alert("Erro crítico no formulário de login. Tente recarregar."); hideLoader(); return;
@@ -652,7 +670,7 @@
                      console.log("Role assigned from JWT user_metadata:", currentUser.role);
                 }
 
-                if (!currentUser.role || ['empresa_manager', 'empresa_counter', 'empresa_login_principal'].includes(currentUser.role) || !currentUser.empresa_id) { // Also fetch profile if empresa_id is missing
+                if (!currentUser.role || ['empresa_manager', 'empresa_counter', 'empresa_login_principal'].includes(currentUser.role) || !currentUser.empresa_id) {
                      console.log("Fetching profile for user (or to get empresa_id/nome):", currentUser.id);
                      const { data: profile, error: profileError } = await _supabaseClient
                         .from('user_profiles')
@@ -669,7 +687,7 @@
                     }
 
                     if (profile) {
-                        currentUser.role = profile.role; // This is the source of truth from DB
+                        currentUser.role = profile.role;
                         currentUser.empresa_id = profile.empresa_id;
                         currentUser.empresa_nome = profile.empresas ? profile.empresas.nome_empresa : (profile.empresa_id ? 'Empresa Associada (Nome não carregado)' : 'N/A');
                         currentUser.full_name = profile.full_name || currentUser.full_name;
@@ -699,7 +717,7 @@
                     ]);
                     await fetchAndRenderEmpresas();
                     showAdminMasterDashboardScreen();
-                } else if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') && currentUser.empresa_id) { // Treat empresa_login_principal as manager
+                } else if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') && currentUser.empresa_id) {
                     await showEmpresaDashboardScreen();
                 } else if (currentUser.role === 'empresa_counter' && currentUser.empresa_id) {
                     await showInventoryCountScreen_Empresa();
@@ -729,26 +747,29 @@
             try {
                 const { error } = await _supabaseClient.auth.signOut();
                 if (error) { console.error("Error in Supabase logout:", error); }
-                currentUser = null; adminSelectedEmpresaContextId = null;
+                currentUser = null; adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false;
                 if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
                 produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; userProfilesCache = [];
-                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.2');
+                quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v2.10.3');
                 showScreen('login'); console.log("User logged out.");
             } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
         }
 
-        function showAdminMasterDashboardScreen() { adminSelectedEmpresaContextId = null; showScreen('adminMasterDashboard'); }
-        async function showEmpresaDashboardScreen() { adminSelectedEmpresaContextId = currentUser?.empresa_id; showScreen('empresaDashboard');}
+        function showAdminMasterDashboardScreen() { adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false; showScreen('adminMasterDashboard'); }
+        async function showEmpresaDashboardScreen() { adminSelectedEmpresaContextId = currentUser?.empresa_id; isEmpresaManagerManagingOwnUsers = false; showScreen('empresaDashboard');}
 
-        async function showAdminEmpresasScreen() {
+        async function showManageEmpresasAndUsersScreen_Admin() { // Renamed from showAdminEmpresasScreen
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
+            isEmpresaManagerManagingOwnUsers = false;
+            if(adminEmpresasTitleEl) adminEmpresasTitleEl.textContent = "Gerenciar Empresas e Seus Usuários";
             showLoader();
             try {
-                if (adminManageUsersEmpresaSection) adminManageUsersEmpresaSection.style.display = 'none';
-                await fetchAndRenderEmpresas();
-                showScreen('adminEmpresas');
-            } catch (e) { console.error("Error showAdminEmpresasScreen:", e); alert("Erro ao carregar tela de empresas."); hideLoader(); }
+                // if (manageUsersEmpresaSection) manageUsersEmpresaSection.style.display = 'none'; // This section is now part of screenManageEmpresaUsers
+                await fetchAndRenderEmpresas(); // This lists all companies for admin to pick from
+                showScreen('adminEmpresas'); // Screen that lists all companies
+            } catch (e) { console.error("Error showManageEmpresasAndUsersScreen_Admin:", e); alert("Erro ao carregar tela de empresas."); hideLoader(); }
         }
+
 
         async function fetchAndRenderEmpresas() {
             if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); hideLoader(); return;}
@@ -773,7 +794,7 @@
                         const btnManageUsers = document.createElement('button');
                         btnManageUsers.textContent = 'Gerenciar Usuários';
                         btnManageUsers.className = 'btn btn-info table-actions';
-                        btnManageUsers.onclick = () => handleShowManageUsersEmpresaSection(empresa.id, empresa.nome_empresa);
+                        btnManageUsers.onclick = () => showManageUsersScreen_Admin(empresa.id, empresa.nome_empresa);
                         actionsCell.appendChild(btnManageUsers);
 
                         const btnManageColabs = document.createElement('button');
@@ -809,41 +830,76 @@
             } catch (e) { console.error("Error add company:", e); alert('Falha: ' + e.message); } finally { hideLoader(); }
         }
 
-        async function handleShowManageUsersEmpresaSection(empresaId, nomeEmpresa) {
-            if (!adminManageUsersEmpresaSection || !adminManageUsersEmpresaTitle || !selectedEmpresaIdForUserManage || !adminEmpresaUsersTableBody || !manageUsersEmpresaMessage || !addUserNameForEmpresaDisplayEl) {
+
+        async function showManageUsersScreen_Admin(empresaId, nomeEmpresa) {
+            isEmpresaManagerManagingOwnUsers = false;
+            if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = `Gerenciar Usuários da Empresa: ${nomeEmpresa}`;
+            if(adminEmpresaNewUserRoleEl) { // Admin Master can create both roles
+                adminEmpresaNewUserRoleEl.innerHTML = `
+                    <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
+                    <option value="empresa_counter">Contador da Empresa (Apenas Contagem)</option>
+                `;
+            }
+            await prepareAndShowManageUsersSection(empresaId, nomeEmpresa);
+        }
+        async function showManageUsersScreen_Empresa() {
+            if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') || !currentUser.empresa_id) {
+                alert("Acesso negado."); return;
+            }
+            isEmpresaManagerManagingOwnUsers = true;
+            if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = `Gerenciar Usuários da Minha Empresa: ${currentUser.empresa_nome}`;
+            if(adminEmpresaNewUserRoleEl) { // Empresa Manager can create both roles for their own company
+                 adminEmpresaNewUserRoleEl.innerHTML = `
+                    <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
+                    <option value="empresa_counter">Contador da Empresa (Apenas Contagem)</option>
+                `;
+            }
+            await prepareAndShowManageUsersSection(currentUser.empresa_id, currentUser.empresa_nome);
+        }
+
+
+        async function prepareAndShowManageUsersSection(empresaId, nomeEmpresa) {
+            if (!manageUsersEmpresaSection || !manageUsersEmpresaTitleEl || !selectedEmpresaIdForUserManage || !adminEmpresaUsersTableBody || !addUserNameForEmpresaDisplayEl) {
                 console.error("UI elements for managing company users not found."); return;
             }
             showLoader();
-            adminManageUsersEmpresaTitle.textContent = `Gerenciar Usuários para: ${nomeEmpresa}`;
+            // Clear previous messages when opening the section, unless it's a success message from creation
+            if (manageUsersEmpresaMessage && manageUsersEmpresaMessage.style.display !== 'block' || !manageUsersEmpresaMessage.textContent.includes("criado com sucesso")) {
+                 if(manageUsersEmpresaMessage) {
+                    manageUsersEmpresaMessage.style.display = 'none';
+                    manageUsersEmpresaMessage.textContent = '';
+                 }
+            }
+
+
+            manageUsersEmpresaTitleEl.textContent = `Usuários para: ${nomeEmpresa}`;
             selectedEmpresaIdForUserManage.value = empresaId;
             if(selectedEmpresaNameForUserManage) selectedEmpresaNameForUserManage.value = nomeEmpresa;
             addUserNameForEmpresaDisplayEl.textContent = nomeEmpresa;
             adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Verificando usuários existentes...</td></tr>';
-            manageUsersEmpresaMessage.style.display = 'none'; manageUsersEmpresaMessage.textContent = '';
-            adminManageUsersEmpresaSection.style.display = 'block';
-            adminManageUsersEmpresaSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            showScreen('manageEmpresaUsers'); // Show the dedicated screen
 
             try {
                 console.log(`DEBUG: Fetching profiles for empresa_id: ${empresaId}`);
                 const { data: existingProfiles, error: profileError } = await _supabaseClient
                     .from('user_profiles')
-                    .select('id, email, full_name, role') // id here is the auth.users.id
+                    .select('id, email, full_name, role')
                     .eq('empresa_id', empresaId)
-                    .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal']); // Include old role
+                    .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal']);
 
                 if (profileError) {
-                    console.error("DEBUG: Profile fetch error in handleShowManageUsersEmpresaSection:", profileError);
+                    console.error("DEBUG: Profile fetch error in prepareAndShowManageUsersSection:", profileError);
                     throw profileError;
                 }
-                console.log("DEBUG: Existing profiles data in handleShowManageUsersEmpresaSection:", existingProfiles);
-                userProfilesCache = existingProfiles || []; // Update cache specifically for this view
+                console.log("DEBUG: Existing profiles data in prepareAndShowManageUsersSection:", existingProfiles);
+                // No global userProfilesCache here, fetch fresh every time for this focused view.
 
                 adminEmpresaUsersTableBody.innerHTML = "";
-                if (userProfilesCache.length > 0) {
-                    userProfilesCache.forEach(profile => {
+                if (existingProfiles && existingProfiles.length > 0) {
+                    existingProfiles.forEach(profile => {
                         const row = adminEmpresaUsersTableBody.insertRow();
                         row.insertCell().textContent = profile.email;
-
                         let roleDisplay = profile.role;
                         if (profile.role === 'empresa_manager' || profile.role === 'empresa_login_principal') {
                             roleDisplay = 'Gerente';
@@ -856,8 +912,11 @@
                         const btnResetPass = document.createElement('button');
                         btnResetPass.textContent = 'Resetar Senha';
                         btnResetPass.className = 'btn btn-warning table-actions';
+                        // Ensure only Admin Master or Manager of THIS user's company can reset.
+                        // Edge function should ideally do final auth check.
                         btnResetPass.onclick = () => callResetPasswordEdgeFunction(profile.id, profile.email, nomeEmpresa);
                         actionsCell.appendChild(btnResetPass);
+                        // TODO: Add delete user button functionality
                     });
                 } else {
                     adminEmpresaUsersTableBody.innerHTML = '<tr><td colspan="3">Nenhum usuário cadastrado para esta empresa.</td></tr>';
@@ -866,19 +925,35 @@
                 if(adminEmpresaNewUserFullNameEl) adminEmpresaNewUserFullNameEl.value = '';
 
             } catch(e) {
-                console.error("Error in handleShowManageUsersEmpresaSection:", e);
+                console.error("Error in prepareAndShowManageUsersSection:", e);
                 adminEmpresaUsersTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color)">Erro ao verificar/gerenciar usuários: ${e.message}</td></tr>`;
             } finally {
                 hideLoader();
             }
         }
 
-        function closeAdminManageUsersEmpresaSection() {
-            if(adminManageUsersEmpresaSection) adminManageUsersEmpresaSection.style.display = 'none';
+
+        function closeAdminManageUsersEmpresaSection() { // Actually closes the screen
+            if (manageUsersEmpresaMessage) {
+                manageUsersEmpresaMessage.style.display = 'none';
+                manageUsersEmpresaMessage.textContent = '';
+            }
+            if (currentUser?.role === 'admin_master') {
+                showManageEmpresasAndUsersScreen_Admin(); // Go back to list of all companies
+            } else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') {
+                showEmpresaDashboardScreen(); // Go back to company dashboard
+            }
         }
 
-        async function handleAdminCreateEmpresaUser() {
-            console.log("handleAdminCreateEmpresaUser called");
+        async function handleCreateEmpresaUser() { // Renamed from handleAdminCreateEmpresaUser
+            console.log("handleCreateEmpresaUser called");
+
+            // Clear previous success/error messages for this specific action
+             if (manageUsersEmpresaMessage) {
+                manageUsersEmpresaMessage.style.display = 'none';
+                manageUsersEmpresaMessage.textContent = '';
+            }
+
             const empresaId = document.getElementById('selectedEmpresaIdForUserManage').value;
             const empresaNome = document.getElementById('addUserNameForEmpresaDisplay').textContent || 'Empresa Desconhecida';
 
@@ -895,7 +970,6 @@
 
             const password = generateNumericPassword(6);
             showLoader();
-            manageUsersEmpresaMessage.style.display = 'none'; manageUsersEmpresaMessage.textContent = '';
 
             try {
                 const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
@@ -903,7 +977,7 @@
                     options: {
                         data: {
                             empresa_id: empresaId,
-                            user_role: role, // This will be in raw_user_meta_data for the trigger
+                            user_role: role,
                             full_name: fullName
                         }
                     }
@@ -918,10 +992,7 @@
 
                 if (authData.user) {
                     console.log("New user created in Auth:", authData.user.id, authData.user.email);
-                    // Assuming the Supabase trigger 'on_auth_user_created' correctly populates 'user_profiles.role'
-                    // from 'auth.users.raw_user_meta_data.user_role'.
-
-                    let successMsg = `Novo usuário (${role}) para ${empresaNome} (${email}) criado com sucesso!`;
+                    let successMsg = `Novo usuário (${roleDisplay(role)}) para ${empresaNome} (${email}) criado com sucesso!`;
                     successMsg += `\nSenha Gerada: ${password}\nInforme ao responsável.`;
                     if (authData.user.email_confirmed_at === null && !authData.user.phone_confirmed_at) {
                          successMsg += `\nNota: Se a confirmação de email estiver ATIVA no Supabase, o usuário ${email} precisará confirmar o email.`;
@@ -931,10 +1002,9 @@
                     manageUsersEmpresaMessage.style.display = 'block';
                     manageUsersEmpresaMessage.style.color = 'var(--success-color)';
 
-                    // Crucial: Short delay to allow Supabase trigger to complete before refetching profiles
-                    await new Promise(resolve => setTimeout(resolve, 1500)); // Delay of 1.5 seconds
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Delay for trigger
 
-                    await handleShowManageUsersEmpresaSection(empresaId, empresaNome);
+                    await prepareAndShowManageUsersSection(empresaId, empresaNome); // Refresh user list, this will NOT clear the success message above
                     adminEmpresaNewUserEmailEl.value = '';
                     adminEmpresaNewUserFullNameEl.value = '';
                 } else {
@@ -942,13 +1012,18 @@
                     throw new Error("Não foi possível obter dados do usuário após cadastro (authData.user nulo).");
                 }
             } catch (e) {
-                console.error("Final catch in handleAdminCreateEmpresaUser:", e);
+                console.error("Final catch in handleCreateEmpresaUser:", e);
                 manageUsersEmpresaMessage.textContent = `Erro ao criar usuário: ${e.message}`;
                 manageUsersEmpresaMessage.style.color = 'var(--danger-color)';
                 manageUsersEmpresaMessage.style.display = 'block';
             } finally {
                 hideLoader();
             }
+        }
+        function roleDisplay(roleKey) { // Helper for consistent role display
+            if (roleKey === 'empresa_manager' || roleKey === 'empresa_login_principal') return 'Gerente';
+            if (roleKey === 'empresa_counter') return 'Contador';
+            return roleKey;
         }
 
         async function callResetPasswordEdgeFunction(authUserId, userEmail, nomeEmpresaContext) {
@@ -957,7 +1032,7 @@
 
             showLoader();
             const messageDisplay = document.getElementById('manageUsersEmpresaMessage');
-            if(messageDisplay) { messageDisplay.style.display = 'none'; messageDisplay.textContent = ''; }
+            if(messageDisplay) { messageDisplay.style.display = 'none'; messageDisplay.textContent = ''; } // Clear previous messages
 
             try {
                 console.log(`Invocando Edge Function 'reset-empresa-password' para auth.users.id: ${authUserId}`);
@@ -990,22 +1065,68 @@
             }
         }
 
+        function areAllVisibleQuantitiesFilled() {
+            if (!inventoryTableBody) return false;
+            const qtyInputs = inventoryTableBody.querySelectorAll('input[type="number"]');
+
+            if (produtosCache.length > 0 && qtyInputs.length === 0) {
+                // Products are loaded for the company, but current filters show none.
+                // In this case, "all visible" is zero, which is technically true.
+                // But we probably don't want to allow export if the list is empty due to filters.
+                // However, if produtosCache itself is empty, then it's fine.
+                return false;
+            }
+            if (qtyInputs.length === 0 && produtosCache.length === 0) {
+                 return true; // No products to fill, so all (zero) are considered "filled" for enabling buttons.
+            }
+
+
+            for (const input of qtyInputs) {
+                const valueStr = input.value.trim();
+                if (valueStr === '' || isNaN(parseFloat(valueStr))) { // Check if empty or not a number
+                    return false; // Found an item not filled with a number
+                }
+                // Allow 0 as a valid preenchimento
+            }
+            return true; // All visible items have a numeric quantity (could be 0)
+        }
+
+
         function updateExportButtonStates() {
-            const hasQuantities = Object.values(quantidadesDigitadas).some(qty => parseFloat(qty) > 0);
-            if (btnGerarTXT) btnGerarTXT.disabled = !hasQuantities;
-            if (btnGerarPDF) btnGerarPDF.disabled = !hasQuantities;
+            const allFilled = areAllVisibleQuantitiesFilled();
+            // Additionally, ensure there's at least one item with quantity > 0 for TXT/PDF to be meaningful,
+            // OR allow export even if all are 0, if that's the desired behavior.
+            // For now, just based on allFilled. The generation function will handle empty useful data.
+            if (btnGerarTXT) btnGerarTXT.disabled = !allFilled;
+            if (btnGerarPDF) btnGerarPDF.disabled = !allFilled;
         }
 
         async function gerarArquivoTXT() {
-            console.log("gerarArquivoTXT v2.10.2 started");
-            showLoader();
+            console.log("gerarArquivoTXT v2.10.3 started");
+
+            if (!areAllVisibleQuantitiesFilled()) {
+                 alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados antes de gerar o arquivo.");
+                 return;
+            }
+            showLoader(); // Show loader after passing validation
+
             const colaboradorSelect = document.getElementById('selectColaboradorContagem');
             if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
             const colaboradorId = colaboradorSelect.value;
             const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
             if (!colaboradorId) { alert("Selecione o colaborador."); hideLoader(); return; }
+
             const produtosContados = produtosCache.filter(p => quantidadesDigitadas[p.id] && parseFloat(quantidadesDigitadas[p.id]) > 0);
-            if (produtosContados.length === 0) { alert("Nenhum produto com quantidade > 0 para gerar o arquivo."); hideLoader(); return; }
+            if (produtosContados.length === 0 && Object.keys(quantidadesDigitadas).length > 0) {
+                // All filled, but all are zero.
+                if (!confirm("Todas as quantidades são zero. Deseja gerar um arquivo TXT (que estará vazio de itens contados) e salvar este histórico?")) {
+                    hideLoader(); return;
+                }
+            } else if (produtosContados.length === 0) {
+                 alert("Nenhum produto com quantidade maior que zero para incluir no arquivo TXT.");
+                 hideLoader(); return;
+            }
+
 
             let conteudoTXT = "";
             produtosContados.forEach(produto => {
@@ -1024,16 +1145,22 @@
                      hideLoader(); return;
                 }
 
+                // Prepare all items that had a quantity entered (even if 0) for history
+                const todosOsItensComQuantidade = produtosCache
+                    .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
+                    .map(p => ({
+                        produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto,
+                        categoria: categoriasCache.find(c => c.id === p.categoria_id)?.nome_categoria || "Sem Categoria",
+                        quantidade: parseFloat(quantidadesDigitadas[p.id])
+                    }));
+
+
                 const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
                     empresa_id: empresaContextoId,
                     colaborador_id: colaboradorId.startsWith('admin_') || colaboradorId.startsWith('user_') ? null : colaboradorId,
                     colaborador_nome: colaboradorNome,
-                    itens_contados: produtosContados.length,
-                    dados_contagem: produtosContados.map(p => ({
-                        produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto,
-                        categoria: categoriasCache.find(c => c.id === p.categoria_id)?.nome_categoria || "Sem Categoria",
-                        quantidade: parseFloat(quantidadesDigitadas[p.id])
-                    }))
+                    itens_contados: todosOsItensComQuantidade.length, // Count of items with any quantity entered
+                    dados_contagem: todosOsItensComQuantidade
                 });
                 if (histError) { console.error("Error saving history:", histError); alert(`Erro ao salvar histórico: ${histError.message}`); hideLoader(); return; }
                 console.log("History saved.");
@@ -1046,8 +1173,13 @@
         }
 
         async function gerarPDFContagem() {
-            console.log("gerarPDFContagem v2.10.2 started");
+            console.log("gerarPDFContagem v2.10.3 started");
+            if (!areAllVisibleQuantitiesFilled()) {
+                 alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados antes de gerar o arquivo.");
+                 return;
+            }
             showLoader();
+
             const { jsPDF } = window.jspdf;
             if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
                  alert("Erro: Biblioteca jsPDF ou jsPDF-AutoTable não carregada corretamente.");
@@ -1064,10 +1196,15 @@
                 hideLoader(); return;
             }
 
-            const produtosContados = produtosCache.filter(p => quantidadesDigitadas[p.id] && parseFloat(quantidadesDigitadas[p.id]) > 0);
+            // For PDF, include all items that had a quantity entered (even if 0)
+            const produtosParaPDF = produtosCache
+                .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
+                .map(p => ({...p, quantidade_digitada: parseFloat(quantidadesDigitadas[p.id]) })) // Add temporary property for PDF
+                .sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || ""));
 
-            if (produtosContados.length === 0) {
-                alert("Nenhum produto com quantidade maior que zero para gerar PDF.");
+
+            if (produtosParaPDF.length === 0) {
+                alert("Nenhum produto com quantidade preenchida para gerar PDF.");
                 hideLoader(); return;
             }
 
@@ -1094,7 +1231,7 @@
                 const tableColumn = ["Código", "Produto", "Categoria", "Quantidade"];
                 const tableRows = [];
 
-                produtosContados.sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || "")).forEach(produto => {
+                produtosParaPDF.forEach(produto => {
                     let categoriaNome = 'Sem Categoria';
                     if (produto.categorias?.nome_categoria) {
                         categoriaNome = produto.categorias.nome_categoria;
@@ -1106,7 +1243,7 @@
                         produto.codigo_produto || produto.id,
                         produto.nome_produto || "N/A",
                         categoriaNome,
-                        quantidadesDigitadas[produto.id]
+                        produto.quantidade_digitada // Use the value we mapped
                     ];
                     tableRows.push(produtoData);
                 });
@@ -1368,7 +1505,7 @@
             if (isAdminCalling && currentUser?.role === 'admin_master') {
                 if (!empresaIdParaAdmin) {
                     alert("ID da empresa não fornecido para visualização de admin.");
-                    showAdminEmpresasScreen();
+                    showManageEmpresasAndUsersScreen_Admin();
                     return;
                 }
                 targetEmpresaId = empresaIdParaAdmin;
@@ -1401,7 +1538,7 @@
                 if(backBtn) {
                     if(backBtn.currentListener) backBtn.removeEventListener('click', backBtn.currentListener);
                     if (isAdminCalling) {
-                        backBtn.currentListener = showAdminEmpresasScreen;
+                        backBtn.currentListener = showManageEmpresasAndUsersScreen_Admin;
                     } else {
                         backBtn.currentListener = showEmpresaDashboardScreen;
                     }
@@ -1805,7 +1942,7 @@
 
         async function showProductManagementScreen_AdminGlobal() {
             if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
-            console.log("showProductManagementScreen_AdminGlobal v2.10.2 called");
+            console.log("showProductManagementScreen_AdminGlobal v2.10.3 called");
             showLoader();
             try {
                 adminSelectedEmpresaContextId = null;
@@ -2419,7 +2556,7 @@
         function displayInventoryProducts(listaProdutos) {
             if (!inventoryTableBody) { console.error("inventoryTableBody not found"); return; }
             inventoryTableBody.innerHTML = "";
-            loadQuantities();
+            loadQuantities(); // Load quantities first
 
             if (!listaProdutos || listaProdutos.length === 0) {
                 inventoryTableBody.innerHTML = `<tr><td colspan="4">Nenhum produto para exibir. ${currentUser.role === 'admin_master' && !adminSelectedEmpresaContextId ? 'Selecione uma empresa para carregar produtos.' : 'Verifique os filtros ou cadastre produtos para esta empresa.'}</td></tr>`;
@@ -2447,19 +2584,26 @@
                 qtdInput.min = '0';
                 qtdInput.dataset.produtoId = produto.id;
                 qtdInput.value = quantidadesDigitadas[produto.id] || '';
-                const handleQtyChange = (e) => {
-                    const val = e.target.value;
-                    if (val === '' || parseFloat(val) < 0) {
+                const handleQtyChangeOrInput = (e) => { // Combined handler for change and input
+                    const valStr = e.target.value.trim();
+                    if (valStr === '') {
                         delete quantidadesDigitadas[produto.id];
-                        if(parseFloat(val) < 0) e.target.value = '';
                     } else {
-                        quantidadesDigitadas[produto.id] = parseFloat(val);
+                        const valNum = parseFloat(valStr);
+                        if (!isNaN(valNum) && valNum >= 0) {
+                            quantidadesDigitadas[produto.id] = valNum;
+                        } else if (!isNaN(valNum) && valNum < 0 && e.type === 'change') { // Only clear on change for negative
+                            delete quantidadesDigitadas[produto.id];
+                            e.target.value = '';
+                        }
+                        // For 'input' event, allow typing negative temporarily, but don't save it
+                        // until 'change' or if it becomes positive.
                     }
-                    saveQuantities();
+                    if (e.type === 'change') saveQuantities(); // Save only on explicit change or valid input
                     updateExportButtonStates();
                 };
-                qtdInput.addEventListener('change', handleQtyChange);
-                qtdInput.addEventListener('input', updateExportButtonStates);
+                qtdInput.addEventListener('change', handleQtyChangeOrInput);
+                qtdInput.addEventListener('input', handleQtyChangeOrInput); // Update button state on every input
                  qtdInput.addEventListener('focus', (e) => e.target.select());
                 qtdCell.appendChild(qtdInput);
             });
@@ -2535,7 +2679,7 @@
 
 
         window.onload = async () => {
-            console.log("window.onload v2.10.2 (User Role Fixes) started");
+            console.log("window.onload v2.10.3 (Full Fill & Mgr Users) started");
             initializeDOMSelectors();
             showLoader();
             if (typeof loadQuantities === "function") loadQuantities();
@@ -2548,13 +2692,13 @@
             document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
 
 
-            document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', showAdminEmpresasScreen);
+            document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', showManageEmpresasAndUsersScreen_Admin);
             document.getElementById('btnAdminGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Admin);
             document.getElementById('btnAdminGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_AdminGlobal);
             document.getElementById('btnAdminContagemEstoque')?.addEventListener('click', showInventoryCountScreen_AdminGlobal);
             document.getElementById('btnAdminHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen_Admin);
 
-
+            document.getElementById('btnEmpresaGerenciarUsuarios')?.addEventListener('click', showManageUsersScreen_Empresa);
             document.getElementById('btnEmpresaGerenciarColaboradores')?.addEventListener('click', () => showEmpresaColaboradoresScreen(null, null, false));
             document.getElementById('btnEmpresaGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Empresa);
             document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_Empresa);
@@ -2572,8 +2716,20 @@
 
             document.getElementById('btnAdminEmpresasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
             document.getElementById('btnAdminAddEmpresa')?.addEventListener('click', handleAdminAddEmpresa);
-            document.getElementById('btnCancelarManageUsersEmpresa')?.addEventListener('click', closeAdminManageUsersEmpresaSection);
-            document.getElementById('btnExecuteCreateNewEmpresaUser')?.addEventListener('click', handleAdminCreateEmpresaUser);
+            document.getElementById('btnCancelarManageUsersEmpresa')?.addEventListener('click', closeAdminManageUsersEmpresaSection); // Will navigate back based on role
+            document.getElementById('btnExecuteCreateNewEmpresaUser')?.addEventListener('click', handleCreateEmpresaUser);
+
+            btnManageEmpresaUsersVoltarEl?.addEventListener('click', () => {
+                 if (isEmpresaManagerManagingOwnUsers) {
+                    showEmpresaDashboardScreen();
+                } else { // Admin was managing users for a specific company
+                    showManageEmpresasAndUsersScreen_Admin();
+                }
+                 if (manageUsersEmpresaMessage) { // Clear message on explicitly going back
+                    manageUsersEmpresaMessage.style.display = 'none';
+                    manageUsersEmpresaMessage.textContent = '';
+                }
+            });
 
 
             document.getElementById('btnAddColaborador')?.addEventListener('click', handleAddColaborador);
@@ -2732,7 +2888,7 @@
                 hideLoader();
             }
         };
-        console.log("SCRIPT END - v2.10.2 (User Role Fixes)");
+        console.log("SCRIPT END - v2.10.3 (Full Fill & Mgr Users)");
     </script>
 </body>
 </html>
