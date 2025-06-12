@@ -361,7 +361,7 @@
             <div class="card"><div class="card-header"><h3>Registros de Contagem</h3></div><div class="card-body" style="padding:0;"><table id="historicoContagensTable"><thead><tr><th id="colEmpresaHistorico" style="display:none;">Empresa</th><th>Data</th><th>Colaborador</th><th>Unidade</th><th>Itens Contados</th><th>Ações</th></tr></thead><tbody id="historicoContagensTableBody"></tbody></table></div></div>
         </div>
 
-        <div id="screenProductManagement" class="screen">
+    <div id="screenProductManagement" class="screen">
     <button class="btn btn-secondary back-button" id="productManagementBackButton">&larr; Voltar</button>
     <h2 id="productManagementTitle">Gerenciar Produtos</h2>
     <div id="adminProdutoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
@@ -369,7 +369,7 @@
         <select id="adminProdutoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
     </div>
     <p id="productManagementContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-    
+   
     <div class="card">
         <div class="card-header"><h3>Adicionar Novo Produto</h3></div>
         <div class="card-body">
@@ -445,11 +445,11 @@
         </div>
 
        <div id="modalPreviewContagem" class="modal-overlay">
-            <div class="modal-content" style="max-width: 700px; text-align:left;">
-                <h4>Resumo da Contagem Atual</h4>
-                <div id="previewContagemTableContainer" style="max-height: 400px; overflow-y:auto;">
-                    <table id="previewContagemTable">
-                        <thead>
+            <div class="modal-content" style="max-width: 700px; text-align:left;">
+                <h4>Resumo da Contagem Atual</h4>
+                <div id="previewContagemTableContainer" style="max-height: 400px; overflow-y:auto;">
+                    <table id="previewContagemTable">
+                        <thead>
                             <tr>
                                 <th>Código</th>
                                 <th>Produto</th>
@@ -457,23 +457,23 @@
                                 <th>Unidades</th> <th>Qtd. Digitada</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <div class="modal-actions" style="margin-top: 1.5rem;">
-                    <button class="btn btn-secondary" id="btnClosePreviewModal">Fechar</button>
-                </div>
-            </div>
-        </div>
-        <div id="modalDetalhesContagem" class="modal-overlay">
-            <div class="modal-content" style="max-width: 600px; text-align:left;">
-                <h4>Detalhes da Contagem</h4>
-                <div id="detalhesContagemConteudo"></div>
-                <div class="modal-actions" style="margin-top:1.5rem;">
-                    <button class="btn btn-secondary" id="btnCloseDetalhesModal">Fechar</button>
-                </div>
-            </div>
-        </div>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button class="btn btn-secondary" id="btnClosePreviewModal">Fechar</button>
+                </div>
+            </div>
+        </div>
+        <div id="modalDetalhesContagem" class="modal-overlay">
+            <div class="modal-content" style="max-width: 600px; text-align:left;">
+                <h4>Detalhes da Contagem</h4>
+                <div id="detalhesContagemConteudo"></div>
+                <div class="modal-actions" style="margin-top:1.5rem;">
+                    <button class="btn btn-secondary" id="btnCloseDetalhesModal">Fechar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -499,7 +499,7 @@
             adminEmpresaUsersTableBody, manageUsersEmpresaMessage,
             adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, addUserNameForEmpresaDisplayEl,
             manageEmpresaUsersScreenTitleEl, btnManageEmpresaUsersVoltarEl, contextEmpresaNameForUserManageEl,
-            
+           
             unidadesTitleEl, adminUnidadeEmpresaSelectContainerEl, adminUnidadeEmpresaSelectEl,
             nomeUnidadeInputEl, unidadesTableBodyEl, btnUnidadesVoltarEl, btnAddUnidadeEl, unidadesContextEl,
             thUnidadeEmpresaScopeEl,
@@ -517,7 +517,7 @@
 
             productManagementBackButton, productManagementTitle, productManagementContext,
             adminProdutoEmpresaSelectorContainer, adminProdutoEmpresaSelect, prodCodigoInput, prodNomeInput,
-            prodCategoriasMultiSelect, productManagementTableBody, xlsxFileInput, btnAddProductEl, btnImportXLSXEl,
+            prodCategoriasMultiSelect, prodUnidadesMultiSelect, productManagementTableBody, xlsxFileInput, btnAddProductEl, btnImportXLSXEl,
 
             inventoryCountBackButton, inventoryCountTitle, inventoryCountContext, adminContagemEmpresaSelectorContainer,
             adminContagemEmpresaSelect, selectColaboradorContagem, selectUnidadeContagem, pesquisaProdutoInput, pesquisaCodigoInput,
@@ -635,7 +635,7 @@ function initializeDOMSelectors() {
     prodCodigoInput = safeGetElementById('prodCodigo');
     prodNomeInput = safeGetElementById('prodNome');
     prodCategoriasMultiSelect = safeGetElementById('prodCategoriasMultiSelect'); // Changed from select to multi-select div
-    prodUnidadesMultiSelect = safeGetElementById('prodUnidadesMultiSelect'); // <--- LINHA ADICIONADA AQUI!
+    prodUnidadesMultiSelect = safeGetElementById('prodUnidadesMultiSelect'); 
     productManagementTableBody = safeGetElementById('productManagementTableBody');
     xlsxFileInput = safeGetElementById('xlsxFile');
     btnAddProductEl = safeGetElementById('btnAddProduct');
@@ -895,8 +895,8 @@ function initializeDOMSelectors() {
                 console.error("Catch in login:", e);
                 currentUser = null;
                 loginErrorMessage.textContent = e.message.includes("Invalid login credentials") ? "Email ou senha inválidos."
-                                                 : (e.message.includes("Email not confirmed") ? "Email não confirmado."
-                                                 : (e.message || "Erro desconhecido."));
+                                                : (e.message.includes("Email not confirmed") ? "Email não confirmado."
+                                                : (e.message || "Erro desconhecido."));
                 loginErrorMessage.style.display = "block";
             } finally {
                 hideLoader();
@@ -1265,221 +1265,213 @@ function initializeDOMSelectors() {
             if (btnGerarPDF) btnGerarPDF.disabled = !allFilled;
         }
 
-// CÓDIGO JAVASCRIPT PARA SUBSTITUIR gerarArquivoTXT
-// Local: Encontre a função async function gerarArquivoTXT() e SUBSTITUA-A INTEIRAMENTE
+        // ===================================
+        // FUNÇÃO CORRIGIDA
+        // ===================================
+        async function gerarArquivoTXT() {
+            console.log("gerarArquivoTXT v3.1 corrected started");
+            if (!areAllVisibleQuantitiesFilled()) {
+                alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
+                return;
+            }
+            showLoader();
 
-async function gerarArquivoTXT() {
-    console.log("gerarArquivoTXT v3.1 started");
-    if (!areAllVisibleQuantitiesFilled()) {
-         alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
-         return;
-    }
-    showLoader();
+            const colaboradorSelect = document.getElementById('selectColaboradorContagem');
+            if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
+            const colaboradorId = colaboradorSelect.value;
+            const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
+            if (!colaboradorId) { alert("Selecione o colaborador."); hideLoader(); return; }
 
-    const colaboradorSelect = document.getElementById('selectColaboradorContagem');
-    if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
-    const colaboradorId = colaboradorSelect.value;
-    const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
-    if (!colaboradorId) { alert("Selecione o colaborador."); hideLoader(); return; }
+            const unidadeSelect = document.getElementById('selectUnidadeContagem');
+            if (!unidadeSelect) { alert("Erro: Seletor de unidade não encontrado."); hideLoader(); return; }
+            const unidadeId = unidadeSelect.value;
+            const unidadeNome = unidadeSelect.options[unidadeSelect.selectedIndex]?.text || "N/A";
+            if (!unidadeId) { alert("Selecione a unidade para a contagem."); hideLoader(); return; }
 
-    const unidadeSelect = document.getElementById('selectUnidadeContagem');
-    if (!unidadeSelect) { alert("Erro: Seletor de unidade não encontrado."); hideLoader(); return; }
-    const unidadeId = unidadeSelect.value;
-    const unidadeNome = unidadeSelect.options[unidadeSelect.selectedIndex]?.text || "N/A";
-    if (!unidadeId) { alert("Selecione a unidade para a contagem."); hideLoader(); return; }
+            const produtosContadosComQtdMaiorZero = produtosCache.filter(p => {
+                const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`);
+                return inputEl && quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])) && parseFloat(quantidadesDigitadas[p.id]) > 0;
+            });
+
+            if (produtosContadosComQtdMaiorZero.length === 0) {
+                const todosPreenchidos = areAllVisibleQuantitiesFilled();
+                if(todosPreenchidos && Object.keys(quantidadesDigitadas).length > 0) {
+                     if (!confirm("Todas as quantidades são zero. Deseja gerar um arquivo TXT (que estará vazio de itens com quantidade > 0) e salvar este histórico?")) {
+                        hideLoader(); return;
+                    }
+                } else if (!todosPreenchidos) {
+                    alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados antes de gerar o arquivo.");
+                    hideLoader(); return;
+                } else {
+                    alert("Nenhum produto com quantidade maior que zero para incluir no arquivo TXT.");
+                    hideLoader(); return;
+                }
+            }
+
+            let conteudoTXT = "";
+            produtosContadosComQtdMaiorZero.forEach(produto => {
+                const codigo = produto.codigo_produto || produto.id;
+                const quantidade = parseFloat(quantidadesDigitadas[produto.id]);
+                // LINHA CORRIGIDA
+                conteudoTXT += `${codigo};${quantidade}\n`;
+            });
+
+            const dataAtual = new Date();
+            // LINHA CORRIGIDA
+            const nomeArquivo = `balanco_est_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}_${String(dataAtual.getHours()).padStart(2, '0')}${String(dataAtual.getMinutes()).padStart(2, '0')}_${unidadeNome.replace(/[^a-zA-Z0-9]/g, '')}.txt`;
+
+            try {
+                const empresaContextoId = (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) ? adminSelectedEmpresaContextId : (currentUser.empresa_id || null);
+                if (!empresaContextoId && currentUser?.role !== 'admin_master') {
+                     console.error("gerarArquivoTXT: Empresa ID não encontrado para usuário da empresa.");
+                     alert("Erro: ID da empresa não encontrado para salvar o histórico.");
+                     hideLoader(); return;
+                }
+
+                const todosOsItensVisiveisComQuantidadePreenchida = produtosCache
+                    .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
+                    .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
+                    .map(p => ({
+                        produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto,
+                        categorias: (p.produtos_categorias || []).map(pc => pc.nome_categoria).filter(Boolean).join(', ') || "Sem Categoria",
+                        unidades: (p.produtos_unidades || []).map(pu => pu.nome_unidade).filter(Boolean).join(', ') || "Todas / Nenhuma Específica",
+                        quantidade: parseFloat(quantidadesDigitadas[p.id])
+                    }));
+
+                const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
+                    empresa_id: empresaContextoId,
+                    colaborador_id: colaboradorId.startsWith('admin_') || colaboradorId.startsWith('user_') ? null : colaboradorId,
+                    colaborador_nome: colaboradorNome,
+                    unidade_id: unidadeId,
+                    unidade_nome: unidadeNome,
+                    itens_contados: todosOsItensVisiveisComQuantidadePreenchida.length,
+                    dados_contagem: todosOsItensVisiveisComQuantidadePreenchida
+                });
+                if (histError) { console.error("Error saving history:", histError); alert(`Erro ao salvar histórico: ${histError.message}`); hideLoader(); return; }
+                console.log("History saved.");
+
+                if (produtosContadosComQtdMaiorZero.length > 0) {
+                    triggerDownload(nomeArquivo, conteudoTXT);
+                    alert(`Arquivo "${nomeArquivo}" gerado, baixado e histórico salvo!`);
+                } else {
+                    alert(`Histórico salvo com sucesso. Nenhum item com quantidade maior que zero para gerar o arquivo TXT.`);
+                }
+                clearAllQuantities();
+
+            } catch (error) { console.error("Error gerarTXT:", error); alert(`Erro na contagem: ${error.message}`); } finally { hideLoader(); }
+        }
+
+        async function gerarPDFContagem() {
+            console.log("gerarPDFContagem v3.1 started");
+            if (!areAllVisibleQuantitiesFilled()) {
+                 alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
+                 return;
+            }
+            showLoader();
+
+            const { jsPDF } = window.jspdf;
+            if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
+                 alert("Erro: Biblioteca jsPDF ou jsPDF-AutoTable não carregada corretamente.");
+                 hideLoader(); return;
+            }
+
+            const colaboradorSelect = document.getElementById('selectColaboradorContagem');
+            if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
+            const colaboradorId = colaboradorSelect.value;
+            const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
+
+            const unidadeSelect = document.getElementById('selectUnidadeContagem'); // New
+            if (!unidadeSelect) { alert("Erro: Seletor de unidade não encontrado."); hideLoader(); return; }
+            const unidadeId = unidadeSelect.value;
+            const unidadeNome = unidadeSelect.options[unidadeSelect.selectedIndex]?.text || "N/A";
 
 
-    const produtosContadosComQtdMaiorZero = produtosCache.filter(p => {
-        const inputEl = inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`);
-        return inputEl && quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])) && parseFloat(quantidadesDigitadas[p.id]) > 0;
-    });
-
-
-    if (produtosContadosComQtdMaiorZero.length === 0) {
-        const todosPreenchidos = areAllVisibleQuantitiesFilled();
-        if(todosPreenchidos && Object.keys(quantidadesDigitadas).length > 0) {
-             if (!confirm("Todas as quantidades são zero. Deseja gerar um arquivo TXT (que estará vazio de itens com quantidade > 0) e salvar este histórico?")) {
+            if (!colaboradorId) {
+                alert("Selecione o colaborador que realizou a contagem.");
                 hideLoader(); return;
             }
-        } else if (!todosPreenchidos) {
-             alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados antes de gerar o arquivo.");
-             hideLoader(); return;
-        } else {
-            alert("Nenhum produto com quantidade maior que zero para incluir no arquivo TXT.");
-            hideLoader(); return;
+            if (!unidadeId) { // New
+                alert("Selecione a unidade da contagem.");
+                hideLoader(); return;
+            }
+
+            const produtosParaPDF = produtosCache
+                .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
+                .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
+                .map(p => ({...p, quantidade_digitada: parseFloat(quantidadesDigitadas[p.id]) }))
+                .sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || ""));
+
+
+            if (produtosParaPDF.length === 0) {
+                alert("Nenhum produto com quantidade preenchida para gerar PDF.");
+                hideLoader(); return;
+            }
+
+            try {
+                const pdf = new jsPDF();
+                const dataAtual = new Date();
+                const dataFormatada = dataAtual.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dataAtual.toLocaleTimeString('pt-BR');
+
+                let empresaNomeContext = "N/A (Contexto Geral/Admin)";
+                if (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) {
+                    const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
+                    if(selectedEmpresa) empresaNomeContext = selectedEmpresa.nome_empresa;
+                } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') && currentUser.empresa_nome) {
+                    empresaNomeContext = currentUser.empresa_nome;
+                }
+
+                pdf.setFontSize(18);
+                pdf.text("Relatório de Contagem de Estoque", 14, 22);
+                pdf.setFontSize(11);
+                pdf.text(`Empresa: ${empresaNomeContext}`, 14, 30);
+                pdf.text(`Unidade: ${unidadeNome}`, 14, 36); // New
+                pdf.text(`Data da Geração: ${dataFormatada}`, 14, 42);
+                pdf.text(`Contagem Realizada por: ${colaboradorNome}`, 14, 48);
+
+
+                const tableColumn = ["Código", "Produto", "Categorias", "Unidades", "Quantidade"];
+                const tableRows = [];
+
+                produtosParaPDF.forEach(produto => {
+                    const categoriesDisplay = (produto.produtos_categorias || [])
+                        .map(pc => pc.nome_categoria) 
+                        .filter(Boolean).join(', ') || 'Sem Categoria';
+
+                    const unitsDisplay = (produto.produtos_unidades || [])
+                        .map(pu => pu.nome_unidade)
+                        .filter(Boolean).join(', ') || 'Todas / Nenhuma Específica';
+
+                    const produtoData = [
+                        produto.codigo_produto || produto.id,
+                        produto.nome_produto || "N/A",
+                        categoriesDisplay,
+                        unitsDisplay, 
+                        produto.quantidade_digitada
+                    ];
+                    tableRows.push(produtoData);
+                });
+
+                pdf.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 60, 
+                    theme: 'striped',
+                    headStyles: { fillColor: [22, 160, 133] },
+                    styles: { fontSize: 9, cellPadding: 2 },
+                    columnStyles: { 3: { halign: 'center' }, 4: { halign: 'right' } }
+                });
+
+                const nomeArquivoPDF = `contagem_estoque_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}_${unidadeNome.replace(/[^a-zA-Z0-9]/g, '')}.pdf`; // New
+                pdf.save(nomeArquivoPDF);
+                alert(`PDF "${nomeArquivoPDF}" gerado com sucesso!`);
+
+            } catch (error) {
+                console.error("Erro ao gerar PDF da contagem:", error);
+                alert("Falha ao gerar PDF: " + error.message);
+            } finally {
+                hideLoader();
+            }
         }
-    }
-
-
-    let conteudoTXT = "";
-    produtosContadosComQtdMaiorZero.forEach(produto => {
-        const codigo = produto.codigo_produto || produto.id;
-        const quantidade = parseFloat(quantidadesDigitadas[produto.id]);
-        conteudoTXT += `<span class="math-inline">\{codigo\};</span>{quantidade}\n`;
-    });
-
-    const dataAtual = new Date();
-    const nomeArquivo = `balanco_est_${dataAtual.getFullYear()}<span class="math-inline">\{String\(dataAtual\.getMonth\(\) \+ 1\)\.padStart\(2, '0'\)\}</span>{String(dataAtual.getDate()).padStart(2, '0')}_${String(dataAtual.getHours()).padStart(2, '0')}<span class="math-inline">\{String\(dataAtual\.getMinutes\(\)\)\.padStart\(2, '0'\)\}\_</span>{unidadeNome.replace(/[^a-zA-Z0-9]/g, '')}.txt`;
-    try {
-        const empresaContextoId = (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) ? adminSelectedEmpresaContextId : (currentUser.empresa_id || null);
-        if (!empresaContextoId && currentUser?.role !== 'admin_master') {
-             console.error("gerarArquivoTXT: Empresa ID não encontrado para usuário da empresa.");
-             alert("Erro: ID da empresa não encontrado para salvar o histórico.");
-             hideLoader(); return;
-        }
-
-        const todosOsItensVisiveisComQuantidadePreenchida = produtosCache
-            .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
-            .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
-            .map(p => ({
-                produto_id: p.id, codigo: p.codigo_produto || p.id, nome: p.nome_produto,
-                categorias: (p.produtos_categorias || []).map(pc => pc.nome_categoria).filter(Boolean).join(', ') || "Sem Categoria", // Updated to use RPC format
-                unidades: (p.produtos_unidades || []).map(pu => pu.nome_unidade).filter(Boolean).join(', ') || "Todas / Nenhuma Específica", // NOVO: Mapeamento de unidades
-                quantidade: parseFloat(quantidadesDigitadas[p.id])
-            }));
-
-
-        const { error: histError } = await _supabaseClient.from('historico_contagens').insert({
-            empresa_id: empresaContextoId,
-            colaborador_id: colaboradorId.startsWith('admin_') || colaboradorId.startsWith('user_') ? null : colaboradorId,
-            colaborador_nome: colaboradorNome,
-            unidade_id: unidadeId, // New
-            unidade_nome: unidadeNome, // New
-            itens_contados: todosOsItensVisiveisComQuantidadePreenchida.length,
-            dados_contagem: todosOsItensVisiveisComQuantidadePreenchida
-        });
-        if (histError) { console.error("Error saving history:", histError); alert(`Erro ao salvar histórico: ${histError.message}`); hideLoader(); return; }
-        console.log("History saved.");
-
-        if (produtosContadosComQtdMaiorZero.length > 0) {
-            triggerDownload(nomeArquivo, conteudoTXT);
-            alert(`Arquivo "${nomeArquivo}" gerado, baixado e histórico salvo!`);
-        } else {
-            alert(`Histórico salvo com sucesso. Nenhum item com quantidade maior que zero para gerar o arquivo TXT.`);
-        }
-        clearAllQuantities();
-
-    } catch (error) { console.error("Error gerarTXT:", error); alert(`Erro na contagem: ${error.message}`); } finally { hideLoader(); }
-}
-
-// CÓDIGO JAVASCRIPT PARA SUBSTITUIR gerarPDFContagem
-// Local: Encontre a função async function gerarPDFContagem() e SUBSTITUA-A INTEIRAMENTE
-
-async function gerarPDFContagem() {
-    console.log("gerarPDFContagem v3.1 started");
-    if (!areAllVisibleQuantitiesFilled()) {
-         alert("Por favor, preencha as quantidades (0 ou mais) para todos os produtos listados na tela antes de gerar o arquivo.");
-         return;
-    }
-    showLoader();
-
-    const { jsPDF } = window.jspdf;
-    if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF.API === 'undefined' || typeof window.jspdf.jsPDF.API.autoTable === 'undefined') {
-         alert("Erro: Biblioteca jsPDF ou jsPDF-AutoTable não carregada corretamente.");
-         hideLoader(); return;
-    }
-
-    const colaboradorSelect = document.getElementById('selectColaboradorContagem');
-    if (!colaboradorSelect) { alert("Erro: Seletor de colaborador não encontrado."); hideLoader(); return; }
-    const colaboradorId = colaboradorSelect.value;
-    const colaboradorNome = colaboradorSelect.options[colaboradorSelect.selectedIndex]?.text || "N/A";
-
-    const unidadeSelect = document.getElementById('selectUnidadeContagem'); // New
-    if (!unidadeSelect) { alert("Erro: Seletor de unidade não encontrado."); hideLoader(); return; }
-    const unidadeId = unidadeSelect.value;
-    const unidadeNome = unidadeSelect.options[unidadeSelect.selectedIndex]?.text || "N/A";
-
-
-    if (!colaboradorId) {
-        alert("Selecione o colaborador que realizou a contagem.");
-        hideLoader(); return;
-    }
-    if (!unidadeId) { // New
-        alert("Selecione a unidade da contagem.");
-        hideLoader(); return;
-    }
-
-    const produtosParaPDF = produtosCache
-        .filter(p => inventoryTableBody.querySelector(`input[data-produto-id="${p.id}"]`))
-        .filter(p => quantidadesDigitadas[p.id] !== undefined && String(quantidadesDigitadas[p.id]).trim() !== '' && !isNaN(parseFloat(quantidadesDigitadas[p.id])))
-        .map(p => ({...p, quantidade_digitada: parseFloat(quantidadesDigitadas[p.id]) }))
-        .sort((a,b) => (a.nome_produto || "").localeCompare(b.nome_produto || ""));
-
-
-    if (produtosParaPDF.length === 0) {
-        alert("Nenhum produto com quantidade preenchida para gerar PDF.");
-        hideLoader(); return;
-    }
-
-    try {
-        const pdf = new jsPDF();
-        const dataAtual = new Date();
-        const dataFormatada = dataAtual.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dataAtual.toLocaleTimeString('pt-BR');
-
-        let empresaNomeContext = "N/A (Contexto Geral/Admin)";
-        if (currentUser?.role === 'admin_master' && adminSelectedEmpresaContextId) {
-            const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
-            if(selectedEmpresa) empresaNomeContext = selectedEmpresa.nome_empresa;
-        } else if ((currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_counter' || currentUser?.role === 'empresa_login_principal') && currentUser.empresa_nome) {
-            empresaNomeContext = currentUser.empresa_nome;
-        }
-
-        pdf.setFontSize(18);
-        pdf.text("Relatório de Contagem de Estoque", 14, 22);
-        pdf.setFontSize(11);
-        pdf.text(`Empresa: ${empresaNomeContext}`, 14, 30);
-        pdf.text(`Unidade: ${unidadeNome}`, 14, 36); // New
-        pdf.text(`Data da Geração: ${dataFormatada}`, 14, 42);
-        pdf.text(`Contagem Realizada por: ${colaboradorNome}`, 14, 48);
-
-
-        // ALTERAÇÃO AQUI: Nova coluna "Unidades" no cabeçalho do PDF
-        const tableColumn = ["Código", "Produto", "Categorias", "Unidades", "Quantidade"];
-        const tableRows = [];
-
-        produtosParaPDF.forEach(produto => {
-            // Get categories from the RPC's 'produtos_categorias' array field
-            const categoriesDisplay = (produto.produtos_categorias || [])
-                .map(pc => pc.nome_categoria) // Directly access 'nome_categoria' from the RPC's JSON structure
-                .filter(Boolean).join(', ') || 'Sem Categoria';
-
-            // NOVO: Get units from the RPC's 'produtos_unidades' array field
-            const unitsDisplay = (produto.produtos_unidades || [])
-                .map(pu => pu.nome_unidade)
-                .filter(Boolean).join(', ') || 'Todas / Nenhuma Específica';
-
-            const produtoData = [
-                produto.codigo_produto || produto.id,
-                produto.nome_produto || "N/A",
-                categoriesDisplay,
-                unitsDisplay, // Usando a nova string de unidades
-                produto.quantidade_digitada
-            ];
-            tableRows.push(produtoData);
-        });
-
-        pdf.autoTable({
-            head: [tableColumn],
-            body: tableRows,
-            startY: 60, // Adjusted startY due to new line for Unit
-            theme: 'striped',
-            headStyles: { fillColor: [22, 160, 133] },
-            styles: { fontSize: 9, cellPadding: 2 },
-            // ALTERAÇÃO AQUI: Ajuste dos columnStyles para as 5 colunas
-            columnStyles: { 3: { halign: 'center' }, 4: { halign: 'right' } }
-        });
-
-        const nomeArquivoPDF = `contagem_estoque_${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}_${unidadeNome.replace(/[^a-zA-Z0-9]/g, '')}.pdf`; // New
-        pdf.save(nomeArquivoPDF);
-        alert(`PDF "${nomeArquivoPDF}" gerado com sucesso!`);
-
-    } catch (error) {
-        console.error("Erro ao gerar PDF da contagem:", error);
-        alert("Falha ao gerar PDF: " + error.message);
-    } finally {
-        hideLoader();
-    }
-}
 
         // --- UNIDADES MANAGEMENT (NEW) ---
         async function showUnidadesScreen(empresaIdParaAdmin = null, nomeEmpresaParaAdmin = null, isAdminCalling = false) {
@@ -1807,7 +1799,7 @@ async function gerarPDFContagem() {
                         const empresaCell = row.insertCell();
                         empresaCell.textContent = cat.empresas?.nome_empresa || `Empresa ID: ${cat.empresa_id}`;
                         if ((currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_counter' || currentUser.role === 'empresa_login_principal') && thCategoriaEmpresaScopeEl && thCategoriaEmpresaScopeEl.style.display === 'none') {
-                             // Cell hidden by CSS
+                                // Cell hidden by CSS
                         }
                         row.insertCell().textContent = new Date(cat.created_at).toLocaleDateString('pt-BR');
 
@@ -2387,7 +2379,7 @@ async function gerarPDFContagem() {
                             const selectedEmpresa = empresasCache.find(e => e.id === adminSelectedEmpresaContextId);
                             const contextText = selectedEmpresa ? `Empresa: ${selectedEmpresa.nome_empresa}` : "Nenhuma empresa selecionada";
                              if(document.getElementById('historicoContext')) document.getElementById('historicoContext').textContent = contextText;
-                            
+                           
                             // Populate units filter based on selected company
                             await loadUnidadesForFilter(adminSelectedEmpresaContextId, 'historicoUnidadeFilter');
                             await fetchAndRenderHistoricoContagens(adminSelectedEmpresaContextId, true, historicoUnidadeFilter.value);
@@ -2508,9 +2500,6 @@ async function gerarPDFContagem() {
             }
         }
 
-        // CÓDIGO JAVASCRIPT PARA SUBSTITUIR showDetalhesContagem
-// Local: Encontre a função function showDetalhesContagem(...) e SUBSTITUA-A INTEIRAMENTE
-
 function showDetalhesContagem(dadosContagem, registroCompleto = null) {
     if (!modalDetalhesContagem || !detalhesContagemConteudo) { console.error("Details modal or content not found."); return;}
 
@@ -2528,7 +2517,6 @@ function showDetalhesContagem(dadosContagem, registroCompleto = null) {
     }
 
     if (dadosContagem && dadosContagem.length > 0) {
-        // ALTERAÇÃO AQUI: Adicionado "Unidades" ao cabeçalho da tabela de detalhes
         htmlConteudo += '<table style="width:100%; font-size:0.9em;"><thead><tr><th>Cód.</th><th>Produto</th><th>Categorias</th><th>Unidades</th><th>Qtd.</th></tr></thead><tbody>';
         dadosContagem.sort((a,b) => (a.nome || "").localeCompare(b.nome || "")).forEach(item => {
             htmlConteudo += `<tr>
@@ -2546,9 +2534,6 @@ function showDetalhesContagem(dadosContagem, registroCompleto = null) {
     modalDetalhesContagem.classList.add('active');
 }        function closeModalDetalhesContagem() { if(modalDetalhesContagem) modalDetalhesContagem.classList.remove('active'); }
         function closeModalPreviewContagem() { if(modalPreviewContagem) modalPreviewContagem.classList.remove('active'); }
-
-            // CÓDIGO JAVASCRIPT PARA SUBSTITUIR populateCategoriaMultiSelect_ProdutoForm
-// Local: Encontre a função populateCategoriaMultiSelect_ProdutoForm e SUBSTITUA-A INTEIRAMENTE
 
 async function populateCategoriaAndUnitMultiSelect_ProdutoForm(empresaIdParaContexto) { // Renomeada
     // --- Popula Categorias ---
@@ -2626,9 +2611,6 @@ async function populateCategoriaAndUnitMultiSelect_ProdutoForm(empresaIdParaCont
 }
 
 
-// CÓDIGO JAVASCRIPT PARA SUBSTITUIR showProductManagementScreen_AdminGlobal
-// Local: Encontre a função showProductManagementScreen_AdminGlobal() e SUBSTITUA-A INTEIRAMENTE
-
 async function showProductManagementScreen_AdminGlobal() {
     if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
     console.log("showProductManagementScreen_AdminGlobal v3.1 called");
@@ -2649,12 +2631,10 @@ async function showProductManagementScreen_AdminGlobal() {
                     if(btnImportXLSXEl) btnImportXLSXEl.disabled = !adminSelectedEmpresaContextId;
 
                     if (adminSelectedEmpresaContextId) {
-                        // CHAMADA ATUALIZADA: Agora para populateCategoriaAndUnitMultiSelect_ProdutoForm
                         await populateCategoriaAndUnitMultiSelect_ProdutoForm(adminSelectedEmpresaContextId);
                         await fetchProductsFromSupabase(adminSelectedEmpresaContextId);
                     } else {
                         if(prodCategoriasMultiSelect) prodCategoriasMultiSelect.innerHTML = '<span class="empty-message">Selecione uma empresa primeiro.</span>';
-                        // NOVA LINHA AQUI: Para limpar o multi-select de unidades se nenhuma empresa estiver selecionada
                         if(prodUnidadesMultiSelect) prodUnidadesMultiSelect.innerHTML = '<span class="empty-message">Selecione uma empresa primeiro.</span>';
                         produtosCache = [];
                     }
@@ -2666,7 +2646,6 @@ async function showProductManagementScreen_AdminGlobal() {
         } else {
              produtosCache = []; renderProductManagementTable();
              if(prodCategoriasMultiSelect) prodCategoriasMultiSelect.innerHTML = '<span class="empty-message">Selecione uma empresa.</span>';
-             // NOVA LINHA AQUI: Para limpar o multi-select de unidades por padrão
              if(prodUnidadesMultiSelect) prodUnidadesMultiSelect.innerHTML = '<span class="empty-message">Selecione uma empresa.</span>';
         }
         showScreen('productManagement', { title: 'Gerenciar Produtos (Admin)', context: 'Selecione uma empresa para ver ou adicionar produtos.', showEmpresaSelector: true });
@@ -2674,9 +2653,6 @@ async function showProductManagementScreen_AdminGlobal() {
     } catch (e) { console.error("Error showProductManagementScreen_AdminGlobal:", e); alert("Erro tela de produtos admin."); }
     finally { hideLoader(); }
 }
-
-// CÓDIGO JAVASCRIPT PARA SUBSTITUIR showProductManagementScreen_Empresa
-// Local: Encontre a função showProductManagementScreen_Empresa() e SUBSTITUA-A INTEIRAMENTE
 
 async function showProductManagementScreen_Empresa() {
     if (!currentUser || !(currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') || !currentUser.empresa_id) {
@@ -2691,7 +2667,6 @@ async function showProductManagementScreen_Empresa() {
         if(btnAddProductEl) btnAddProductEl.disabled = false;
         if(btnImportXLSXEl) btnImportXLSXEl.disabled = false;
 
-        // CHAMADA ATUALIZADA: Agora para populateCategoriaAndUnitMultiSelect_ProdutoForm
         await populateCategoriaAndUnitMultiSelect_ProdutoForm(adminSelectedEmpresaContextId);
         await fetchProductsFromSupabase(adminSelectedEmpresaContextId);
         renderProductManagementTable();
@@ -2716,7 +2691,6 @@ async function showProductManagementScreen_Empresa() {
                 hideLoader(); return;
             }
             try {
-                // MUDANÇA AQUI: Chamada à função RPC para buscar produtos com suas categorias
                 const { data: productsData, error: productsError } = await _supabaseClient.rpc('get_produtos_com_categorias', {
                     p_empresa_id: empresaIdFiltro
                 });
@@ -2725,8 +2699,6 @@ async function showProductManagementScreen_Empresa() {
                 produtosCache = productsData || [];
                 console.log(`Products loaded for company ID ${empresaIdFiltro}:`, produtosCache.length);
 
-                // Carregar categorias separadamente, pois a RPC as inclui como JSON para o produto,
-                // mas o cache de categorias ainda é útil para filtros e outras telas (como gestão de categorias).
                 const { data: categoriesData, error: categoriesError } = await _supabaseClient.from('categorias')
                     .select('id, nome_categoria, empresa_id')
                     .eq('empresa_id', empresaIdFiltro)
@@ -2739,7 +2711,6 @@ async function showProductManagementScreen_Empresa() {
                     console.log(`Categories loaded for product management (CID: ${empresaIdFiltro}): ${categoriasCache.length}`);
                 }
 
-                // Carregar unidades para a empresa atual
                 const { data: unitsData, error: unitsError } = await _supabaseClient.from('unidades')
                     .select('id, nome_unidade, empresa_id')
                     .eq('empresa_id', empresaIdFiltro)
@@ -2761,16 +2732,12 @@ async function showProductManagementScreen_Empresa() {
             }
         }
 
-        // CÓDIGO JAVASCRIPT PARA SUBSTITUIR renderProductManagementTable
-// Local: Encontre a função renderProductManagementTable() e SUBSTITUA-A INTEIRAMENTE
-
 function renderProductManagementTable() {
     if (!productManagementTableBody) { console.error("productManagementTableBody not found"); return; }
     productManagementTableBody.innerHTML = "";
 
     if (produtosCache.length === 0) {
-        // Colspan ajustado para 5 colunas (Código, Produto, Categorias, Unidades, Ação)
-        productManagementTableBody.innerHTML = `<tr><td colspan="5">Nenhum produto cadastrado para a empresa selecionada.</td></tr>`; // <--- Colspan alterado de 4 para 5
+        productManagementTableBody.innerHTML = `<tr><td colspan="5">Nenhum produto cadastrado para a empresa selecionada.</td></tr>`;
         return;
     }
 
@@ -2779,15 +2746,13 @@ function renderProductManagementTable() {
         row.insertCell().textContent = produto.codigo_produto;
         row.insertCell().textContent = produto.nome_produto;
 
-        // Display multiple categories (agora do formato RPC)
         const categoriesCell = row.insertCell();
         const categoryNames = (produto.produtos_categorias || [])
             .map(cat => cat.nome_categoria)
             .filter(Boolean);
         categoriesCell.textContent = categoryNames.length > 0 ? categoryNames.join(', ') : 'Sem Categoria';
 
-        // Display multiple units (NOVA PARTE AQUI)
-        const unitsCell = row.insertCell(); // <--- NOVA CÉLULA AQUI
+        const unitsCell = row.insertCell(); 
         const unitNames = (produto.produtos_unidades || [])
             .map(unit => unit.nome_unidade)
             .filter(Boolean);
@@ -2802,9 +2767,6 @@ function renderProductManagementTable() {
     });
 }
 
-        // CÓDIGO JAVASCRIPT PARA SUBSTITUIR handleAddProduct
-// Local: Encontre a função async function handleAddProduct() e SUBSTITUA-A INTEIRAMENTE
-
 async function handleAddProduct() {
     if (!prodCodigoInput || !prodNomeInput || !prodCategoriasMultiSelect || !prodUnidadesMultiSelect) {
         alert("Erro: Campos do formulário de produto não encontrados."); return;
@@ -2812,7 +2774,7 @@ async function handleAddProduct() {
     const codigo = prodCodigoInput.value.trim();
     const nome = prodNomeInput.value.trim();
     const selectedCategoryIds = Array.from(prodCategoriasMultiSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-    const selectedUnitIds = Array.from(prodUnidadesMultiSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value); // NOVO: Coleta IDs das unidades selecionadas
+    const selectedUnitIds = Array.from(prodUnidadesMultiSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
 
 
     let empresaParaProdutoId = null;
@@ -2835,7 +2797,7 @@ async function handleAddProduct() {
     if (!codigo) { alert("Código do produto é obrigatório."); prodCodigoInput.focus(); return; }
     if (!nome) { alert("Nome do produto é obrigatório."); prodNomeInput.focus(); return; }
     if (selectedCategoryIds.length === 0) { alert("Selecione pelo menos uma categoria para o produto."); return; }
-    if (selectedUnitIds.length === 0) { alert("Selecione pelo menos uma unidade para o produto."); return; return; } // NOVO: Validação para unidades
+    if (selectedUnitIds.length === 0) { alert("Selecione pelo menos uma unidade para o produto."); return; return; }
 
 
     showLoader();
@@ -2858,7 +2820,7 @@ async function handleAddProduct() {
                 nome_produto: nome,
                 empresa_id: empresaParaProdutoId
             }
-        ]).select('id').single(); // Get the ID of the newly inserted product
+        ]).select('id').single(); 
 
         if (error) throw error;
 
@@ -2872,12 +2834,10 @@ async function handleAddProduct() {
             .insert(categoryLinksToInsert);
 
         if (categoryLinkError) {
-            // Se o link de categoria falhar, tentar reverter a criação do produto
             await _supabaseClient.from('produtos').delete().eq('id', newProduct.id);
             throw categoryLinkError;
         }
 
-        // NOVO: Insert into produtos_unidades linking table
         const unitLinksToInsert = selectedUnitIds.map(unitId => ({
             id_produto: newProduct.id,
             id_unidade: unitId
@@ -2887,7 +2847,6 @@ async function handleAddProduct() {
             .insert(unitLinksToInsert);
 
         if (unitLinkError) {
-            // Se o link de unidade falhar, desfazer também o produto e os links de categoria (para robustez)
             await _supabaseClient.from('produtos_categorias').delete().eq('id_produto', newProduct.id);
             await _supabaseClient.from('produtos').delete().eq('id', newProduct.id);
             throw unitLinkError;
@@ -2897,13 +2856,10 @@ async function handleAddProduct() {
         alert(`Produto "${nome}" adicionado com sucesso!`);
         prodCodigoInput.value = '';
         prodNomeInput.value = '';
-        // Clear checkboxes for categories
         prodCategoriasMultiSelect.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        // Clear checkboxes for units (NOVO)
         prodUnidadesMultiSelect.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
 
-
-        await fetchProductsFromSupabase(empresaParaProdutoId);
+ await fetchProductsFromSupabase(empresaParaProdutoId);
         renderProductManagementTable();
 
     } catch (e) {
