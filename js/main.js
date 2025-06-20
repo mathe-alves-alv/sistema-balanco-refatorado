@@ -19,7 +19,7 @@ import { handleLogin, handleLogout, showAdminMasterDashboardScreen, showEmpresaD
 import { appState, setCurrentUser, resetAppState } from './state.js';
 import { showScreen, showLoader, hideLoader } from './ui-manager.js';
 import { loadQuantities, saveQuantities, generateNumericPassword, clearAllQuantities, updateExportButtonStates } from './utils.js';
-import { showManageEmpresasAndUsersScreen_Admin, handleAdminAddEmpresa } from './admin/empresas.js';
+import { showManageEmpresasAndUsersScreen_Admin, handleAdminAddEmpresa, fetchAndRenderEmpresas } from './admin/empresas.js'; // <-- ADICIONADA AQUI
 import { showManageUsersScreen_Admin, showManageUsersScreen_Empresa, closeManageEmpresaUsersScreen, handleCreateEmpresaUser } from './admin/users.js';
 import { showUnidadesScreen, handleAddUnidade } from './unidades.js';
 import { showCategoriasScreen_Admin, showCategoriasScreen_Empresa, handleAddCategoria } from './categorias.js';
@@ -31,12 +31,8 @@ import { showHistoricoContagensScreen_Admin, showHistoricoContagensScreen, close
 
 // ==================================================================
 // == PONTO DE ENTRADA PRINCIPAL DO SCRIPT ==
-// Este bloco auto-executável é a primeira coisa que roda, mas APENAS o setup inicial.
-// A lógica principal de inicialização do app é movida para dentro de runApplication.
 // ==================================================================
-(async () => { // Este é o top-level await para o módulo
-    // A inicialização do SupabaseClient pode permanecer aqui
-    // já que é uma dependência fundamental e síncrona/quase-síncrona para o resto do app.
+(async () => {
     const supabaseClient = await initializeSupabase(); 
 
     if (!supabaseClient) {
@@ -44,7 +40,6 @@ import { showHistoricoContagensScreen_Admin, showHistoricoContagensScreen, close
         return; 
     }
 
-    // Espera o DOM estar totalmente carregado antes de iniciar o restante da aplicação.
     document.addEventListener('DOMContentLoaded', () => {
         runApplication(supabaseClient);
     });
@@ -56,11 +51,11 @@ import { showHistoricoContagensScreen_Admin, showHistoricoContagensScreen, close
  * Ela só é chamada depois que a conexão com o Supabase é estabelecida e o HTML está pronto.
  * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
  */
-async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para permitir await dentro
+async function runApplication(_supabaseClient) {
     console.log("runApplication iniciada. Configurando o sistema...");
     
     initializeDOMSelectors();
-    loadQuantities(); // Importado de utils.js
+    loadQuantities();
 
     // Adiciona todos os seus event listeners
     document.getElementById('loginButton')?.addEventListener('click', () => handleLogin(_supabaseClient));
@@ -71,11 +66,11 @@ async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para
         }
     });
     document.getElementById('btnLogoutAdmin')?.addEventListener('click', () => {
-        resetAppState(); // Reseta o estado ao deslogar
+        resetAppState(); 
         handleLogout(_supabaseClient);
     });
     document.getElementById('btnLogoutEmpresa')?.addEventListener('click', () => {
-        resetAppState(); // Reseta o estado ao deslogar
+        resetAppState(); 
         handleLogout(_supabaseClient);
     });
     document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', () => showManageEmpresasAndUsersScreen_Admin(_supabaseClient));
@@ -91,7 +86,7 @@ async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para
     document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', () => showProductManagementScreen_Empresa(_supabaseClient));
     document.getElementById('btnEmpresaContagemEstoque')?.addEventListener('click', () => showInventoryCountScreen_Empresa(_supabaseClient));
     document.getElementById('btnEmpresaHistoricoContagens')?.addEventListener('click', () => showHistoricoContagensScreen(_supabaseClient));
-    document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', () => showChangePasswordScreen_Empresa(_supabaseClient)); // Adicionado _supabaseClient
+    document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', () => showChangePasswordScreen_Empresa(_supabaseClient));
     
     btnCategoriasVoltarEl?.addEventListener('click', () => {
         if (appState.currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
@@ -151,7 +146,7 @@ async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para
     if (filtroCategoriaSelect) filtroCategoriaSelect.addEventListener("change", filterInventoryProducts);
     if (filtroUnidadeSelect) filtroUnidadeSelect.addEventListener("change", filterInventoryProducts);
 
-    // Tenta restaurar a sessão do usuário - ESTE BLOCO FOI MOVIDO PARA DENTRO DE runApplication (que é async)
+    // Tenta restaurar a sessão do usuário
     try {
         console.log("Tentando obter sessão Supabase (runApplication - main.js)...");
         const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
@@ -183,9 +178,6 @@ async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para
             console.log("Usuário restaurado da sessão (runApplication - main.js):", appState.currentUser);
 
             if (appState.currentUser.role === 'admin_master') {
-                // Ao carregar a página com sessão ativa, as selects de empresa já foram populadas pelo populateEmpresasSelect
-                // em auth.js durante o handleLogin ou no deploy inicial de admin.
-                // Agora, apenas chamamos fetchAndRenderEmpresas para a tabela principal.
                 await fetchAndRenderEmpresas(_supabaseClient); 
                 showAdminMasterDashboardScreen();
             } else if (appState.currentUser.role === 'empresa_manager' || appState.currentUser.role === 'empresa_login_principal') {
