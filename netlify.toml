@@ -1,0 +1,4 @@
+[build]
+  # Este é o diretório onde suas funções estão.
+  # O Netlify vai olhar aqui e preparar tudo o que encontrar.
+  functions = "netlify/functions/"git add .
