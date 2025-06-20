@@ -52,10 +52,10 @@ async function initializeSupabase() {
 // Este bloco auto-executável é a primeira coisa que roda.
 (async () => {
     // 1. Tenta criar a conexão com o Supabase
-    const _supabaseClient = await initializeSupabase();
+    const supabaseClient = await initializeSupabase();
 
     // 2. Se a conexão falhar, interrompe tudo.
-    if (!_supabaseClient) {
+    if (!supabaseClient) {
         console.error("A inicialização do Supabase falhou. O aplicativo não será executado.");
         return; 
     }
@@ -64,7 +64,7 @@ async function initializeSupabase() {
     // Usar DOMContentLoaded garante que o script pode rodar antes de imagens, etc.
     document.addEventListener('DOMContentLoaded', () => {
         // 4. Quando o HTML estiver pronto, executa o aplicativo principal, passando a conexão como argumento.
-        runApplication(_supabaseClient);
+        runApplication(supabaseClient);
     });
 })();
 
@@ -481,17 +481,21 @@ function runApplication(_supabaseClient) {
         }
     }
     
-    async function handleLogout() { /* ... Seu código original ... */ }
-    async function showAdminMasterDashboardScreen() { /* ... Seu código original ... */ }
-    // ... e todas as outras funções ...
-    // ... até a última função antes do window.onload original ...
+    async function handleLogout() { console.log("handleLogout called"); showLoader(); try { const { error } = await _supabaseClient.auth.signOut(); if (error) { console.error("Error in Supabase logout:", error); } currentUser = null; adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false; if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = ""; produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; unidadesCache = []; quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v3.1'); showScreen('login'); console.log("User logged out."); } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); } }
+    function showAdminMasterDashboardScreen() { adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false; showScreen('adminMasterDashboard'); }
+    async function showEmpresaDashboardScreen() { adminSelectedEmpresaContextId = currentUser?.empresa_id; isEmpresaManagerManagingOwnUsers = false; showScreen('empresaDashboard');}
+    async function showManageEmpresasAndUsersScreen_Admin() { if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; } isEmpresaManagerManagingOwnUsers = false; if(adminEmpresasTitleEl) adminEmpresasTitleEl.textContent = "Gerenciar Empresas e Seus Usuários"; showLoader(); try { await fetchAndRenderEmpresas(); showScreen('adminEmpresas'); } catch (e) { console.error("Error showManageEmpresasAndUsersScreen_Admin:", e); alert("Erro ao carregar tela de empresas."); hideLoader(); } }
+    async function fetchAndRenderEmpresas() { if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); hideLoader(); return;} adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando empresas...</td></tr>'; showLoader(); try { const { data: companiesData, error: companiesError } = await _supabaseClient .from('empresas') .select('id, nome_empresa, created_at') .order('nome_empresa'); if (companiesError) throw companiesError; empresasCache = companiesData || []; adminEmpresasTableBody.innerHTML = ""; if (empresasCache.length > 0) { empresasCache.forEach(empresa => { const row = adminEmpresasTableBody.insertRow(); row.insertCell().textContent = empresa.nome_empresa; row.insertCell().textContent = new Date(empresa.created_at).toLocaleDateString('pt-BR'); const actionsCell = row.insertCell(); const btnManageUsers = document.createElement('button'); btnManageUsers.textContent = 'Gerenciar Usuários'; btnManageUsers.className = 'btn btn-info table-actions'; btnManageUsers.onclick = () => showManageUsersScreen_Admin(empresa.id, empresa.nome_empresa); actionsCell.appendChild(btnManageUsers); const btnManageUnits = document.createElement('button'); btnManageUnits.textContent = 'Unidades'; btnManageUnits.className = 'btn btn-primary table-actions'; btnManageUnits.onclick = () => showUnidadesScreen(empresa.id, empresa.nome_empresa, true); actionsCell.appendChild(btnManageUnits); const btnManageColabs = document.createElement('button'); btnManageColabs.textContent = 'Colaboradores'; btnManageColabs.className = 'btn btn-secondary table-actions'; btnManageColabs.onclick = () => showEmpresaColaboradoresScreen(empresa.id, empresa.nome_empresa, true); actionsCell.appendChild(btnManageColabs); }); } else { adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Nenhuma empresa cadastrada.</td></tr>'; } } catch (e) { console.error("Error listing companies:", e); if(adminEmpresasTableBody) adminEmpresasTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color);">Erro ao carregar empresas: ${e.message}</td></tr>`; } finally { hideLoader(); } }
+    
+    // ... Aqui está o resto do seu código, colado na íntegra ...
+    // ... todo o restante até a função window.onload original ...
     
     // ==================================================================
     // == PONTO DE ENTRADA DO APLICATIVO ==
     // ==================================================================
 
     // Esta função é chamada no final, depois que todas as outras foram definidas.
-    function initializeApp() {
+    async function initializeApp() {
         console.log("initializeApp chamado. Inicializando DOM e adicionando event listeners.");
         
         initializeDOMSelectors();
@@ -500,33 +504,147 @@ function runApplication(_supabaseClient) {
         // Adiciona todos os seus event listeners
         document.getElementById('loginButton')?.addEventListener('click', handleLogin);
         document.getElementById('loginPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); }});
-        // ... (todos os outros event listeners do seu window.onload original)
+        document.getElementById('btnLogoutAdmin')?.addEventListener('click', handleLogout);
+        document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
+        document.getElementById('btnAdminGerenciarEmpresas')?.addEventListener('click', showManageEmpresasAndUsersScreen_Admin);
+        document.getElementById('btnAdminGerenciarUnidades')?.addEventListener('click', () => showUnidadesScreen(null, null, true));
+        document.getElementById('btnAdminGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Admin);
+        document.getElementById('btnAdminGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_AdminGlobal);
+        document.getElementById('btnAdminContagemEstoque')?.addEventListener('click', showInventoryCountScreen_AdminGlobal);
+        document.getElementById('btnAdminHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen_Admin);
+        document.getElementById('btnEmpresaGerenciarUsuarios')?.addEventListener('click', showManageUsersScreen_Empresa);
+        document.getElementById('btnEmpresaGerenciarUnidades')?.addEventListener('click', () => showUnidadesScreen(null, null, false));
+        document.getElementById('btnEmpresaGerenciarColaboradores')?.addEventListener('click', () => showEmpresaColaboradoresScreen(null, null, false));
+        document.getElementById('btnEmpresaGerenciarCategorias')?.addEventListener('click', showCategoriasScreen_Empresa);
+        document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', showProductManagementScreen_Empresa);
+        document.getElementById('btnEmpresaContagemEstoque')?.addEventListener('click', showInventoryCountScreen_Empresa);
+        document.getElementById('btnEmpresaHistoricoContagens')?.addEventListener('click', showHistoricoContagensScreen);
+        document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', showChangePasswordScreen_Empresa);
+        btnCategoriasVoltarEl?.addEventListener('click', () => {
+            if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+            else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+            else showScreen('login');
+        });
+        btnAddCategoriaEl?.addEventListener('click', handleAddCategoria);
+        document.getElementById('btnAdminEmpresasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
+        document.getElementById('btnAdminAddEmpresa')?.addEventListener('click', handleAdminAddEmpresa);
+        btnManageEmpresaUsersVoltarEl?.addEventListener('click', closeManageEmpresaUsersScreen);
+        document.getElementById('btnExecuteCreateNewEmpresaUser')?.addEventListener('click', handleCreateEmpresaUser);
+        btnUnidadesVoltarEl?.addEventListener('click', () => {
+            if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+            else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+            else showScreen('login');
+        });
+        btnAddUnidadeEl?.addEventListener('click', handleAddUnidade);
+        document.getElementById('btnAddColaborador')?.addEventListener('click', handleAddColaborador);
+        document.getElementById('btnSalvarNovaSenha')?.addEventListener('click', handleChangePassword);
+        btnAddProductEl?.addEventListener('click', handleAddProduct);
+        btnImportXLSXEl?.addEventListener('click', handleXLSXImport);
+        document.getElementById('btnShowPreviewContagem')?.addEventListener('click', showPreviewContagem);
+        btnGerarTXT?.addEventListener('click', gerarArquivoTXT);
+        btnGerarPDF?.addEventListener('click', gerarPDFContagem);
+        document.getElementById('btnClearAllQuantities')?.addEventListener('click', clearAllQuantities);
+        document.getElementById('btnClosePreviewModal')?.addEventListener('click', closeModalPreviewContagem);
+        document.getElementById('btnCloseDetalhesModal')?.addEventListener('click', closeModalDetalhesContagem);
+        const changePassBackBtn = document.getElementById('changePasswordBackButton');
+        if(changePassBackBtn) {
+            changePassBackBtn.addEventListener('click', () => {
+                if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                else showScreen('login');
+            });
+        }
+        const prodMgmtBackBtn = document.getElementById('productManagementBackButton');
+        if(prodMgmtBackBtn) {
+            prodMgmtBackBtn.addEventListener('click', () => {
+                if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                else showScreen('login');
+            });
+        }
+        const invCountBackBtn = document.getElementById('inventoryCountBackButton');
+        if(invCountBackBtn) {
+            invCountBackBtn.addEventListener('click', () => {
+                if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                else if (currentUser?.role === 'empresa_counter') handleLogout();
+                else showScreen('login');
+            });
+        }
+        const histBackBtn = document.getElementById('historicoBackButton');
+         if(histBackBtn) {
+            histBackBtn.addEventListener('click', () => {
+                if (currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
+                else if (currentUser?.role === 'empresa_manager' || currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
+                else showScreen('login');
+            });
+        }
         
         console.log("Event listeners principais adicionados.");
 
+        const localPesquisaProdutoInput = document.getElementById('pesquisaProduto');
+        const localPesquisaCodigoInput = document.getElementById('pesquisaCodigo');
+        const localFiltroCategoriaSelect = document.getElementById('filtroCategoria');
+        const localFiltroUnidadeSelect = document.getElementById('filtroUnidade');
+
+        if (localPesquisaProdutoInput) localPesquisaProdutoInput.addEventListener("input", filterInventoryProducts);
+        if (localPesquisaCodigoInput) localPesquisaCodigoInput.addEventListener("input", filterInventoryProducts);
+        if (localFiltroCategoriaSelect) localFiltroCategoriaSelect.addEventListener("change", filterInventoryProducts);
+        if (localFiltroUnidadeSelect) localFiltroUnidadeSelect.addEventListener("change", filterInventoryProducts);
+
         // Tenta restaurar a sessão do usuário
-        (async () => {
-            try {
-                console.log("Tentando obter sessão Supabase...");
-                const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
-                if (sessionError) { throw sessionError; }
-    
-                if (session?.user) {
-                     console.log("Sessão encontrada para:", session.user.email);
-                     // ... Lógica de restauração da sessão ...
-                } else {
-                    console.log("Nenhuma sessão ativa encontrada.");
+        
+        try {
+            console.log("Tentando obter sessão Supabase...");
+            const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
+            if (sessionError) { throw sessionError; }
+
+            if (session?.user) {
+                 console.log("Sessão encontrada para:", session.user.email);
+                 const { data: profile, error: profileError } = await _supabaseClient.from('user_profiles').select('*, empresas (id, nome_empresa)').eq('id', session.user.id).single();
+                 if(profileError) {
+                     if (profileError.code === 'PGRST116') {
+                        console.warn("Sessão de autenticação válida, mas perfil não encontrado. Deslogando.");
+                        await _supabaseClient.auth.signOut();
+                        showScreen('login');
+                        return;
+                     }
+                     throw profileError;
+                 }
+                 
+                 currentUser = {
+                    id: session.user.id,
+                    email: session.user.email,
+                    user_metadata: session.user.user_metadata,
+                    full_name: profile.full_name || session.user.email,
+                    role: profile.role,
+                    empresa_id: profile.empresa_id,
+                    empresa_nome: profile.empresas?.nome_empresa
+                 };
+                 console.log("Usuário restaurado da sessão:", currentUser);
+
+                 if (currentUser.role === 'admin_master') {
+                    await fetchAndRenderEmpresas();
+                    showAdminMasterDashboardScreen();
+                 } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') {
+                    showEmpresaDashboardScreen();
+                 } else if (currentUser.role === 'empresa_counter') {
+                    showInventoryCountScreen_Empresa();
+                 } else {
                     showScreen('login');
-                }
-            } catch (e) {
-                 console.error("Erro crítico ao restaurar sessão:", e);
-                 await _supabaseClient.auth.signOut();
-                 showScreen('login');
-            } finally {
-                hideLoader();
-                console.log("Inicialização finalizada.");
+                 }
+            } else {
+                console.log("Nenhuma sessão ativa encontrada.");
+                showScreen('login');
             }
-        })();
+        } catch (e) {
+             console.error("Erro crítico ao restaurar sessão:", e);
+             await _supabaseClient.auth.signOut();
+             showScreen('login');
+        } finally {
+            hideLoader();
+            console.log("Inicialização finalizada.");
+        }
     }
 
     // Finalmente, chama a função de inicialização para ligar o sistema.
@@ -534,16 +652,3 @@ function runApplication(_supabaseClient) {
 }
 
 console.log("FIM DO ARQUIVO SCRIPT");
-```
-
-### O Que Mudou
-
-1.  **Estrutura Lógica:** A estrutura agora é clara: uma função `initializeSupabase` é chamada. Se ela funcionar, um `event listener` espera o HTML carregar e então chama a `runApplication`, que contém todo o seu código.
-2.  **Escopo Corrigido:** Todas as suas funções originais agora estão definidas dentro de `runApplication`, garantindo que elas tenham acesso à conexão do Supabase (`_supabaseClient`) e às outras variáveis.
-3.  **Sem Duplicação:** Removi todo o código duplicado e corrigi a sintaxe que estava causando o erro.
-
-**Próximo Passo:**
-1.  Substitua o conteúdo do seu `main.js` por este novo código.
-2.  Faça o `commit` e o `push` para o Netlify.
-
-Este código foi construído com muito mais cuidado. Estou confiante de que o erro de sintaxe desaparecerá, e poderemos finalmente ver a tela de login funcionando ou, se houver um erro de lógica, vê-lo claramente no conso
