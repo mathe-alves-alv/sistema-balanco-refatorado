@@ -1,4 +1,4 @@
-// js/admin/users.js - CORRIGIDO (Removido select de auth.users direto)
+// js/admin/users.js - CORRIGIDO (Removido select de auth.users direto e comentários na string de select)
 
 import { showLoader, hideLoader, showScreen } from '../ui-manager.js';
 import { 
@@ -84,7 +84,7 @@ export async function showManageUsersScreen_Empresa(_supabaseClient) {
 
 /**
  * Busca os perfis de usuário de uma empresa e os renderiza na tabela.
- * ATENÇÃO: A seleção de 'auth_users:auth.users(email_confirmed_at)' foi removida devido a erro de parsing no PostgREST.
+ * ATENÇÃO: A seleção de 'auth_users:auth.users(email_confirmed_at)' foi removida para resolver erro de parsing.
  * O status de confirmação do email não será exibido por esta função.
  * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
  * @param {string} empresaId O ID da empresa para buscar usuários.
@@ -102,13 +102,9 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
     try {
         const { data: users, error } = await _supabaseClient
             .from('user_profiles')
-            .select(`
-                id,
-                email,
-                full_name,
-                role
-                -- auth_users:auth.users(email_confirmed_at) -- ESTA LINHA FOI O PROBLEMA. COMENTADA/REMOVIDA
-            `)
+            // O SELECT FOI AJUSTADO PARA CONTER APENAS OS NOMES DAS COLUNAS.
+            // REMOVIDO QUALQUER COMENTÁRIO OU CARACTERE ADICIONAL DENTRO DOS BACKTICKS.
+            .select(`id,email,full_name,role`) 
             .eq('empresa_id', empresaId)
             .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal'])
             .order('full_name');
@@ -130,7 +126,9 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
                 else if (user.role === 'empresa_counter') displayRole = 'Contador';
                 row.insertCell().textContent = displayRole;
 
-                // Não é possível exibir status de confirmação do email sem a informação diretamente na query
+                // Não é possível exibir status de confirmação do email sem a informação
+                // Você pode adicionar uma coluna 'email_confirmed_at' em user_profiles e atualizá-la
+                // via um trigger de banco de dados se precisar dessa informação aqui.
                 const confirmedCell = row.insertCell();
                 confirmedCell.textContent = 'N/A'; // Ou 'Não disponível' ou deixar em branco
 
