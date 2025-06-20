@@ -1,7 +1,9 @@
 // js/utils.js
 
-import { btnGerarTXT, btnGerarPDF } from './dom-selectors.js'; // Importa elementos DOM
+// IMPORTANTE: quantitiesDigitadas agora é importado de contagens.js
 import { quantidadesDigitadas } from './contagens.js'; // Importa quantidadesDigitadas do módulo contagens
+import { btnGerarTXT, btnGerarPDF, inventoryTableBody } from './dom-selectors.js'; // Importa elementos DOM que utils.js precisa
+
 
 /**
  * Salva as quantidades digitadas no localStorage.
@@ -81,7 +83,29 @@ export function triggerDownload(filename, textContent) {
  * com base na existência de quantidades digitadas.
  */
 export function updateExportButtonStates() {
+    // Agora 'quantidadesDigitadas' é importado de 'contagens.js'
     const hasQuantities = Object.keys(quantidadesDigitadas).some(key => quantidadesDigitadas[key] > 0);
     if (btnGerarTXT) btnGerarTXT.disabled = !hasQuantities;
     if (btnGerarPDF) btnGerarPDF.disabled = !hasQuantities;
+}
+
+/**
+ * Limpa todas as quantidades digitadas e o localStorage.
+ * Esta função foi movida de contagens.js para utils.js para ser mais genérica.
+ * @param {HTMLElement} [tableBody=inventoryTableBody] O tbody da tabela de inventário.
+ */
+export function clearAllQuantities(tableBody = inventoryTableBody) {
+    // Zera o objeto quantidadesDigitadas (que é importado de contagens.js)
+    for (const key in quantidadesDigitadas) {
+        delete quantidadesDigitadas[key];
+    }
+    saveQuantities(); // Salva o estado vazio no localStorage
+
+    // Limpa os inputs visíveis na tela
+    if (tableBody) {
+        const inputs = tableBody.querySelectorAll('.quantidade-input');
+        inputs.forEach(input => input.value = '');
+    }
+    console.log("Quantities cleared.");
+    updateExportButtonStates(); // Atualiza o estado dos botões de exportação
 }
