@@ -15,9 +15,8 @@ import { initializeDOMSelectors,
 } from './dom-selectors.js';
 
 import { initializeSupabase } from './supabase-client.js';
-// Importa as funções de autenticação e o objeto de estado do usuário
 import { handleLogin, handleLogout, showAdminMasterDashboardScreen, showEmpresaDashboardScreen, showChangePasswordScreen_Empresa, handleChangePassword } from './auth.js';
-import { appState, setCurrentUser, resetAppState } from './state.js'; // Importa o estado global e funcs de set
+import { appState, setCurrentUser, resetAppState } from './state.js';
 import { showScreen, showLoader, hideLoader } from './ui-manager.js';
 import { loadQuantities, saveQuantities, generateNumericPassword, clearAllQuantities, updateExportButtonStates } from './utils.js';
 import { showManageEmpresasAndUsersScreen_Admin, handleAdminAddEmpresa } from './admin/empresas.js';
@@ -32,32 +31,32 @@ import { showHistoricoContagensScreen_Admin, showHistoricoContagensScreen, close
 
 // ==================================================================
 // == PONTO DE ENTRADA PRINCIPAL DO SCRIPT ==
+// Este bloco auto-executável é a primeira coisa que roda, mas APENAS o setup inicial.
+// A lógica principal de inicialização do app é movida para dentro de runApplication.
 // ==================================================================
-// Este bloco auto-executável é a primeira coisa que roda.
-(async () => {
-    // 1. Tenta criar a conexão com o Supabase
+(async () => { // Este é o top-level await para o módulo
+    // A inicialização do SupabaseClient pode permanecer aqui
+    // já que é uma dependência fundamental e síncrona/quase-síncrona para o resto do app.
     const supabaseClient = await initializeSupabase(); 
 
-    // 2. Se a conexão falhar, interrompe tudo.
     if (!supabaseClient) {
         console.error("A inicialização do Supabase falhou. O aplicativo não será executado.");
         return; 
     }
 
-    // 3. Se a conexão for bem-sucedida, espera o HTML estar pronto.
+    // Espera o DOM estar totalmente carregado antes de iniciar o restante da aplicação.
     document.addEventListener('DOMContentLoaded', () => {
-        // 4. Quando o HTML estiver pronto, executa o aplicativo principal, passando a conexão como argumento.
         runApplication(supabaseClient);
     });
 })();
 
 
 /**
- * Função principal que contém toda a lógica do seu aplicativo.
+ * Função principal que contém toda a lógica de inicialização do seu aplicativo.
  * Ela só é chamada depois que a conexão com o Supabase é estabelecida e o HTML está pronto.
  * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
  */
-function runApplication(_supabaseClient) {
+async function runApplication(_supabaseClient) { // Adicionado 'async' aqui para permitir await dentro
     console.log("runApplication iniciada. Configurando o sistema...");
     
     initializeDOMSelectors();
@@ -92,12 +91,12 @@ function runApplication(_supabaseClient) {
     document.getElementById('btnEmpresaGerenciarProdutos')?.addEventListener('click', () => showProductManagementScreen_Empresa(_supabaseClient));
     document.getElementById('btnEmpresaContagemEstoque')?.addEventListener('click', () => showInventoryCountScreen_Empresa(_supabaseClient));
     document.getElementById('btnEmpresaHistoricoContagens')?.addEventListener('click', () => showHistoricoContagensScreen(_supabaseClient));
-    document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', showChangePasswordScreen_Empresa); 
+    document.getElementById('btnEmpresaAlterarSenha')?.addEventListener('click', () => showChangePasswordScreen_Empresa(_supabaseClient)); // Adicionado _supabaseClient
     
     btnCategoriasVoltarEl?.addEventListener('click', () => {
         if (appState.currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
         else if (appState.currentUser?.role === 'empresa_manager' || appState.currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
-        else showScreen('login', {}, appState.currentUser); // Passa appState.currentUser
+        else showScreen('login', {}, appState.currentUser);
     });
     btnAddCategoriaEl?.addEventListener('click', () => handleAddCategoria(_supabaseClient));
     document.getElementById('btnAdminEmpresasVoltar')?.addEventListener('click', showAdminMasterDashboardScreen);
@@ -107,16 +106,16 @@ function runApplication(_supabaseClient) {
     btnUnidadesVoltarEl?.addEventListener('click', () => {
         if (appState.currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
         else if (appState.currentUser?.role === 'empresa_manager' || appState.currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
-        else showScreen('login', {}, appState.currentUser); // Passa appState.currentUser
+        else showScreen('login', {}, appState.currentUser);
     });
     btnAddUnidadeEl?.addEventListener('click', () => handleAddUnidade(_supabaseClient));
     document.getElementById('btnAddColaborador')?.addEventListener('click', () => handleAddColaborador(_supabaseClient));
     document.getElementById('btnSalvarNovaSenha')?.addEventListener('click', () => handleChangePassword(_supabaseClient));
     btnAddProductEl?.addEventListener('click', () => handleAddProduct(_supabaseClient));
     btnImportXLSXEl?.addEventListener('click', (e) => handleXLSXImport(e, _supabaseClient));
-    document.getElementById('btnShowPreviewContagem')?.addEventListener('click', () => showPreviewContagem(_supabaseClient)); // Passa _supabaseClient
-    btnGerarTXT?.addEventListener('click', () => gerarArquivoTXT(_supabaseClient)); // Passa _supabaseClient
-    btnGerarPDF?.addEventListener('click', () => gerarPDFContagem(_supabaseClient)); // Passa _supabaseClient
+    document.getElementById('btnShowPreviewContagem')?.addEventListener('click', () => showPreviewContagem(_supabaseClient));
+    btnGerarTXT?.addEventListener('click', () => gerarArquivoTXT(_supabaseClient));
+    btnGerarPDF?.addEventListener('click', () => gerarPDFContagem(_supabaseClient));
     document.getElementById('btnClearAllQuantities')?.addEventListener('click', clearAllQuantities);
     document.getElementById('btnClosePreviewModal')?.addEventListener('click', closeModalPreviewContagem);
     document.getElementById('btnCloseDetalhesModal')?.addEventListener('click', closeModalDetalhesContagem);
@@ -135,7 +134,7 @@ function runApplication(_supabaseClient) {
     inventoryCountBackButton?.addEventListener('click', () => {
         if (appState.currentUser?.role === 'admin_master') showAdminMasterDashboardScreen();
         else if (appState.currentUser?.role === 'empresa_manager' || appState.currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen();
-        else if (appState.currentUser?.role === 'empresa_counter') handleLogout(_supabaseClient); // Contador volta para login
+        else if (appState.currentUser?.role === 'empresa_counter') handleLogout(_supabaseClient);
         else showScreen('login', {}, appState.currentUser);
     });
     historicoBackButton?.addEventListener('click', () => {
@@ -152,9 +151,9 @@ function runApplication(_supabaseClient) {
     if (filtroCategoriaSelect) filtroCategoriaSelect.addEventListener("change", filterInventoryProducts);
     if (filtroUnidadeSelect) filtroUnidadeSelect.addEventListener("change", filterInventoryProducts);
 
-    // Tenta restaurar a sessão do usuário
+    // Tenta restaurar a sessão do usuário - ESTE BLOCO FOI MOVIDO PARA DENTRO DE runApplication (que é async)
     try {
-        console.log("Tentando obter sessão Supabase (main.js)...");
+        console.log("Tentando obter sessão Supabase (runApplication - main.js)...");
         const { data: { session }, error: sessionError } = await _supabaseClient.auth.getSession();
         if (sessionError) { throw sessionError; }
 
@@ -165,14 +164,13 @@ function runApplication(_supabaseClient) {
                 if (profileError.code === 'PGRST116') {
                     console.warn("Sessão de autenticação válida, mas perfil não encontrado. Deslogando.");
                     await _supabaseClient.auth.signOut();
-                    resetAppState(); // Reseta o estado ao deslogar
+                    resetAppState();
                     showScreen('login', {}, appState.currentUser);
                     return;
                 }
                 throw profileError;
             }
             
-            // ATUALIZA O ESTADO GLOBAL USANDO A FUNÇÃO SETTER
             setCurrentUser({
                 id: session.user.id,
                 email: session.user.email,
@@ -182,11 +180,13 @@ function runApplication(_supabaseClient) {
                 empresa_id: profile.empresa_id,
                 empresa_nome: profile.empresas?.nome_empresa
             });
-            console.log("Usuário restaurado da sessão (main.js):", appState.currentUser);
+            console.log("Usuário restaurado da sessão (runApplication - main.js):", appState.currentUser);
 
-            // As chamadas para showScreen agora também precisam de currentUser
             if (appState.currentUser.role === 'admin_master') {
-                await fetchAndRenderEmpresas(_supabaseClient); // fetchAndRenderEmpresas precisa ser ajustada para usar appState.currentUser.role
+                // Ao carregar a página com sessão ativa, as selects de empresa já foram populadas pelo populateEmpresasSelect
+                // em auth.js durante o handleLogin ou no deploy inicial de admin.
+                // Agora, apenas chamamos fetchAndRenderEmpresas para a tabela principal.
+                await fetchAndRenderEmpresas(_supabaseClient); 
                 showAdminMasterDashboardScreen();
             } else if (appState.currentUser.role === 'empresa_manager' || appState.currentUser.role === 'empresa_login_principal') {
                 showEmpresaDashboardScreen();
@@ -196,16 +196,16 @@ function runApplication(_supabaseClient) {
                 showScreen('login', {}, appState.currentUser);
             }
         } else {
-            console.log("Nenhuma sessão ativa encontrada (main.js).");
+            console.log("Nenhuma sessão ativa encontrada (runApplication - main.js).");
             showScreen('login', {}, appState.currentUser);
         }
     } catch (e) {
-        console.error("Erro crítico ao restaurar sessão (main.js):", e);
+        console.error("Erro crítico ao restaurar sessão (runApplication - main.js):", e);
         await _supabaseClient.auth.signOut();
-        resetAppState(); // Reseta o estado ao deslogar
+        resetAppState();
         showScreen('login', {}, appState.currentUser);
     } finally {
         hideLoader();
-        console.log("Inicialização finalizada (main.js).");
+        console.log("Inicialização finalizada (runApplication - main.js).");
     }
 }
