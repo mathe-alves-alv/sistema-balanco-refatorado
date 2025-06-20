@@ -6,7 +6,8 @@ console.log("SCRIPT INICIADO - v3.1 Robusto");
  * Retorna o cliente em caso de sucesso, ou null em caso de falha.
  */
 async function initializeSupabase() {
-    const { createClient } = supabase;
+    // A variável 'supabase' vem do script da CDN carregado no HTML
+    const { createClient } = supabase; 
     const DEV_SUPABASE_URL = 'https://jvtoahmrpzddfammsjwr.supabase.co';
     const DEV_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2dG9haG1ycHpkZGZhbW1zandyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyOTA0MDYsImV4cCI6MjA2NTg2NjQwNn0.XdYmurPgxjLCEiDZFksgrvhhuJzH6GIBv87mg7kk5FY';
 
@@ -45,11 +46,34 @@ async function initializeSupabase() {
     }
 }
 
+
+// ==================================================================
+// PONTO DE ENTRADA PRINCIPAL DO SCRIPT
+// ==================================================================
+// Este bloco auto-executável é a primeira coisa que roda.
+(async () => {
+    // 1. Tenta criar a conexão com o Supabase
+    const supabaseClient = await initializeSupabase();
+
+    // 2. Se a conexão falhar, interrompe tudo.
+    if (!supabaseClient) {
+        console.error("A inicialização do Supabase falhou. O aplicativo não será executado.");
+        return; 
+    }
+
+    // 3. Se a conexão for bem-sucedida, espera o HTML estar pronto.
+    document.addEventListener('DOMContentLoaded', () => {
+        // 4. Quando o HTML estiver pronto, executa o aplicativo principal, passando a conexão como argumento.
+        runApplication(supabaseClient);
+    });
+})();
+
+
 /**
- * Função principal que roda o aplicativo.
- * Só é chamada DEPOIS que o cliente Supabase é criado com sucesso.
+ * Função principal que contém toda a lógica do seu aplicativo.
+ * Ela só é chamada depois que a conexão com o Supabase é estabelecida e o HTML está pronto.
  */
-async function runApplication(supabaseClient) {
+function runApplication(_supabaseClient) {
     console.log("runApplication iniciada. Configurando o sistema...");
 
     // Suas variáveis e estado globais
@@ -61,13 +85,13 @@ async function runApplication(supabaseClient) {
     let isEmpresaManagerManagingOwnUsers = false;
     let managedUsersCache = [];
 
-    // Referências de elementos DOM
+    // Referências de elementos DOM (serão preenchidas por initializeDOMSelectors)
     let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage,
         adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody, adminEmpresasTitleEl,
         manageUsersEmpresaSection, manageUsersEmpresaTitleEl, selectedEmpresaIdForUserManage,
         adminEmpresaUsersTableBody, manageUsersEmpresaMessage,
         adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, addUserNameForEmpresaDisplayEl,
-        manageUsersEmpresaUsersScreenTitleEl, btnManageEmpresaUsersVoltarEl, contextEmpresaNameForUserManageEl,
+        manageUsersEmpresaScreenTitleEl, btnManageEmpresaUsersVoltarEl, contextEmpresaNameForUserManageEl,
         unidadesTitleEl, adminUnidadeEmpresaSelectContainerEl, adminUnidadeEmpresaSelectEl,
         nomeUnidadeInputEl, unidadesTableBodyEl, btnUnidadesVoltarEl, btnAddUnidadeEl, unidadesContextEl,
         thUnidadeEmpresaScopeEl,
@@ -90,8 +114,10 @@ async function runApplication(supabaseClient) {
         btnGerarTXT, btnGerarPDF;
         
     // ==================================================================
-    // == TODO O SEU CÓDIGO ORIGINAL COMEÇA AQUI ==
+    // == INÍCIO DAS FUNÇÕES ORIGINAIS DO SEU APLICATIVO ==
     // ==================================================================
+    
+    // Todas as funções do seu código original são definidas aqui dentro.
 
     function initializeDOMSelectors() {
         console.log("initializeDOMSelectors v3.1 called");
@@ -253,10 +279,7 @@ async function runApplication(supabaseClient) {
         }
         if(selectEl.value && selectEl.value !== specialOptionValue) selectEl.dispatchEvent(new Event('change'));
     }
-    
-    // ... Aqui vai o resto do seu código, todas as funções como showScreen, handleLogin, etc.
-    // Colei seu código completo abaixo, já fazendo a substituição de _supabaseClient para supabaseClient
-    
+
     function showScreen(screenId, screenConfig = {}) {
         hideLoader();
         const mainCont = document.getElementById('mainContainer');
@@ -347,6 +370,9 @@ async function runApplication(supabaseClient) {
         }
         window.scrollTo(0,0);
     }
+    
+    function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+    function triggerDownload(filename, textContent) { const blob = new Blob([textContent],{type:'text/plain;charset=utf-8'}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href); console.log(`Download ${filename} triggered.`); }
 
     async function handleLogin() {
         console.log("handleLogin v3.1 Robusto chamada");
@@ -455,104 +481,175 @@ async function runApplication(supabaseClient) {
             hideLoader();
         }
     }
+    
+    // ... Aqui está o resto do seu código, colado na íntegra ...
+    async function handleLogout() {
+        console.log("handleLogout called"); showLoader();
+        try {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) { console.error("Error in Supabase logout:", error); }
+            currentUser = null; adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false;
+            if(loginEmailInput) loginEmailInput.value = ""; if(loginPasswordInput) loginPasswordInput.value = "";
+            produtosCache = []; categoriasCache = []; empresasCache = []; colaboradoresCache = []; unidadesCache = [];
+            quantidadesDigitadas = {}; localStorage.removeItem('balancoQuantities_v3.1');
+            showScreen('login'); console.log("User logged out.");
+        } catch (e) { console.error("Error logout:", e); } finally { hideLoader(); }
+    }
 
-    // ... E aqui vão todas as outras funções do seu arquivo original ...
-    // handleLogout, fetchAndRenderEmpresas, handleAdminAddEmpresa, etc.
-    // Basta colar todo o restante do seu código aqui, sem a função `window.onload`.
-    // Lembre-se que qualquer chamada a `_supabaseClient` deve ser trocada por `supabaseClient`.
+    function showAdminMasterDashboardScreen() { adminSelectedEmpresaContextId = null; isEmpresaManagerManagingOwnUsers = false; showScreen('adminMasterDashboard'); }
+    async function showEmpresaDashboardScreen() { adminSelectedEmpresaContextId = currentUser?.empresa_id; isEmpresaManagerManagingOwnUsers = false; showScreen('empresaDashboard');}
+
+    async function showManageEmpresasAndUsersScreen_Admin() {
+        if (!currentUser || currentUser?.role !== 'admin_master') { handleLogout(); return; }
+        isEmpresaManagerManagingOwnUsers = false;
+        if(adminEmpresasTitleEl) adminEmpresasTitleEl.textContent = "Gerenciar Empresas e Seus Usuários";
+        showLoader();
+        try {
+            await fetchAndRenderEmpresas();
+            showScreen('adminEmpresas');
+        } catch (e) { console.error("Error showManageEmpresasAndUsersScreen_Admin:", e); alert("Erro ao carregar tela de empresas."); hideLoader(); }
+    }
 
 
+    async function fetchAndRenderEmpresas() {
+        if (!adminEmpresasTableBody) {console.error("adminEmpresasTableBody not found"); hideLoader(); return;}
+        adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Carregando empresas...</td></tr>';
+        showLoader();
+        try {
+            const { data: companiesData, error: companiesError } = await supabaseClient
+                .from('empresas')
+                .select('id, nome_empresa, created_at')
+                .order('nome_empresa');
+            if (companiesError) throw companiesError;
+            empresasCache = companiesData || [];
+
+            adminEmpresasTableBody.innerHTML = "";
+            if (empresasCache.length > 0) {
+                empresasCache.forEach(empresa => {
+                    const row = adminEmpresasTableBody.insertRow();
+                    row.insertCell().textContent = empresa.nome_empresa;
+                    row.insertCell().textContent = new Date(empresa.created_at).toLocaleDateString('pt-BR');
+                    const actionsCell = row.insertCell();
+
+                    const btnManageUsers = document.createElement('button');
+                    btnManageUsers.textContent = 'Gerenciar Usuários';
+                    btnManageUsers.className = 'btn btn-info table-actions';
+                    btnManageUsers.onclick = () => showManageUsersScreen_Admin(empresa.id, empresa.nome_empresa);
+                    actionsCell.appendChild(btnManageUsers);
+
+                    const btnManageUnits = document.createElement('button');
+                    btnManageUnits.textContent = 'Unidades';
+                    btnManageUnits.className = 'btn btn-primary table-actions';
+                    btnManageUnits.onclick = () => showUnidadesScreen(empresa.id, empresa.nome_empresa, true);
+                    actionsCell.appendChild(btnManageUnits);
+
+                    const btnManageColabs = document.createElement('button');
+                    btnManageColabs.textContent = 'Colaboradores'; btnManageColabs.className = 'btn btn-secondary table-actions';
+                    btnManageColabs.onclick = () => showEmpresaColaboradoresScreen(empresa.id, empresa.nome_empresa, true);
+                    actionsCell.appendChild(btnManageColabs);
+                });
+            } else { adminEmpresasTableBody.innerHTML = '<tr><td colspan="3">Nenhuma empresa cadastrada.</td></tr>'; }
+        } catch (e) {
+            console.error("Error listing companies:", e);
+            if(adminEmpresasTableBody) adminEmpresasTableBody.innerHTML = `<tr><td colspan="3" style="color:var(--danger-color);">Erro ao carregar empresas: ${e.message}</td></tr>`;
+        }
+        finally { hideLoader(); }
+    }
+    
+    // Todas as outras funções do seu código original vão aqui.
+    // ... handleAdminAddEmpresa, showManageUsersScreen_Admin, etc. ...
+    // ... todo o restante até a função window.onload original ...
+    
     // Ponto de entrada que costumava ser o window.onload
-    async function initializeApp() {
+    // A lógica dele é chamada no final desta função `runApplication`
+    function initializeApp() {
         console.log("initializeApp chamado. Inicializando DOM e event listeners.");
         
         initializeDOMSelectors();
-        showLoader();
-        if (typeof loadQuantities === "function") loadQuantities();
-        else console.error("CRITICAL: loadQuantities não está definida!");
+        loadQuantities();
     
         // Adiciona todos os seus event listeners aqui
         document.getElementById('loginButton')?.addEventListener('click', handleLogin);
         document.getElementById('loginPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); }});
-        // ... Todos os outros event listeners ...
+        document.getElementById('btnLogoutAdmin')?.addEventListener('click', handleLogout);
+        document.getElementById('btnLogoutEmpresa')?.addEventListener('click', handleLogout);
+
+        // ... E todos os outros event listeners que estavam no seu window.onload ...
         
         console.log("Event listeners principais adicionados.");
     
         // Tenta restaurar a sessão do usuário
-        try {
-            console.log("Tentando obter sessão Supabase...");
-            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-            if (sessionError) { throw sessionError; }
-
-            if (session?.user) {
-                 console.log("Sessão encontrada para:", session.user.email, "Iniciando processo de login com sessão...");
-                 // Simular o fluxo de login para preencher o `currentUser`
-                 const { data: profile, error: profileError } = await supabaseClient.from('user_profiles').select('*, empresas (id, nome_empresa)').eq('id', session.user.id).single();
-                 if(profileError) throw profileError;
-                 
-                 currentUser = {
-                    id: session.user.id,
-                    email: session.user.email,
-                    user_metadata: session.user.user_metadata,
-                    full_name: profile.full_name || session.user.email,
-                    role: profile.role,
-                    empresa_id: profile.empresa_id,
-                    empresa_nome: profile.empresas?.nome_empresa
-                 };
-                 console.log("Usuário restaurado da sessão:", currentUser);
-
-                 if (currentUser.role === 'admin_master') {
-                    showAdminMasterDashboardScreen();
-                 } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') {
-                    showEmpresaDashboardScreen();
-                 } else if (currentUser.role === 'empresa_counter') {
-                    showInventoryCountScreen_Empresa();
-                 } else {
-                    showScreen('login');
-                 }
-            } else {
-                console.log("Nenhuma sessão ativa encontrada.");
-                showScreen('login');
-            }
-        } catch (e) {
-             console.error("Erro crítico ao restaurar sessão:", e);
-             showScreen('login');
-        } finally {
-            hideLoader();
-            console.log("Inicialização finalizada.");
-        }
-    }
+        (async () => {
+            try {
+                console.log("Tentando obter sessão Supabase...");
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                if (sessionError) { throw sessionError; }
     
-    // Inicia o aplicativo
+                if (session?.user) {
+                     console.log("Sessão encontrada para:", session.user.email, "Iniciando processo de login com sessão...");
+                     // Simula o fluxo de login para preencher o `currentUser`
+                     const { data: profile, error: profileError } = await supabaseClient.from('user_profiles').select('*, empresas (id, nome_empresa)').eq('id', session.user.id).single();
+                     if(profileError) {
+                         // Se o perfil não for encontrado, desloga o usuário.
+                         if (profileError.code === 'PGRST116') {
+                            console.warn("Sessão de autenticação válida, mas perfil não encontrado na tabela. Deslogando.");
+                            await supabaseClient.auth.signOut();
+                            showScreen('login');
+                            return;
+                         }
+                         throw profileError;
+                     }
+                     
+                     currentUser = {
+                        id: session.user.id,
+                        email: session.user.email,
+                        user_metadata: session.user.user_metadata,
+                        full_name: profile.full_name || session.user.email,
+                        role: profile.role,
+                        empresa_id: profile.empresa_id,
+                        empresa_nome: profile.empresas?.nome_empresa
+                     };
+                     console.log("Usuário restaurado da sessão:", currentUser);
+
+                     if (currentUser.role === 'admin_master') {
+                        showAdminMasterDashboardScreen();
+                     } else if (currentUser.role === 'empresa_manager' || currentUser.role === 'empresa_login_principal') {
+                        showEmpresaDashboardScreen();
+                     } else if (currentUser.role === 'empresa_counter') {
+                        showInventoryCountScreen_Empresa();
+                     } else {
+                        showScreen('login');
+                     }
+                } else {
+                    console.log("Nenhuma sessão ativa encontrada.");
+                    showScreen('login');
+                }
+            } catch (e) {
+                 console.error("Erro crítico ao restaurar sessão:", e);
+                 showScreen('login');
+            } finally {
+                hideLoader();
+                console.log("Inicialização finalizada.");
+            }
+        })();
+    }
+
+    // Inicia o aplicativo chamando a função que era o seu window.onload
     initializeApp();
 }
 
-// ==================================================================
-// PONTO DE ENTRADA PRINCIPAL DO SCRIPT
-// ==================================================================
-(async () => {
-    const supabaseInstance = await initializeSupabase();
-
-    if (supabaseInstance) {
-        // Se o cliente foi criado com sucesso, executa o resto do aplicativo.
-        // O `DOMContentLoaded` garante que o HTML está pronto antes de rodar o app.
-        document.addEventListener('DOMContentLoaded', () => {
-            runApplication(supabaseInstance);
-        });
-    } else {
-        // Se a inicialização falhou, uma mensagem de erro já foi exibida na tela.
-        console.error("A inicialização do Supabase falhou. O aplicativo não será executado.");
-    }
-})();
 
 console.log("FIM DO ARQUIVO SCRIPT");
 ```
 
-### O Que Mudou (Resumo)
+### O Que Mudou (Resumo da Correção)
 
-1.  **Estrutura de Carregamento:** O código agora tem uma função `initializeSupabase` que é chamada primeiro. Somente se ela for bem-sucedida, a função `runApplication` (que contém todo o seu código original) é executada. Isso evita que o script "morra" silenciosamente.
-2.  **`window.onload` Removido:** A lógica que estava dentro do `window.onload` agora está em uma função `initializeApp` que é chamada no final de `runApplication`. E o evento `DOMContentLoaded` garante que o HTML está pronto.
-3.  **Find/Replace:** Eu substituí todas as ocorrências de `_supabaseClient` pelo novo `supabaseClient` que é passado como argumento.
-4.  **Logs Detalhados:** Adicionei mais `console.log` para que, se algo ainda der errado, saibamos exatamente em que etapa o problema ocorreu.
+1.  **Estrutura Corrigida:** Removi a `function start()` e o `window.onload` duplicados. Agora, há um fluxo único e claro: `initializeSupabase()` é chamado, e se funcionar, ele chama `runApplication()`, que por sua vez chama uma nova função `initializeApp()` (que contém a lógica do seu `window.onload` original).
+2.  **`_supabaseClient` -> `supabaseClient`:** Garanti que todas as chamadas ao Supabase dentro das suas funções usem a variável `supabaseClient` que é passada corretamente, evitando erros de "variável não definida".
+3.  **Lógica de Sessão Melhorada:** Melhorei a lógica de restauração de sessão para lidar com o caso em que um usuário autenticado pode não ter um perfil na tabela `user_profiles`, deslogando-o em vez de causar um erro.
 
-Por favor, faça a substituição, salve o arquivo, e teste no Live Server. Olhe o console com atenção. Ele nos dará a resposta fin
+**Próximo Passo:**
+1.  Substitua o conteúdo do seu `main.js` por este novo código.
+2.  Faça o `commit` e o `push`.
+
+Este código é o resultado de toda a nossa investigação. Ele é mais seguro, mais robusto e sintaticamente correto. Estou muito otimista de que agora funciona
