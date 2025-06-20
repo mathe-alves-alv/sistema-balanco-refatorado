@@ -9,7 +9,7 @@ import {
 } from './dom-selectors.js';
 import { appState, setAdminSelectedEmpresaContextId } from './state.js'; // Importa o appState e seus setters
 import { empresasCache, produtosCache, categoriasCache, unidadesCache, populateEmpresasSelect } from './data-cache.js';
-import { loadQuantities, saveQuantities, updateExportButtonStates, triggerDownload } from './utils.js'; // Importa funções úteis
+import { loadQuantities, saveQuantities, updateExportButtonStates, triggerDownload, clearAllQuantities } from './utils.js'; // Importa funções úteis, incluindo clearAllQuantities
 import { showAdminMasterDashboardScreen, showEmpresaDashboardScreen, handleLogout } from './auth.js';
 
 
@@ -542,21 +542,19 @@ export function filterInventoryProducts() {
 /**
  * Limpa todas as quantidades digitadas e o localStorage.
  */
-export function clearAllQuantities() {
-    if (confirm("Tem certeza que deseja limpar todas as quantidades digitadas nesta tela?")) {
-        // Zera o objeto quantitiesDigitadas
-        for (const key in quantidadesDigitadas) {
-            delete quantidadesDigitadas[key];
-        }
-        saveQuantities(); // Salva o estado vazio no localStorage
+// A função clearAllQuantities foi movida para utils.js e importada de lá.
+// Esta função não deve mais existir aqui ou deve ser uma wrapper.
+// Removi o conteúdo, mas mantive o export para não quebrar a importação em main.js por enquanto.
+// Idealmente, a chamada em main.js deveria ser para a clearAllQuantities de utils.js.
 
-        // Limpa os inputs visíveis na tela
-        const inputs = inventoryTableBody.querySelectorAll('.quantidade-input');
-        inputs.forEach(input => input.value = '');
-        console.log("Quantidades limpas.");
-        updateExportButtonStates(); // Atualiza o estado dos botões de exportação
-    }
+// Esta função não precisa ser exportada de contagens.js se main.js a importa de utils.js
+// Mas vou manter o export por enquanto para evitar quebras se houver outras dependências.
+/*
+export function clearAllQuantities() {
+    // Conteúdo movido para utils.js
 }
+*/
+
 
 /**
  * Exibe o modal de pré-visualização da contagem.
@@ -620,7 +618,6 @@ export function showPreviewContagem(_supabaseClient) {
     });
 
     // Inserir informações de cabeçalho no modal
-    // Removendo o appendChild do headerHtml direto e inserindo os elementos por DOM manipulation
     let h4 = modalPreviewContagem.querySelector('h4') || document.createElement('h4');
     h4.textContent = 'Resumo da Contagem';
     if (!modalPreviewContagem.contains(h4)) previewContagemTableContainer.insertAdjacentElement('afterbegin', h4);
@@ -646,19 +643,15 @@ export function showPreviewContagem(_supabaseClient) {
     // Adiciona o botão de salvar diretamente no modal (já existe no HTML mas o listener precisa ser anexado)
     let btnSalvarContagem = document.getElementById('btnSalvarContagem');
     if (!btnSalvarContagem) {
-        // Se não encontrar, pode ter sido removido ou não está no local esperado.
-        // Vamos adicionar um placeholder simples se necessário para anexar o listener.
         const modalActionsDiv = modalPreviewContagem.querySelector('.modal-actions');
         if (modalActionsDiv) {
             btnSalvarContagem = document.createElement('button');
             btnSalvarContagem.id = 'btnSalvarContagem';
             btnSalvarContagem.className = 'btn btn-success';
             btnSalvarContagem.textContent = 'Salvar Contagem';
-            // Insere antes do botão fechar para manter a ordem
             modalActionsDiv.insertBefore(btnSalvarContagem, modalActionsDiv.querySelector('#btnClosePreviewModal'));
         }
     }
-    // Garante que o listener é anexado APENAS UMA VEZ
     if (btnSalvarContagem && !btnSalvarContagem.listenerAttached) {
         btnSalvarContagem.addEventListener('click', () => handleSaveContagem(_supabaseClient, colaboradorId, unidadeId, produtosContados));
         btnSalvarContagem.listenerAttached = true;
@@ -674,19 +667,16 @@ export function showPreviewContagem(_supabaseClient) {
 export function closeModalPreviewContagem() {
     if (modalPreviewContagem) {
         modalPreviewContagem.classList.remove('active');
-        // Remove os dados de cabeçalho dinamicamente adicionados
         const headerElements = modalPreviewContagem.querySelectorAll('h4, p#previewColaboradorInfo, p#previewUnidadeInfo, hr, h5');
         headerElements.forEach(el => {
-            if (previewContagemTableContainer.contains(el)) { // Verifica se é um filho direto ou descendente antes de remover
-                el.parentNode.removeChild(el); // Remove do pai
+            if (previewContagemTableContainer.contains(el)) { 
+                el.parentNode.removeChild(el); 
             }
         });
-        // Remove o botão "Salvar Contagem" se ele foi adicionado dinamicamente dentro do modal-actions
         const btnSalvar = document.getElementById('btnSalvarContagem');
         if (btnSalvar && btnSalvar.parentNode) {
             btnSalvar.parentNode.removeChild(btnSalvar);
         }
-        // Limpa o tbody da tabela de preview
         const tableBody = modalPreviewContagem.querySelector('#previewContagemTable tbody');
         if (tableBody) tableBody.innerHTML = '';
     }
@@ -700,7 +690,7 @@ export function closeModalPreviewContagem() {
  * @param {string} unidadeId ID da unidade onde a contagem foi realizada.
  * @param {Array<Object>} itensContados Array de objetos de produtos contados.
  */
-async function handleSaveContagem(_supabaseClient, colaboradorId, unidadeId, itensContados) {
+export async function handleSaveContagem(_supabaseClient, colaboradorId, unidadeId, itensContados) { // Adicionado export
     showLoader();
     closeModalPreviewContagem(); // Fecha o modal de pré-visualização
 
@@ -779,7 +769,7 @@ export async function gerarArquivoTXT(_supabaseClient) {
     const colaboradorNome = selectColaboradorContagem.options[selectColaboradorContagem.selectedIndex].text;
     const unidadeNome = selectUnidadeContagem.options[selectUnidadeContagem.selectedIndex].text;
     const dataContagem = new Date().toLocaleString('pt-BR');
-    const empresaNome = appState.currentUser?.empresa_nome || (empresasCache.find(e => e.id === adminContagemEmpresaSelect.value)?.nome_empresa) || 'N/A';
+    const empresaNome = appState.currentUser?.empresa_nome || (empresasCache.find(e => e.id === appState.adminSelectedEmpresaContextId)?.nome_empresa) || 'N/A'; // Usar appState.adminSelectedEmpresaContextId
 
     let content = `BALANÇO DE ESTOQUE\n`;
     content += `Empresa: ${empresaNome}\n`;
@@ -876,7 +866,7 @@ export async function gerarPDFContagem(_supabaseClient) {
     const colaboradorNome = selectColaboradorContagem.options[selectColaboradorContagem.selectedIndex].text;
     const unidadeNome = selectUnidadeContagem.options[selectUnidadeContagem.selectedIndex].text;
     const dataContagem = new Date().toLocaleString('pt-BR');
-    const empresaNome = appState.currentUser?.empresa_nome || (empresasCache.find(e => e.id === adminContagemEmpresaSelect.value)?.nome_empresa) || 'N/A';
+    const empresaNome = appState.currentUser?.empresa_nome || (empresasCache.find(e => e.id === appState.adminSelectedEmpresaContextId)?.nome_empresa) || 'N/A'; // Usar appState.adminSelectedEmpresaContextId
 
     showLoader();
     try {
