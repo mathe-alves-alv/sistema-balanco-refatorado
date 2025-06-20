@@ -4,7 +4,7 @@ import { showLoader, hideLoader, showScreen } from '../ui-manager.js';
 import { 
     adminEmpresaUsersTableBody, manageUsersEmpresaMessage, adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, 
     selectedEmpresaIdForUserManage, // Este é o ID oculto no formulário
-    manageEmpresaUsersScreenTitleEl, // <-- CORRIGIDO AQUI: A variável era manageEmpresaUsersScreenTitleEl no dom-selectors.js
+    manageUsersEmpresaScreenTitleEl, // <-- CORRIGIDO AQUI: O NOME CORRETO É 'manageUsersEmpresaScreenTitleEl'
     contextEmpresaNameForUserManageEl, addUserNameForEmpresaDisplayEl, currentPasswordGroup 
 } from '../dom-selectors.js';
 import { appState, setCurrentUser, setAdminSelectedEmpresaContextId, setIsEmpresaManagerManagingOwnUsers, setManagedUsersCache } from '../state.js'; 
@@ -28,7 +28,8 @@ export async function showManageUsersScreen_Admin(_supabaseClient, empresaId, em
     setAdminSelectedEmpresaContextId(empresaId); 
     setIsEmpresaManagerManagingOwnUsers(false); 
 
-    if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = `Gerenciar Usuários da Empresa`;
+    // Referência corrigida para a variável DOM
+    if(manageUsersEmpresaScreenTitleEl) manageUsersEmpresaScreenTitleEl.textContent = `Gerenciar Usuários da Empresa`;
     if(contextEmpresaNameForUserManageEl) contextEmpresaNameForUserManageEl.textContent = empresaNome;
     if(addUserNameForEmpresaDisplayEl) addUserNameForEmpresaDisplayEl.textContent = `para ${empresaNome}`;
     
@@ -65,7 +66,8 @@ export async function showManageUsersScreen_Empresa(_supabaseClient) {
     setAdminSelectedEmpresaContextId(appState.currentUser.empresa_id); 
     setIsEmpresaManagerManagingOwnUsers(true); 
 
-    if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = "Gerenciar Meus Usuários";
+    // Referência corrigida para a variável DOM
+    if(manageUsersEmpresaScreenTitleEl) manageUsersEmpresaScreenTitleEl.textContent = "Gerenciar Meus Usuários";
     if(contextEmpresaNameForUserManageEl) contextEmpresaNameForUserManageEl.textContent = appState.currentUser.empresa_nome || "Minha Empresa";
     if(addUserNameForEmpresaDisplayEl) addUserNameForEmpresaDisplayEl.textContent = `na ${appState.currentUser.empresa_nome || "Minha Empresa"}`;
     
@@ -300,64 +302,64 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
 }
 
 /**
- * Lida com a exclusão de um usuário de empresa.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} userId ID do usuário a ser excluído (do Auth).
- * @param {string} userEmail Email do usuário a ser excluído.
- * @param {string} empresaId ID da empresa à qual o usuário pertence.
- */
+ * Lida com a exclusão de um usuário de empresa.
+ * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
+ * @param {string} userId ID do usuário a ser excluído (do Auth).
+ * @param {string} userEmail Email do usuário a ser excluído.
+ * @param {string} empresaId ID da empresa à qual o usuário pertence.
+ */
 export async function handleDeleteUser(_supabaseClient, userId, userEmail, empresaId) {
-    if (!confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação é irreversível e removerá o acesso dele ao sistema!`)) {
-        return;
-    }
-    showLoader();
-    try {
-        const { data: userToDeleteProfile, error: profileCheckError } = await _supabaseClient
-            .from('user_profiles')
-            .select('role')
-            .eq('id', userId)
-            .single();
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação é irreversível e removerá o acesso dele ao sistema!`)) {
+        return;
+    }
+    showLoader();
+    try {
+        const { data: userToDeleteProfile, error: profileCheckError } = await _supabaseClient
+            .from('user_profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
 
-        if (profileCheckError) throw profileCheckError;
-        
-        if (userToDeleteProfile.role === 'empresa_login_principal' && appState.currentUser.role !== 'admin_master') {
-            alert("Você não pode excluir o usuário principal da empresa. Apenas um Admin Master pode fazer isso.");
-            hideLoader();
-            return;
-        }
+        if (profileCheckError) throw profileCheckError;
+        
+        if (userToDeleteProfile.role === 'empresa_login_principal' && appState.currentUser.role !== 'admin_master') {
+            alert("Você não pode excluir o usuário principal da empresa. Apenas um Admin Master pode fazer isso.");
+            hideLoader();
+            return;
+        }
 
-        if (appState.currentUser.role === 'empresa_manager' && userId === appState.currentUser.id) {
-            alert("Você não pode excluir seu próprio usuário através desta tela.");
-            hideLoader();
-            return;
-        }
+        if (appState.currentUser.role === 'empresa_manager' && userId === appState.currentUser.id) {
+            alert("Você não pode excluir seu próprio usuário através desta tela.");
+            hideLoader();
+            return;
+        }
 
-        console.log("Deletando perfil de usuário:", userId);
-        const { error: profileDeleteError } = await _supabaseClient.from('user_profiles').delete().eq('id', userId);
-        if (profileDeleteError) throw profileDeleteError;
+        console.log("Deletando perfil de usuário:", userId);
+        const { error: profileDeleteError } = await _supabaseClient.from('user_profiles').delete().eq('id', userId);
+        if (profileDeleteError) throw profileDeleteError;
 
-        alert(`Usuário "${userEmail}" excluído com sucesso.`);
-        await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
+        alert(`Usuário "${userEmail}" excluído com sucesso.`);
+        await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
 
-    } catch (e) {
-        console.error("Erro ao excluir usuário:", e);
-        manageUsersEmpresaMessage.textContent = `Erro ao excluir usuário: ${e.message}`;
-        manageUsersEmpresaMessage.style.color = 'var(--danger-color)';
-        manageUsersEmpresaMessage.style.display = 'block';
-    } finally {
-        hideLoader();
-    }
+    } catch (e) {
+        console.error("Erro ao excluir usuário:", e);
+        manageUsersEmpresaMessage.textContent = `Erro ao excluir usuário: ${e.message}`;
+        manageUsersEmpresaMessage.style.color = 'var(--danger-color)';
+        manageUsersEmpresaMessage.style.display = 'block';
+    } finally {
+        hideLoader();
+    }
 }
 
 
 /**
- * Função auxiliar para exibir o nome da função de forma mais amigável.
- * @param {string} roleKey A chave da função (ex: 'empresa_manager').
- * @returns {string} O nome de exibição da função.
- */
+ * Função auxiliar para exibir o nome da função de forma mais amigável.
+ * @param {string} roleKey A chave da função (ex: 'empresa_manager').
+ * @returns {string} O nome de exibiÃ§Ã£o da funÃ§Ã£o.
+ */
 function roleDisplay(roleKey) {
-    if (roleKey === 'empresa_manager') return 'Gerente';
-    if (roleKey === 'empresa_counter') return 'Contador';
-    if (roleKey === 'empresa_login_principal') return 'Gerente Principal';
-    return roleKey; 
+    if (roleKey === 'empresa_manager') return 'Gerente';
+    if (roleKey === 'empresa_counter') return 'Contador';
+    if (roleKey === 'empresa_login_principal') return 'Gerente Principal';
+    return roleKey; 
 }
