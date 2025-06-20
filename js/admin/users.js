@@ -1,10 +1,15 @@
 // js/admin/users.js
 
 import { showLoader, hideLoader, showScreen } from '../ui-manager.js';
-import { adminEmpresaUsersTableBody, manageUsersEmpresaMessage, adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, selectedEmpresaIdForUserManage, manageEmpresaUsersScreenTitleEl, contextEmpresaNameForUserManageEl, addUserNameForEmpresaDisplayEl, currentPasswordGroup } from '../dom-selectors.js';
-import { appState, setCurrentUser, setAdminSelectedEmpresaContextId, setIsEmpresaManagerManagingOwnUsers, setManagedUsersCache } from '../state.js'; // Importa o appState e seus setters
+import { 
+    adminEmpresaUsersTableBody, manageUsersEmpresaMessage, adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, 
+    selectedEmpresaIdForUserManage, // Este é o ID oculto no formulário
+    manageEmpresaUsersScreenTitleEl, // <-- CORRIGIDO AQUI: A variável era manageEmpresaUsersScreenTitleEl no dom-selectors.js
+    contextEmpresaNameForUserManageEl, addUserNameForEmpresaDisplayEl, currentPasswordGroup 
+} from '../dom-selectors.js';
+import { appState, setCurrentUser, setAdminSelectedEmpresaContextId, setIsEmpresaManagerManagingOwnUsers, setManagedUsersCache } from '../state.js'; 
 import { showEmpresaDashboardScreen, showAdminMasterDashboardScreen, showChangePasswordScreen_Admin } from '../auth.js';
-import { generateNumericPassword } from '../utils.js'; // Importa a função de utils.js
+import { generateNumericPassword } from '../utils.js'; 
 
 
 /**
@@ -16,21 +21,19 @@ import { generateNumericPassword } from '../utils.js'; // Importa a função de 
 export async function showManageUsersScreen_Admin(_supabaseClient, empresaId, empresaNome) {
     if (!appState.currentUser || appState.currentUser?.role !== 'admin_master') {
         alert("Acesso negado. Apenas Admin Master pode gerenciar usuários de outras empresas.");
-        showScreen('login', {}, appState.currentUser); // Fallback seguro
+        showScreen('login', {}, appState.currentUser); 
         return;
     }
     console.log(`showManageUsersScreen_Admin called for company ${empresaNome} (ID: ${empresaId})`);
-    setAdminSelectedEmpresaContextId(empresaId); // Atualiza o estado global
-    setIsEmpresaManagerManagingOwnUsers(false); // Admin master gerenciando usuários de uma empresa
+    setAdminSelectedEmpresaContextId(empresaId); 
+    setIsEmpresaManagerManagingOwnUsers(false); 
 
     if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = `Gerenciar Usuários da Empresa`;
     if(contextEmpresaNameForUserManageEl) contextEmpresaNameForUserManageEl.textContent = empresaNome;
     if(addUserNameForEmpresaDisplayEl) addUserNameForEmpresaDisplayEl.textContent = `para ${empresaNome}`;
     
-    // Esconde o campo de "senha atual" (relevante apenas para alteração de senha pessoal)
     if(currentPasswordGroup) currentPasswordGroup.style.display = 'none'; 
 
-    // Configura as opções de função para o novo usuário (Gerente ou Contador)
     if(adminEmpresaNewUserRoleEl) {
         adminEmpresaNewUserRoleEl.innerHTML = `
             <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
@@ -39,7 +42,7 @@ export async function showManageUsersScreen_Admin(_supabaseClient, empresaId, em
     }
 
     await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
-    showScreen('manageEmpresaUsers', {}, appState.currentUser); // Passa appState.currentUser
+    showScreen('manageEmpresaUsers', {}, appState.currentUser); 
 }
 
 /**
@@ -49,27 +52,25 @@ export async function showManageUsersScreen_Admin(_supabaseClient, empresaId, em
 export async function showManageUsersScreen_Empresa(_supabaseClient) {
     if (!appState.currentUser || !(appState.currentUser.role === 'empresa_manager' || appState.currentUser.role === 'empresa_login_principal')) {
         alert("Acesso negado. Apenas Gerentes da Empresa podem gerenciar usuários.");
-        showEmpresaDashboardScreen(appState.currentUser); // Redireciona para o dashboard da empresa
+        showEmpresaDashboardScreen(appState.currentUser); 
         return;
     }
     if (!appState.currentUser.empresa_id) {
         console.error("ID da empresa não encontrada para o gerente logado.");
         alert("Erro: ID da sua empresa não encontrado. Tente relogar.");
-        showScreen('login', {}, appState.currentUser); // Fallback para login
+        showScreen('login', {}, appState.currentUser); 
         return;
     }
     console.log(`showManageUsersScreen_Empresa called for company ${appState.currentUser.empresa_nome} (ID: ${appState.currentUser.empresa_id})`);
-    setAdminSelectedEmpresaContextId(appState.currentUser.empresa_id); // Atualiza o estado global
-    setIsEmpresaManagerManagingOwnUsers(true); // Gerente gerenciando seus próprios usuários
+    setAdminSelectedEmpresaContextId(appState.currentUser.empresa_id); 
+    setIsEmpresaManagerManagingOwnUsers(true); 
 
     if(manageEmpresaUsersScreenTitleEl) manageEmpresaUsersScreenTitleEl.textContent = "Gerenciar Meus Usuários";
     if(contextEmpresaNameForUserManageEl) contextEmpresaNameForUserManageEl.textContent = appState.currentUser.empresa_nome || "Minha Empresa";
     if(addUserNameForEmpresaDisplayEl) addUserNameForEmpresaDisplayEl.textContent = `na ${appState.currentUser.empresa_nome || "Minha Empresa"}`;
     
-    // Esconde o campo de "senha atual"
     if(currentPasswordGroup) currentPasswordGroup.style.display = 'none';
 
-    // Configura as opções de função para o novo usuário (Gerente ou Contador)
     if(adminEmpresaNewUserRoleEl) {
         adminEmpresaNewUserRoleEl.innerHTML = `
             <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
@@ -78,7 +79,7 @@ export async function showManageUsersScreen_Empresa(_supabaseClient) {
     }
 
     await fetchAndRenderEmpresaUsers(_supabaseClient, appState.currentUser.empresa_id);
-    showScreen('manageEmpresaUsers', {}, appState.currentUser); // Passa appState.currentUser
+    showScreen('manageEmpresaUsers', {}, appState.currentUser); 
 }
 
 /**
@@ -109,19 +110,17 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
                 )
             `)
             .eq('empresa_id', empresaId)
-            // Filtra para mostrar apenas os roles que podem ser gerenciados por essa tela
             .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal'])
             .order('full_name');
 
         if (error) throw error;
 
-        setManagedUsersCache(users || []); // Atualiza o cache de usuários no estado global
+        setManagedUsersCache(users || []); 
         adminEmpresaUsersTableBody.innerHTML = '';
 
         if (appState.managedUsersCache.length > 0) {
             appState.managedUsersCache.forEach(user => {
                 const row = adminEmpresaUsersTableBody.insertRow();
-                // Garante que o nome completo seja exibido se disponível, senão o email
                 row.insertCell().textContent = user.full_name || user.email; 
                 row.insertCell().textContent = user.email;
                 
@@ -136,23 +135,20 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
 
                 const actionsCell = row.insertCell();
 
-                // Botão para alterar senha (chama a tela de mudança de senha, com contexto de admin)
                 const btnChangePass = document.createElement('button');
                 btnChangePass.textContent = 'Redefinir Senha';
                 btnChangePass.className = 'btn btn-warning table-actions';
                 btnChangePass.onclick = () => showChangePasswordScreen_Admin(user.id, user.email);
                 actionsCell.appendChild(btnChangePass);
 
-                // Botão para excluir usuário
                 let canDeleteUser = false;
                 if (appState.currentUser.role === 'admin_master') {
                     canDeleteUser = true;
                 } else if (appState.isEmpresaManagerManagingOwnUsers && appState.currentUser.empresa_id === empresaId) {
-                    // Se o usuário atual é o gerente e está gerenciando sua própria empresa
                     if (user.id === appState.currentUser.id) {
-                        canDeleteUser = false; // Não pode excluir a si mesmo
+                        canDeleteUser = false; 
                     } else if (user.role === 'empresa_login_principal') {
-                         canDeleteUser = false; // Gerente normal não pode excluir o login principal
+                         canDeleteUser = false; 
                     } else {
                         canDeleteUser = true;
                     }
@@ -187,11 +183,10 @@ export function closeManageEmpresaUsersScreen() {
         manageUsersEmpresaMessage.textContent = '';
     }
     if (appState.isEmpresaManagerManagingOwnUsers) {
-        showEmpresaDashboardScreen(appState.currentUser); // Passa o currentUser
+        showEmpresaDashboardScreen(appState.currentUser); 
     } else {
         showAdminMasterDashboardScreen();
     }
-    // isEmpresaManagerManagingOwnUsers já é definida nas funções showManageUsersScreen, não precisa resetar aqui
 }
 
 /**
@@ -206,7 +201,6 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
         manageUsersEmpresaMessage.textContent = '';
     }
 
-    // Pega o ID da empresa do elemento DOM (definido por showManageUsersScreen_Admin/Empresa)
     const empresaId = selectedEmpresaIdForUserManage.value;
     const empresaNome = contextEmpresaNameForUserManageEl.textContent || 'Empresa Desconhecida';
 
@@ -223,31 +217,28 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
     if (!/\S+@\S+\.\S+/.test(email)) { alert("Por favor, insira um email válido."); adminEmpresaNewUserEmailEl.focus(); return; }
     if (!roleToCreate) { alert("A função é obrigatória."); adminEmpresaNewUserRoleEl.focus(); return; }
 
-    // Só um admin master pode criar um novo 'empresa_login_principal'
     if (roleToCreate === 'empresa_login_principal' && appState.currentUser.role !== 'admin_master') {
         alert("Você não tem permissão para criar um usuário com a função 'Gerente Principal'.");
         return;
     }
-    // Um gerente normal não pode criar outro 'empresa_login_principal'
     if (roleToCreate === 'empresa_login_principal' && appState.currentUser.role === 'empresa_manager') {
          alert("Um gerente normal não pode criar outro Gerente Principal.");
          return;
     }
 
-    const password = generateNumericPassword(8); // Gera uma senha temporária
+    const password = generateNumericPassword(8); 
     showLoader();
 
     try {
         console.log("Tentando criar usuário Supabase Auth:", email, "Role:", roleToCreate, "Empresa ID:", empresaId);
 
-        // Cria o usuário no Supabase Auth
         const { data: authData, error: signUpError } = await _supabaseClient.auth.signUp({
             email, password,
             options: {
-                data: { // Metadados do usuário para o JWT
+                data: { 
                     full_name: fullName,
                     user_role: roleToCreate,
-                    empresa_id: empresaId // Adiciona empresa_id aos metadados do auth
+                    empresa_id: empresaId 
                 }
             }
         });
@@ -266,7 +257,6 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
         const newUserId = authData.user.id;
         console.log("Usuário Auth criado com ID:", newUserId);
 
-        // Cria o perfil do usuário na tabela 'user_profiles'
         const { error: profileError } = await _supabaseClient
             .from('user_profiles')
             .insert({
@@ -279,7 +269,6 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
 
         if (profileError) {
             console.error("Erro ao criar perfil, tentando apagar o usuário de autenticação para evitar inconsistência:", profileError);
-            // Tenta apagar o usuário recém-criado do Auth para evitar "órfãos"
             await _supabaseClient.auth.admin.deleteUser(newUserId).catch(e => console.error("Erro ao apagar usuário Auth após falha no perfil:", e));
             throw profileError;
         }
@@ -294,12 +283,10 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
         manageUsersEmpresaMessage.style.display = 'block';
         manageUsersEmpresaMessage.style.color = 'var(--success-color)';
 
-        // Limpa o formulário
         adminEmpresaNewUserEmailEl.value = '';
         adminEmpresaNewUserFullNameEl.value = '';
-        adminEmpresaNewUserRoleEl.value = 'empresa_manager'; // Reseta para o padrão
+        adminEmpresaNewUserRoleEl.value = 'empresa_manager'; 
         
-        // Atualiza a tabela de usuários
         await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
 
     } catch (e) {
@@ -325,7 +312,6 @@ export async function handleDeleteUser(_supabaseClient, userId, userEmail, empre
     }
     showLoader();
     try {
-        // Primeiro, verifica o role do usuário para garantir que o usuário atual tem permissão para deletar
         const { data: userToDeleteProfile, error: profileCheckError } = await _supabaseClient
             .from('user_profiles')
             .select('role')
@@ -334,31 +320,23 @@ export async function handleDeleteUser(_supabaseClient, userId, userEmail, empre
 
         if (profileCheckError) throw profileCheckError;
         
-        // Se o usuário logado não for admin_master, ele não pode deletar um 'empresa_login_principal'
         if (userToDeleteProfile.role === 'empresa_login_principal' && appState.currentUser.role !== 'admin_master') {
             alert("Você não pode excluir o usuário principal da empresa. Apenas um Admin Master pode fazer isso.");
             hideLoader();
             return;
         }
 
-        // Se o usuário logado for gerente, ele não pode excluir a si mesmo
         if (appState.currentUser.role === 'empresa_manager' && userId === appState.currentUser.id) {
             alert("Você não pode excluir seu próprio usuário através desta tela.");
             hideLoader();
             return;
         }
 
-        // 1. Apaga da tabela user_profiles (automaticamente apaga do auth.users se CASCADE DELETE estiver configurado)
         console.log("Deletando perfil de usuário:", userId);
         const { error: profileDeleteError } = await _supabaseClient.from('user_profiles').delete().eq('id', userId);
         if (profileDeleteError) throw profileDeleteError;
 
-        // Se o Supabase Auth não tiver CASCADE DELETE configurado do 'user_profiles' para 'auth.users',
-        // você precisaria de uma chamada `_supabaseClient.auth.admin.deleteUser(userId);` aqui.
-        // No entanto, é mais comum configurar a cascata no banco de dados para `auth.users`.
-        
         alert(`Usuário "${userEmail}" excluído com sucesso.`);
-        // Atualiza a lista após a exclusão
         await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
 
     } catch (e) {
@@ -381,5 +359,5 @@ function roleDisplay(roleKey) {
     if (roleKey === 'empresa_manager') return 'Gerente';
     if (roleKey === 'empresa_counter') return 'Contador';
     if (roleKey === 'empresa_login_principal') return 'Gerente Principal';
-    return roleKey; // Retorna a chave se não for reconhecida
+    return roleKey; 
 }
