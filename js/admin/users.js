@@ -301,9 +301,9 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
 /**
  * Lida com a exclusão de um usuário de empresa.
  * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} userId ID do usuário a ser excluído (do Auth).
- * @param {string} userEmail Email do usuário a ser excluído.
- * @param {string} empresaId ID da empresa à qual o usuário pertence.
+ * @param {string} userId O ID do usuário a ser excluído (do Auth).
+ * @param {string} userEmail O email do usuário a ser excluído.
+ * @param {string} empresaId O ID da empresa à qual o usuário pertence.
  */
 export async function handleDeleteUser(_supabaseClient, userId, userEmail, empresaId) {
     if (!confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação é irreversível e removerá o acesso dele ao sistema!`)) {
