@@ -1,4 +1,4 @@
-// js/admin/users.js - CÓDIGO DEFINITIVO E CORRIGIDO
+// js/admin/users.js - CÓDIGO DEFINITIVO E CORRIGIDO (com upsert e sem deleteUser no frontend)
 
 import { showLoader, hideLoader, showScreen } from '../ui-manager.js';
 import { 
@@ -115,7 +115,6 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
     try {
         const { data: users, error } = await _supabaseClient
             .from('user_profiles')
-            // LINHA CRÍTICA: APENAS AS COLUNAS. SEM NENHUM COMENTÁRIO OU CARACTERE EXTRA DENTRO DOS BACKTICKS.
             .select(`id,email,full_name,role`) 
             .eq('empresa_id', empresaId)
             .in('role', ['empresa_manager', 'empresa_counter', 'empresa_login_principal'])
@@ -138,9 +137,6 @@ export async function fetchAndRenderEmpresaUsers(_supabaseClient, empresaId) {
                 else if (user.role === 'empresa_counter') displayRole = 'Contador';
                 row.insertCell().textContent = displayRole;
 
-                // Não é possível exibir status de confirmação do email sem a informação
-                // Você pode adicionar uma coluna 'email_confirmed_at' em user_profiles e atualizá-la
-                // via um trigger de banco de dados se precisar dessa informação aqui.
                 const confirmedCell = row.insertCell();
                 confirmedCell.textContent = 'N/A'; // Por enquanto, exibe N/A
 
@@ -273,7 +269,7 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
 
         const { error: profileError } = await _supabaseClient
             .from('user_profiles')
-            .insert({
+            .upsert({ // CORRIGIDO PARA UPSERT AQUI
                 id: newUserId,
                 email: email,
                 full_name: fullName,
