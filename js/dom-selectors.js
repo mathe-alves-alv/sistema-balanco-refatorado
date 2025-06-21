@@ -29,14 +29,16 @@ export let empresaDashboardTitle, empresaUserNameSpan, empresaUserRoleDisplaySpa
 export let btnGerarTXT, btnGerarPDF;
 
 export function initializeDOMSelectors() {
-    console.log("initializeDOMSelectors v3.1 called (from dom-selectors.js)");
+    console.log("initializeDOMSelectors v3.1 called (from dom-selectors.js). A chave 'manageUsersEmpresa' foi corrigida.");
     mainContainer = document.getElementById('mainContainer');
     screens = {
         login: document.getElementById('screenLogin'),
         adminMasterDashboard: document.getElementById('screenAdminMasterDashboard'),
         empresaDashboard: document.getElementById('screenEmpresaDashboard'),
         adminEmpresas: document.getElementById('screenAdminEmpresas'),
-        manageEmpresaUsers: document.getElementById('screenManageEmpresaUsers'),
+        // AQUI ESTÁ A CORREÇÃO CRÍTICA: A chave agora é 'manageUsersEmpresa'
+        // para corresponder ao que é passado para showScreen em users.js
+        manageUsersEmpresa: document.getElementById('screenManageEmpresaUsers'), 
         unidades: document.getElementById('screenUnidades'),
         adminCategorias: document.getElementById('screenAdminCategorias'),
         empresaColaboradores: document.getElementById('screenEmpresaColaboradores'),
@@ -73,9 +75,11 @@ export function initializeDOMSelectors() {
     adminEmpresaNewUserFullNameEl = safeGetElementById('adminEmpresaNewUserFullName');
     adminEmpresaNewUserRoleEl = safeGetElementById('adminEmpresaNewUserRole');
     addUserNameForEmpresaDisplayEl = safeGetElementById('addUserNameForEmpresaDisplay');
-    manageUsersEmpresaScreenTitleEl = safeGetElementById('manageEmpresaUsersScreenTitle');
+    // Esta variável DOM 'manageUsersEmpresaScreenTitleEl' também foi corrigida para usar o ID HTML correspondente
+    manageUsersEmpresaScreenTitleEl = safeGetElementById('manageEmpresaUsersScreenTitle'); // O ID HTML é 'manageEmpresaUsersScreenTitle', o JS variável é 'manageUsersEmpresaScreenTitleEl'
     btnManageEmpresaUsersVoltarEl = safeGetElementById('btnManageEmpresaUsersVoltar');
     contextEmpresaNameForUserManageEl = safeGetElementById('contextEmpresaNameForUserManage');
+
     unidadesTitleEl = safeGetElementById('unidadesTitle');
     adminUnidadeEmpresaSelectContainerEl = safeGetElementById('adminUnidadeEmpresaSelectContainer');
     adminUnidadeEmpresaSelectEl = safeGetElementById('adminUnidadeEmpresaSelect');
@@ -85,6 +89,7 @@ export function initializeDOMSelectors() {
     btnAddUnidadeEl = safeGetElementById('btnAddUnidade');
     unidadesContextEl = safeGetElementById('unidadesContext');
     thUnidadeEmpresaScopeEl = safeGetElementById('thUnidadeEmpresaScope');
+
     categoriasTitleEl = safeGetElementById('categoriasTitle');
     adminCategoriaEmpresaSelectContainerEl = safeGetElementById('adminCategoriaEmpresaSelectContainer');
     adminCategoriaEmpresaSelectEl = safeGetElementById('adminCategoriaEmpresaSelect');
@@ -94,10 +99,13 @@ export function initializeDOMSelectors() {
     btnAddCategoriaEl = safeGetElementById('btnAddCategoria');
     categoriasContextEl = safeGetElementById('categoriasContext');
     thCategoriaEmpresaScopeEl = safeGetElementById('thCategoriaEmpresaScope');
+
+
     colaboradoresEmpresaNomeSpan = safeGetElementById('colaboradoresEmpresaNome');
     colaboradorNomeInput = safeGetElementById('colaboradorNome');
     colaboradoresTableBody = safeGetElementById('colaboradoresTableBody');
     colaboradorUnidadesMultiSelect = safeGetElementById('colaboradorUnidadesMultiSelect');
+
     currentPasswordInput = safeGetElementById('currentPasswordInput');
     newPasswordInput = safeGetElementById('newPasswordInput');
     confirmNewPasswordInput = safeGetElementById('confirmNewPasswordInput');
@@ -105,6 +113,7 @@ export function initializeDOMSelectors() {
     changePasswordBackButton = safeGetElementById('changePasswordBackButton');
     changingPasswordForUserDisplay = safeGetElementById('changingPasswordForUserDisplay');
     currentPasswordGroup = safeGetElementById('currentPasswordGroup');
+
     historicoEmpresaNomeSpan = safeGetElementById('historicoEmpresaNomeSpan');
     historicoContagensTableBody = safeGetElementById('historicoContagensTableBody');
     modalDetalhesContagem = safeGetElementById('modalDetalhesContagem');
@@ -117,6 +126,8 @@ export function initializeDOMSelectors() {
     colEmpresaHistorico = safeGetElementById('colEmpresaHistorico');
     historicoUnidadeFilterContainer = safeGetElementById('historicoUnidadeFilterContainer');
     historicoUnidadeFilter = safeGetElementById('historicoUnidadeFilter');
+
+
     productManagementBackButton = safeGetElementById('productManagementBackButton');
     productManagementTitle = safeGetElementById('productManagementTitle');
     productManagementContext = safeGetElementById('productManagementContext');
@@ -124,31 +135,33 @@ export function initializeDOMSelectors() {
     adminProdutoEmpresaSelect = safeGetElementById('adminProdutoEmpresaSelect');
     prodCodigoInput = safeGetElementById('prodCodigo');
     prodNomeInput = safeGetElementById('prodNome');
-    prodCategoriasMultiSelect = safeGetElementById('prodCategoriasMultiSelect');
-    prodUnidadesMultiSelect = safeGetElementById('prodUnidadesMultiSelect');
+    prodCategoriasMultiSelect = safeGetElementById('prodCategoriasMultiSelect'); // Changed from select to multi-select div
+    prodUnidadesMultiSelect = safeGetElementById('prodUnidadesMultiSelect');    
     productManagementTableBody = safeGetElementById('productManagementTableBody');
     xlsxFileInput = safeGetElementById('xlsxFile');
     btnAddProductEl = safeGetElementById('btnAddProduct');
     btnImportXLSXEl = safeGetElementById('btnImportXLSX');
+
     inventoryCountBackButton = safeGetElementById('inventoryCountBackButton');
     inventoryCountTitle = safeGetElementById('inventoryCountTitle');
     inventoryCountContext = safeGetElementById('inventoryCountContext');
     adminContagemEmpresaSelectorContainer = safeGetElementById('adminContagemEmpresaSelectorContainer');
     adminContagemEmpresaSelect = safeGetElementById('adminContagemEmpresaSelect');
     selectColaboradorContagem = safeGetElementById('selectColaboradorContagem');
-    selectUnidadeContagem = safeGetElementById('selectUnidadeContagem');
+    selectUnidadeContagem = safeGetElementById('selectUnidadeContagem'); // New
     pesquisaProdutoInput = safeGetElementById('pesquisaProduto');
     pesquisaCodigoInput = safeGetElementById('pesquisaCodigo');
     filtroCategoriaSelect = document.getElementById('filtroCategoria');
-    filtroUnidadeSelect = document.getElementById('filtroUnidade');
+    filtroUnidadeSelect = document.getElementById('filtroUnidade'); // New
     inventoryTableBody = safeGetElementById('inventoryTableBody');
     modalPreviewContagem = safeGetElementById('modalPreviewContagem');
     previewContagemTableContainer = safeGetElementById('previewContagemTableContainer');
     empresaDashboardTitle = safeGetElementById('empresaDashboardTitle');
     empresaUserNameSpan = safeGetElementById('empresaUserName');
     empresaUserRoleDisplaySpan = safeGetElementById('empresaUserRoleDisplay');
+
     btnGerarTXT = safeGetElementById('btnGerarTXT');
     btnGerarPDF = safeGetElementById('btnGerarPDF');
 
-    console.log("DOM Selectors initialization complete (from dom-selectors.js).");
+    console.log("DOM Selectors initialization complete (from dom-selectors.js). A chave 'manageUsersEmpresa' foi corrigida.");
 }
