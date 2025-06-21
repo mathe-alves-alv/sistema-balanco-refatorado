@@ -1,10 +1,10 @@
-// js/admin/users.js - VERSÃO COM SELECT STRING ABSOLUTAMENTE LIMPPA
+// js/admin/users.js - CÓDIGO DEFINITIVO E CORRIGIDO
 
 import { showLoader, hideLoader, showScreen } from '../ui-manager.js';
 import { 
     adminEmpresaUsersTableBody, manageUsersEmpresaMessage, adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, 
-    selectedEmpresaIdForUserManage,
-    manageUsersEmpresaScreenTitleEl, // CORREÇÃO JÁ APLICADA PREVIAMENTE
+    selectedEmpresaIdForUserManage, // Este é o input hidden que armazena o ID da empresa para o formulário
+    manageUsersEmpresaScreenTitleEl, // Referência corrigida para a variável DOM
     contextEmpresaNameForUserManageEl, addUserNameForEmpresaDisplayEl, currentPasswordGroup 
 } from '../dom-selectors.js';
 import { appState, setAdminSelectedEmpresaContextId, setIsEmpresaManagerManagingOwnUsers, setManagedUsersCache } from '../state.js'; 
@@ -39,6 +39,13 @@ export async function showManageUsersScreen_Admin(_supabaseClient, empresaId, em
             <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
             <option value="empresa_counter">Contador da Empresa (Apenas Contagem)</option>
         `;
+    }
+
+    // CORREÇÃO CRÍTICA: Define o valor do input hidden 'selectedEmpresaIdForUserManage'
+    if(selectedEmpresaIdForUserManage) {
+        selectedEmpresaIdForUserManage.value = empresaId;
+    } else {
+        console.error("CRÍTICO: selectedEmpresaIdForUserManage não encontrado ao definir valor. ID da empresa não será passado.");
     }
 
     await fetchAndRenderEmpresaUsers(_supabaseClient, empresaId);
@@ -76,6 +83,13 @@ export async function showManageUsersScreen_Empresa(_supabaseClient) {
             <option value="empresa_manager">Gerente da Empresa (Acesso Total)</option>
             <option value="empresa_counter">Contador da Empresa (Apenas Contagem)</option>
         `;
+    }
+
+    // CORREÇÃO CRÍTICA: Define o valor do input hidden 'selectedEmpresaIdForUserManage'
+    if(selectedEmpresaIdForUserManage) {
+        selectedEmpresaIdForUserManage.value = appState.currentUser.empresa_id;
+    } else {
+        console.error("CRÍTICO: selectedEmpresaIdForUserManage não encontrado ao definir valor. ID da empresa não será passado.");
     }
 
     await fetchAndRenderEmpresaUsers(_supabaseClient, appState.currentUser.empresa_id);
@@ -198,10 +212,13 @@ export async function handleCreateEmpresaUser(_supabaseClient) {
         manageUsersEmpresaMessage.textContent = '';
     }
 
-    const empresaId = selectedEmpresaIdForUserManage.value;
+    // AQUI: Lê o ID da empresa do input hidden
+    const empresaId = selectedEmpresaIdForUserManage.value; 
     const empresaNome = contextEmpresaNameForUserManageEl.textContent || 'Empresa Desconhecida';
 
+    // A validação agora inclui a verificação se o empresaId está presente
     if (!adminEmpresaNewUserEmailEl || !adminEmpresaNewUserFullNameEl || !adminEmpresaNewUserRoleEl || !empresaId) {
+        // Este alert será disparado se empresaId for vazio
         alert("Erro de interface ou ID da empresa faltando. Recarregue a página.");
         return;
     }
