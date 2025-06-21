@@ -1,167 +1,35 @@
 // js/dom-selectors.js
 
-// Variáveis para armazenar as referências dos elementos DOM
-export let mainContainer, screens = {}, loadingIndicator, loginEmailInput, loginPasswordInput, loginErrorMessage;
-export let adminMasterNameDisplay, adminNomeEmpresaInput, adminEmpresasTableBody, adminEmpresasTitleEl;
-export let manageUsersEmpresaSection, manageUsersEmpresaTitleEl, selectedEmpresaIdForUserManage;
-export let adminEmpresaUsersTableBody, manageUsersEmpresaMessage;
-export let adminEmpresaNewUserEmailEl, adminEmpresaNewUserFullNameEl, adminEmpresaNewUserRoleEl, addUserNameForEmpresaDisplayEl;
-export let manageUsersEmpresaScreenTitleEl, btnManageEmpresaUsersVoltarEl, contextEmpresaNameForUserManageEl;
-export let unidadesTitleEl, adminUnidadeEmpresaSelectContainerEl, adminUnidadeEmpresaSelectEl;
-export let nomeUnidadeInputEl, unidadesTableBodyEl, btnUnidadesVoltarEl, btnAddUnidadeEl, unidadesContextEl;
-export let thUnidadeEmpresaScopeEl;
-export let categoriasTitleEl, adminCategoriaEmpresaSelectContainerEl, adminCategoriaEmpresaSelectEl;
-export let nomeCategoriaInputEl, categoriasTableBodyEl, btnCategoriasVoltarEl, btnAddCategoriaEl, categoriasContextEl;
-export let thCategoriaEmpresaScopeEl;
-export let colaboradoresEmpresaNomeSpan, colaboradorNomeInput, colaboradoresTableBody, colaboradorUnidadesMultiSelect;
-export let currentPasswordInput, newPasswordInput, confirmNewPasswordInput, changePasswordMessage;
-export let changePasswordBackButton, changingPasswordForUserDisplay, currentPasswordGroup;
-export let historicoEmpresaNomeSpan, historicoContagensTableBody, modalDetalhesContagem, detalhesContagemConteudo;
-export let adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico;
-export let historicoUnidadeFilterContainer, historicoUnidadeFilter;
-export let productManagementBackButton, productManagementTitle, productManagementContext;
-export let adminProdutoEmpresaSelectorContainer, adminProdutoEmpresaSelect, prodCodigoInput, prodNomeInput;
-export let prodCategoriasMultiSelect, prodUnidadesMultiSelect, productManagementTableBody, xlsxFileInput, btnAddProductEl, btnImportXLSXEl;
-export let inventoryCountBackButton, inventoryCountTitle, inventoryCountContext, adminContagemEmpresaSelectorContainer;
-export let adminContagemEmpresaSelect, selectColaboradorContagem, selectUnidadeContagem, pesquisaProdutoInput, pesquisaCodigoInput;
-export let filtroCategoriaSelect, filtroUnidadeSelect, inventoryTableBody, modalPreviewContagem, previewContagemTableContainer;
-export let empresaDashboardTitle, empresaUserNameSpan, empresaUserRoleDisplaySpan;
-export let btnGerarTXT, btnGerarPDF;
+// -- Indicadores Globais --
+export const loadingIndicator = document.getElementById('loadingIndicator');
+export const toastContainer = document.body; // Supondo que o toast será adicionado ao body
 
-export function initializeDOMSelectors() {
-    console.log("initializeDOMSelectors v3.1 called (from dom-selectors.js). A chave 'manageUsersEmpresa' foi corrigida.");
-    mainContainer = document.getElementById('mainContainer');
-    screens = {
-        login: document.getElementById('screenLogin'),
-        adminMasterDashboard: document.getElementById('screenAdminMasterDashboard'),
-        empresaDashboard: document.getElementById('screenEmpresaDashboard'),
-        adminEmpresas: document.getElementById('screenAdminEmpresas'),
-        // AQUI ESTÁ A CORREÇÃO CRÍTICA: A chave agora é 'manageUsersEmpresa'
-        // para corresponder ao que é passado para showScreen em users.js
-        manageUsersEmpresa: document.getElementById('screenManageEmpresaUsers'), 
-        unidades: document.getElementById('screenUnidades'),
-        adminCategorias: document.getElementById('screenAdminCategorias'),
-        empresaColaboradores: document.getElementById('screenEmpresaColaboradores'),
-        changePassword: document.getElementById('screenChangePassword'),
-        historicoContagens: document.getElementById('screenHistoricoContagens'),
-        productManagement: document.getElementById('screenProductManagement'),
-        inventoryCount: document.getElementById('screenInventoryCount')
-    };
-    loadingIndicator = document.getElementById('loadingIndicator');
-    loginEmailInput = document.getElementById('loginEmail');
-    loginPasswordInput = document.getElementById('loginPassword');
-    loginErrorMessage = document.getElementById('loginErrorMessage');
+// -- Telas Principais (para o ui-manager) --
+// Seleciona todas as divs que têm a classe 'screen'
+export const allScreens = document.querySelectorAll('.screen'); 
 
-    function safeGetElementById(id, context = document) {
-        const el = context.getElementById(id);
-        if (!el) console.warn(`Element with ID '${id}' NOT found in initializeDOMSelectors.`);
-        return el;
-    }
+// -- Tela de Login --
+export const loginForm = document.getElementById('login-form');
+// Note que não selecionamos os inputs ou botão individualmente aqui, pois o form nos dá acesso a eles.
 
-    Object.keys(screens).forEach(key => {
-        if (!screens[key]) console.warn(`Screen element screens.${key} (Reference ID: ${key}) NOT found in initial assignment.`);
-    });
+// -- Botões Gerais / Navegação --
+export const logoutButton = document.getElementById('btnLogoutAdmin'); // Assumindo um logout para todos
 
-    adminMasterNameDisplay = safeGetElementById('adminMasterNameDisplay');
-    adminNomeEmpresaInput = safeGetElementById('adminNomeEmpresa');
-    adminEmpresasTableBody = safeGetElementById('adminEmpresasTableBody');
-    adminEmpresasTitleEl = safeGetElementById('adminEmpresasTitle');
-    manageUsersEmpresaSection = safeGetElementById('manageUsersEmpresaSection');
-    manageUsersEmpresaTitleEl = safeGetElementById('manageUsersEmpresaTitle');
-    selectedEmpresaIdForUserManage = safeGetElementById('selectedEmpresaIdForUserManage');
-    adminEmpresaUsersTableBody = safeGetElementById('adminEmpresaUsersTableBody');
-    manageUsersEmpresaMessage = safeGetElementById('manageUsersEmpresaMessage');
-    adminEmpresaNewUserEmailEl = safeGetElementById('adminEmpresaNewUserEmail');
-    adminEmpresaNewUserFullNameEl = safeGetElementById('adminEmpresaNewUserFullName');
-    adminEmpresaNewUserRoleEl = safeGetElementById('adminEmpresaNewUserRole');
-    addUserNameForEmpresaDisplayEl = safeGetElementById('addUserNameForEmpresaDisplay');
-    // Esta variável DOM 'manageUsersEmpresaScreenTitleEl' também foi corrigida para usar o ID HTML correspondente
-    manageUsersEmpresaScreenTitleEl = safeGetElementById('manageEmpresaUsersScreenTitle'); // O ID HTML é 'manageEmpresaUsersScreenTitle', o JS variável é 'manageUsersEmpresaScreenTitleEl'
-    btnManageEmpresaUsersVoltarEl = safeGetElementById('btnManageEmpresaUsersVoltar');
-    contextEmpresaNameForUserManageEl = safeGetElementById('contextEmpresaNameForUserManage');
+// -- Gerenciamento de Empresas e Usuários (Admin) --
+export const manageUsersScreen = document.getElementById('screenManageEmpresaUsers');
+export const manageUsersList = document.getElementById('adminEmpresaUsersTableBody');
+export const manageEmpresaUsersScreenTitleEl = document.getElementById('manageEmpresaUsersScreenTitle');
 
-    unidadesTitleEl = safeGetElementById('unidadesTitle');
-    adminUnidadeEmpresaSelectContainerEl = safeGetElementById('adminUnidadeEmpresaSelectContainer');
-    adminUnidadeEmpresaSelectEl = safeGetElementById('adminUnidadeEmpresaSelect');
-    nomeUnidadeInputEl = safeGetElementById('nomeUnidadeInput');
-    unidadesTableBodyEl = safeGetElementById('unidadesTableBody');
-    btnUnidadesVoltarEl = safeGetElementById('btnUnidadesVoltar');
-    btnAddUnidadeEl = safeGetElementById('btnAddUnidade');
-    unidadesContextEl = safeGetElementById('unidadesContext');
-    thUnidadeEmpresaScopeEl = safeGetElementById('thUnidadeEmpresaScope');
+// -- Formulário de Criação de Usuário --
+export const createUserForm = document.getElementById('create-user-form');
 
-    categoriasTitleEl = safeGetElementById('categoriasTitle');
-    adminCategoriaEmpresaSelectContainerEl = safeGetElementById('adminCategoriaEmpresaSelectContainer');
-    adminCategoriaEmpresaSelectEl = safeGetElementById('adminCategoriaEmpresaSelect');
-    nomeCategoriaInputEl = safeGetElementById('nomeCategoriaInput');
-    categoriasTableBodyEl = safeGetElementById('categoriasTableBody');
-    btnCategoriasVoltarEl = safeGetElementById('btnCategoriasVoltar');
-    btnAddCategoriaEl = safeGetElementById('btnAddCategoria');
-    categoriasContextEl = safeGetElementById('categoriasContext');
-    thCategoriaEmpresaScopeEl = safeGetElementById('thCategoriaEmpresaScope');
+// -- Tela e Formulário de Alteração de Senha --
+export const changePasswordScreen = document.getElementById('change-password-screen');
+export const changePasswordForm = document.getElementById('change-password-form');
+export const changingPasswordForUserDisplay = document.getElementById('changing-password-for-user-display');
+export const newPasswordInput = document.getElementById('new-password-input');
 
-
-    colaboradoresEmpresaNomeSpan = safeGetElementById('colaboradoresEmpresaNome');
-    colaboradorNomeInput = safeGetElementById('colaboradorNome');
-    colaboradoresTableBody = safeGetElementById('colaboradoresTableBody');
-    colaboradorUnidadesMultiSelect = safeGetElementById('colaboradorUnidadesMultiSelect');
-
-    currentPasswordInput = safeGetElementById('currentPasswordInput');
-    newPasswordInput = safeGetElementById('newPasswordInput');
-    confirmNewPasswordInput = safeGetElementById('confirmNewPasswordInput');
-    changePasswordMessage = safeGetElementById('changePasswordMessage');
-    changePasswordBackButton = safeGetElementById('changePasswordBackButton');
-    changingPasswordForUserDisplay = safeGetElementById('changingPasswordForUserDisplay');
-    currentPasswordGroup = safeGetElementById('currentPasswordGroup');
-
-    historicoEmpresaNomeSpan = safeGetElementById('historicoEmpresaNomeSpan');
-    historicoContagensTableBody = safeGetElementById('historicoContagensTableBody');
-    modalDetalhesContagem = safeGetElementById('modalDetalhesContagem');
-    detalhesContagemConteudo = safeGetElementById('detalhesContagemConteudo');
-    adminHistoricoEmpresaSelectorContainer = safeGetElementById('adminHistoricoEmpresaSelectorContainer');
-    adminHistoricoEmpresaSelect = safeGetElementById('adminHistoricoEmpresaSelect');
-    historicoBackButton = safeGetElementById('historicoBackButton');
-    historicoTitle = safeGetElementById('historicoTitle');
-    historicoContext = safeGetElementById('historicoContext');
-    colEmpresaHistorico = safeGetElementById('colEmpresaHistorico');
-    historicoUnidadeFilterContainer = safeGetElementById('historicoUnidadeFilterContainer');
-    historicoUnidadeFilter = safeGetElementById('historicoUnidadeFilter');
-
-
-    productManagementBackButton = safeGetElementById('productManagementBackButton');
-    productManagementTitle = safeGetElementById('productManagementTitle');
-    productManagementContext = safeGetElementById('productManagementContext');
-    adminProdutoEmpresaSelectorContainer = safeGetElementById('adminProdutoEmpresaSelectorContainer');
-    adminProdutoEmpresaSelect = safeGetElementById('adminProdutoEmpresaSelect');
-    prodCodigoInput = safeGetElementById('prodCodigo');
-    prodNomeInput = safeGetElementById('prodNome');
-    prodCategoriasMultiSelect = safeGetElementById('prodCategoriasMultiSelect'); // Changed from select to multi-select div
-    prodUnidadesMultiSelect = safeGetElementById('prodUnidadesMultiSelect');    
-    productManagementTableBody = safeGetElementById('productManagementTableBody');
-    xlsxFileInput = safeGetElementById('xlsxFile');
-    btnAddProductEl = safeGetElementById('btnAddProduct');
-    btnImportXLSXEl = safeGetElementById('btnImportXLSX');
-
-    inventoryCountBackButton = safeGetElementById('inventoryCountBackButton');
-    inventoryCountTitle = safeGetElementById('inventoryCountTitle');
-    inventoryCountContext = safeGetElementById('inventoryCountContext');
-    adminContagemEmpresaSelectorContainer = safeGetElementById('adminContagemEmpresaSelectorContainer');
-    adminContagemEmpresaSelect = safeGetElementById('adminContagemEmpresaSelect');
-    selectColaboradorContagem = safeGetElementById('selectColaboradorContagem');
-    selectUnidadeContagem = safeGetElementById('selectUnidadeContagem'); // New
-    pesquisaProdutoInput = safeGetElementById('pesquisaProduto');
-    pesquisaCodigoInput = safeGetElementById('pesquisaCodigo');
-    filtroCategoriaSelect = document.getElementById('filtroCategoria');
-    filtroUnidadeSelect = document.getElementById('filtroUnidade'); // New
-    inventoryTableBody = safeGetElementById('inventoryTableBody');
-    modalPreviewContagem = safeGetElementById('modalPreviewContagem');
-    previewContagemTableContainer = safeGetElementById('previewContagemTableContainer');
-    empresaDashboardTitle = safeGetElementById('empresaDashboardTitle');
-    empresaUserNameSpan = safeGetElementById('empresaUserName');
-    empresaUserRoleDisplaySpan = safeGetElementById('empresaUserRoleDisplay');
-
-    btnGerarTXT = safeGetElementById('btnGerarTXT');
-    btnGerarPDF = safeGetElementById('btnGerarPDF');
-
-    console.log("DOM Selectors initialization complete (from dom-selectors.js). A chave 'manageUsersEmpresa' foi corrigida.");
-}
+// Você pode continuar adicionando outros seletores que seu sistema usa aqui...
+// Exemplo:
+// export const productManagementScreen = document.getElementById('screenProductManagement');
+// export const productManagementTableBody = document.getElementById('productManagementTableBody');
