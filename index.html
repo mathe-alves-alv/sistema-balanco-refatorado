@@ -3,339 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Balance System - v3.1 (Unidades & Multi-Associações + RPC Produtos)</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
+    <title>Sistema de Balanço de Estoque</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <div id="toast-container"></div>
     <div id="mainContainer" class="container">
         <div id="loadingIndicator" class="loader" style="display:none;"></div>
 
+        <!-- Tela de Login -->
         <div id="screenLogin" class="screen active">
             <h1>Login no Sistema de Balanço</h1>
             <form id="login-form" class="login-form card card-body">
-                <div class="form-group"><label for="loginEmail">Email:</label><input type="email" id="loginEmail" placeholder="seuemail@exemplo.com" autocomplete="email" required></div>
-                <div class="form-group"><label for="loginPassword">Senha:</label><input type="password" id="loginPassword" placeholder="Sua senha" autocomplete="current-password" required></div>
-                <button type="submit" class="btn btn-primary" id="loginButton">Entrar</button>
+                <div class="form-group"><label for="loginEmail">Email:</label><input type="email" id="loginEmail" name="email" required></div>
+                <div class="form-group"><label for="loginPassword">Senha:</label><input type="password" id="loginPassword" name="password" required></div>
+                <button type="submit" class="btn btn-primary">Entrar</button>
                 <div id="loginErrorMessage"></div>
             </form>
         </div>
 
-        <div id="screenAdminMasterDashboard" class="screen">
-            <h2>Painel Admin Master</h2>
-            <p style="text-align: center;">Bem-vindo, <span id="adminMasterNameDisplay">Admin Master</span>!</p>
-            <div class="dashboard-options">
-                <button class="btn btn-primary" id="btnAdminGerenciarEmpresas">Gerenciar Empresas & Seus Usuários</button>
-                <button class="btn btn-primary" id="btnAdminGerenciarUnidades">Gerenciar Unidades (Admin)</button>
-                <button class="btn btn-primary" id="btnAdminGerenciarCategorias">Gerenciar Categorias (Admin)</button>
-                <button class="btn btn-primary" id="btnAdminGerenciarProdutos">Gerenciar Produtos (Admin)</button>
-                <button class="btn btn-primary" id="btnAdminContagemEstoque">Contagem de Estoque (Admin)</button>
-                <button class="btn btn-info" id="btnAdminHistoricoContagens">Histórico de Contagens (Admin)</button>
-                <button class="btn btn-secondary" id="btnLogoutAdmin">Logout</button>
+        <!-- Painel de Administração (NOVO VISUAL CORRIGIDO) -->
+        <div id="screenAdminDashboard" class="screen">
+            <h2>Painel de Administração</h2>
+            <p style="text-align: center; margin-bottom: 2rem;">Bem-vindo, <span id="adminNameDisplay"></span>!</p>
+            
+            <div class="dashboard-grid">
+                <button class="dashboard-card" id="btnGoToManageUsers">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <span>Gerenciar Usuários</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToManageUnidades">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 9.5 21 3m-5 3.5-2-2"/><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M9 21v-8a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v8"/><path d="M12 3V2.5A1.5 1.5 0 0 1 13.5 1h1A1.5 1.5 0 0 1 16 2.5V3"/></svg>
+                    </div>
+                    <span>Gerenciar Unidades</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToManageCategorias">
+                    <div class="dashboard-card-icon">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432l-8.704-8.704Z"/><path d="M6 9h.01"/></svg>
+                    </div>
+                    <span>Gerenciar Categorias</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToManageProducts">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    </div>
+                    <span>Gerenciar Produtos</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToManageSetores">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9.5 9 5 5"/><path d="m14.5 9-5 5"/></svg>
+                    </div>
+                    <span>Gerenciar Setores</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToManageColaboradores">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5.1 5.1 0 0 0-4.17 0"/></svg>
+                    </div>
+                    <span>Gerenciar Colaboradores</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToInventoryCount">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H8.6c-.4 0-.8.2-1 .5l-4 4c-.3.3-.5.7-.5 1V21c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7.4c0-.4-.2-.8-.5-1l-4-4c-.2-.3-.6-.5-1-.5Z"/><path d="M15 2v5h5"/><path d="M9 12h6"/><path d="M9 16h6"/><path d="M9 20h2"/></svg>
+                    </div>
+                    <span>Fazer Contagem</span>
+                </button>
+                <button class="dashboard-card" id="btnGoToHistoricoContagens">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                    </div>
+                    <span>Histórico de Contagens</span>
+                </button>
+                <button class="dashboard-card dashboard-card-secondary" id="btnLogout">
+                    <div class="dashboard-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    </div>
+                    <span>Sair</span>
+                </button>
             </div>
         </div>
 
-        <div id="screenEmpresaDashboard" class="screen">
-            <h2 id="empresaDashboardTitle">Painel da Empresa</h2>
-            <p style="text-align: center;">Logado como: <span id="empresaUserName"></span> (<span id="empresaUserRoleDisplay"></span>)</p>
-            <div class="dashboard-options">
-                <button class="btn btn-warning" id="btnEmpresaGerenciarUsuarios" data-role-context="empresa_manager_self">Gerenciar Usuários da Empresa</button>
-                <button class="btn btn-primary" id="btnEmpresaGerenciarUnidades" data-role-req="empresa_manager">Gerenciar Unidades</button>
-                <button class="btn btn-primary" id="btnEmpresaGerenciarColaboradores" data-role-req="empresa_manager">Gerenciar Colaboradores</button>
-                <button class="btn btn-primary" id="btnEmpresaGerenciarCategorias" data-role-req="empresa_manager">Gerenciar Categorias da Empresa</button>
-                <button class="btn btn-primary" id="btnEmpresaGerenciarProdutos" data-role-req="empresa_manager">Gerenciar Produtos da Empresa</button>
-                <button class="btn btn-primary" id="btnEmpresaContagemEstoque">Iniciar Contagem da Empresa</button>
-                <button class="btn btn-info" id="btnEmpresaHistoricoContagens" data-role-req="empresa_manager">Ver Histórico de Contagens</button>
-                <button class="btn btn-info" id="btnEmpresaAlterarSenha" data-role-req="empresa_manager">Alterar Senha Pessoal</button>
-                <button class="btn btn-secondary" id="btnLogoutEmpresa">Logout</button>
-            </div>
-        </div>
-
-        <div id="screenAdminEmpresas" class="screen">
-            <button class="btn btn-secondary back-button" id="btnAdminEmpresasVoltar">&larr; Painel Admin</button>
-            <h2 id="adminEmpresasTitle">Gerenciar Empresas e Seus Usuários</h2>
-            <div class="card"><div class="card-header"><h3>Adicionar Nova Empresa</h3></div><div class="card-body"><div class="form-group"><label for="adminNomeEmpresa">Nome da Empresa:</label><input type="text" id="adminNomeEmpresa" placeholder="Nome da nova empresa"></div><button class="btn btn-success" id="btnAdminAddEmpresa">Adicionar Empresa</button></div></div>
-            <div class="card"><div class="card-header"><h3>Empresas Cadastradas</h3></div><div class="card-body"><table id="adminEmpresasTable"><thead><tr><th>Nome da Empresa</th><th>Criação</th><th style="min-width: 280px;">Ações da Empresa</th></tr></thead><tbody id="adminEmpresasTableBody"></tbody></table></div></div>
-        </div>
-
-        <div id="screenManageEmpresaUsers" class="screen">
-            <button class="btn btn-secondary back-button" id="btnManageEmpresaUsersVoltar">&larr; Voltar</button>
-            <h2 id="manageEmpresaUsersScreenTitle">Gerenciar Usuários da Empresa</h2>
-            <div id="manageUsersEmpresaSection" class="card" style="margin-top: 1rem;">
-                <div class="card-header"><h3 id="manageUsersEmpresaTitle">Gerenciar Usuários para Empresa: <span id="contextEmpresaNameForUserManage"></span></h3></div>
+        <!-- OUTRAS TELAS (CÓDIGO COMPLETO) -->
+        <div id="screenManageUsers" class="screen">
+            <button class="btn btn-secondary back-button" id="btnUsersBack">&larr; Painel</button>
+            <h2>Gerenciar Usuários</h2>
+            <div class="card">
+                <div class="card-header"><h3>Adicionar Novo Usuário</h3></div>
                 <div class="card-body">
-                    <input type="hidden" id="selectedEmpresaIdForUserManage">
-                    <div id="password-reveal-section" class="generated-password-display" style="display:none; margin-bottom:1.5rem;">
-                        Senha gerada: <strong id="generated-password-display"></strong>
-                    </div>
-                    <h4>Usuários Existentes</h4>
-                    <div style="max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem;">
-                        <table id="adminEmpresaUsersTable" class="table table-sm">
-                            <thead><tr><th>Email</th><th>Função</th><th>Ações</th></tr></thead>
-                            <tbody id="adminEmpresaUsersTableBody"></tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <h4>Adicionar Novo Usuário para <strong id="addUserNameForEmpresaDisplay"></strong></h4>
                     <form id="create-user-form">
-                        <input type="hidden" id="empresaIdForNewUser" name="empresa">
-
+                        <div class="form-group"><label for="newUserEmail">Email:</label><input type="email" id="newUserEmail" name="email" required></div>
                         <div class="form-group">
-                            <label for="adminEmpresaNewUserEmail">Email do Novo Usuário:</label>
-                            <input type="email" id="adminEmpresaNewUserEmail" name="email" placeholder="novo.usuario@email.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="adminEmpresaNewUserFullName">Nome de Referência do Usuário (Opcional):</label>
-                            <input type="text" id="adminEmpresaNewUserFullName" name="fullName" placeholder="Ex: João Silva Contador">
-                        </div>
-                        <div class="form-group">
-                            <label for="adminEmpresaNewUserRole">Função do Novo Usuário:</label>
-                            <select id="adminEmpresaNewUserRole" name="role">
-                                <option value="gerente_empresa">Gerente da Empresa (Acesso Total)</option>
-                                <option value="contador_empresa">Contador da Empresa (Apenas Contagem)</option>
+                            <label for="newUserRole">Função:</label>
+                            <select id="newUserRole" name="role">
+                                <option value="admin">Admin</option>
+                                <option value="contador">Contador</option>
+                                <option value="gerente">Gerente</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-success" id="btnExecuteCreateNewEmpresaUser">Criar Novo Usuário e Gerar Senha</button>
+                        <button type="submit" class="btn btn-success">Criar Usuário e Gerar Senha</button>
                     </form>
+                    <div id="password-reveal-section" style="display:none;" class="generated-password-display">
+                        Senha gerada: <strong id="generated-password-display"></strong>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Usuários Cadastrados</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="usersTable">
+                            <thead><tr><th>Email</th><th>Função</th><th>Ações</th></tr></thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="screenUnidades" class="screen">
-            <button class="btn btn-secondary back-button" id="btnUnidadesVoltar"> &larr; Voltar ao Painel</button>
-            <h2 id="unidadesTitle">Gerenciar Unidades</h2>
+            <button class="btn btn-secondary back-button" id="btnUnidadesBack">&larr; Painel</button>
+            <h2>Gerenciar Unidades</h2>
             <div class="card">
                 <div class="card-header"><h3>Adicionar Nova Unidade</h3></div>
                 <div class="card-body">
-                    <div class="form-group" id="adminUnidadeEmpresaSelectContainer">
-                        <label for="adminUnidadeEmpresaSelect">Gerenciar Unidades Para Empresa:</label>
-                        <select id="adminUnidadeEmpresaSelect">
-                            <option value="">-- Selecione uma Empresa --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nomeUnidadeInput">Nome da Nova Unidade:</label>
-                        <input type="text" id="nomeUnidadeInput" placeholder="Ex: Matriz, Depósito Central, Filial Norte">
-                    </div>
-                    <button class="btn btn-success" id="btnAddUnidade" disabled>Adicionar Unidade</button>
+                    <form id="add-unidade-form" class="form-inline-flex">
+                        <div class="form-group"><label for="nomeUnidadeInput">Nome da Unidade:</label><input type="text" id="nomeUnidadeInput" required></div>
+                        <button type="submit" class="btn btn-success">Adicionar</button>
+                    </form>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header"><h3>Unidades Cadastradas</h3></div>
                 <div class="card-body">
-                    <p id="unidadesContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-                    <table id="unidadesTable">
-                        <thead><tr><th>Nome da Unidade</th><th id="thUnidadeEmpresaScope">Empresa</th><th>Criação</th><th>Ações</th></tr></thead>
-                        <tbody id="unidadesTableBody"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table id="unidadesTable">
+                            <thead><tr><th>Nome</th><th>Criação</th><th>Ações</th></tr></thead>
+                            <tbody id="unidadesTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div id="screenAdminCategorias" class="screen">
-            <button class="btn btn-secondary back-button" id="btnCategoriasVoltar"> &larr; Voltar ao Painel</button>
-            <h2 id="categoriasTitle">Gerenciar Categorias</h2>
+        
+        <div id="screenCategorias" class="screen">
+            <button class="btn btn-secondary back-button" id="btnCategoriasBack">&larr; Painel</button>
+            <h2>Gerenciar Categorias</h2>
             <div class="card">
                 <div class="card-header"><h3>Adicionar Nova Categoria</h3></div>
                 <div class="card-body">
-                    <div class="form-group" id="adminCategoriaEmpresaSelectContainer">
-                        <label for="adminCategoriaEmpresaSelect">Gerenciar Categorias Para Empresa:</label>
-                        <select id="adminCategoriaEmpresaSelect">
-                            <option value="">-- Selecione uma Empresa --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nomeCategoriaInput">Nome da Nova Categoria:</label>
-                        <input type="text" id="nomeCategoriaInput" placeholder="Ex: Bolos, Salgados, Bebidas">
-                    </div>
-                    <button class="btn btn-success" id="btnAddCategoria" disabled>Adicionar Categoria</button>
+                    <form id="add-categoria-form" class="form-inline-flex">
+                        <div class="form-group"><label for="nomeCategoriaInput">Nome da Categoria:</label><input type="text" id="nomeCategoriaInput" required></div>
+                        <button type="submit" class="btn btn-success">Adicionar</button>
+                    </form>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header"><h3>Categorias Cadastradas</h3></div>
                 <div class="card-body">
-                    <p id="categoriasContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-                    <table id="categoriasTable">
-                        <thead><tr><th>Nome da Categoria</th><th id="thCategoriaEmpresaScope">Empresa</th><th>Criação</th><th>Ações</th></tr></thead>
-                        <tbody id="categoriasTableBody"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table id="categoriasTable">
+                            <thead><tr><th>Nome</th><th>Criação</th><th>Ações</th></tr></thead>
+                            <tbody id="categoriasTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenProductManagement" class="screen">
+            <button class="btn btn-secondary back-button" id="productManagementBackButton">&larr; Painel</button>
+            <h2 id="productManagementTitleEl">Gerenciar Produtos</h2>
+            <div class="card">
+                <div class="card-header"><h3>Adicionar Novo Produto</h3></div>
+                <div class="card-body">
+                    <form id="addProductForm">
+                        <div class="form-group"><label for="prodCodigoInput">Código:</label><input type="text" id="prodCodigoInput" required></div>
+                        <div class="form-group"><label for="prodNomeInput">Nome do Produto:</label><input type="text" id="prodNomeInput" required></div>
+                        <div class="form-group">
+                            <label>Categorias:</label>
+                            <div id="prodCategoriasMultiSelect" class="checkbox-container"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Unidades:</label>
+                            <div id="prodUnidadesMultiSelect" class="checkbox-container"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="btnAdicionarProduto">Adicionar Produto</button>
+                    </form>
+                    <p style="text-align: center; margin-top: 1rem;">Ou</p>
+                    <input type="file" id="importProductFileInput" accept=".xlsx" style="margin-bottom: 1rem;">
+                    <button class="btn btn-secondary" id="btnImportProducts">Importar Produtos do XLSX</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Produtos Cadastrados</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="productManagementTable">
+                            <thead><tr><th>Código</th><th>Nome</th><th>Categorias</th><th>Unidades</th><th>Ações</th></tr></thead>
+                            <tbody id="productManagementTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenSetores" class="screen">
+            <button class="btn btn-secondary back-button" id="btnSetoresBack">&larr; Painel</button>
+            <h2>Gerenciar Setores</h2>
+            <div class="card">
+                <div class="card-header"><h3>Adicionar Novo Setor</h3></div>
+                <div class="card-body">
+                    <form id="add-setor-form" class="form-inline-flex">
+                        <div class="form-group">
+                            <label for="nomeSetorInput">Nome do Setor:</label>
+                            <input type="text" id="nomeSetorInput" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="selectUnidadeSetor">Unidade Vinculada:</label>
+                            <select id="selectUnidadeSetor" required>
+                                <option value="">-- Selecione a Unidade --</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Setores Cadastrados</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="setoresTable">
+                            <thead><tr><th>Nome</th><th>Unidade</th><th>Criação</th><th>Ações</th></tr></thead>
+                            <tbody id="setoresTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="screenEmpresaColaboradores" class="screen">
-            <button class="btn btn-secondary back-button" id="colaboradoresBackButton">&larr; Voltar</button>
-            <h2>Gerenciar Colaboradores (<span id="colaboradoresEmpresaNome"></span>)</h2>
+            <button class="btn btn-secondary back-button" id="colaboradoresBackButton">&larr; Painel</button>
+            <h2>Gerenciar Colaboradores</h2>
             <div class="card">
                 <div class="card-header"><h3>Adicionar Novo Colaborador</h3></div>
                 <div class="card-body">
-                    <div class="form-inline-flex">
+                    <form id="add-colaborador-form">
+                        <div class="form-group"><label for="colaboradorNomeInput">Nome do Colaborador:</label><input type="text" id="colaboradorNomeInput" required></div>
                         <div class="form-group">
-                            <label for="colaboradorNome">Nome do Colaborador:</label>
-                            <input type="text" id="colaboradorNome" placeholder="Nome completo">
+                            <label>Unidades Associadas:</label>
+                            <div id="colaboradorUnidadesMultiSelect" class="checkbox-container"></div>
                         </div>
-                        <button class="btn btn-success" id="btnAddColaborador">Adicionar</button>
-                    </div>
-                    <div class="form-group">
-                        <label>Vincular a Unidades:</label>
-                        <div id="colaboradorUnidadesMultiSelect" class="multi-select-container">
-                            <span class="empty-message">Nenhuma unidade disponível ou carregando...</span>
-                        </div>
+                        <button type="submit" class="btn btn-success">Adicionar Colaborador</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Colaboradores Cadastrados</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="colaboradoresTable">
+                            <thead><tr><th>Nome</th><th>Unidades</th><th>Ativo</th><th>Criação</th><th>Ações</th></tr></thead>
+                            <tbody id="colaboradoresTableBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-            <div class="card"><div class="card-header"><h3>Colaboradores Cadastrados</h3></div><div class="card-body"><table id="colaboradoresTable"><thead><tr><th>Nome</th><th>Unidades</th><th>Ativo</th><th>Criação</th><th style="min-width: 220px;">Ações</th></tr></thead><tbody id="colaboradoresTableBody"></tbody></table></div></div>
         </div>
-
-        <div id="change-password-screen" class="screen" style="display: none;">
-            <button class="btn btn-secondary back-button" id="changePasswordBackButton">&larr; Voltar</button>
-            <h2>Alterar Senha de Usuário</h2>
-            <form id="change-password-form" class="password-change-form card card-body">
-                <p>Alterando senha para o login: <strong id="changing-password-for-user-display"></strong></p>
-                <div class="form-group">
-                    <label for="new-password-input">Nova Senha (mín. 6 caracteres):</label>
-                    <input type="password" id="new-password-input" placeholder="Digite a nova senha" required minlength="6">
+        
+        <div id="screenInventoryCount" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <button class="btn btn-secondary back-button" id="inventoryCountBackButton">&larr; Painel</button>
+                <button class="btn btn-danger" id="btnLogoutContador">Sair do Sistema</button>
+            </div>
+            <h2 id="inventoryCountTitleEl">Balanço de Estoque</h2>
+            <div class="card">
+                <div class="card-header"><h3>Informações da Contagem</h3></div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="selectColaboradorContagem">Contador:</label>
+                        <select id="selectColaboradorContagem"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectSetorContagem">Setor:</label>
+                        <select id="selectSetorContagem">
+                            <option value="">-- Selecione um Setor --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selectUnidadeContagem">Unidade da Contagem:</label>
+                        <select id="selectUnidadeContagem" disabled>
+                            <option value="">-- Unidade (auto-preenchida) --</option>
+                        </select>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" id="btnSalvarNovaSenha">Salvar Nova Senha</button>
-                <div id="changePasswordMessage" style="margin-top:1rem; text-align:center;"></div>
-            </form>
+            </div>
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header"><h3>Produtos para Contagem</h3></div>
+                <div class="card-body">
+                    <div class="form-inline-flex" style="margin-bottom: 1rem;">
+                        <div class="form-group" style="flex:1;"><label for="pesquisaProdutoInput">Pesquisar Produto:</label><input type="text" id="pesquisaProdutoInput" placeholder="Nome do produto"></div>
+                        <div class="form-group" style="flex:1;"><label for="pesquisaCodigoInput">Pesquisar Código:</label><input type="text" id="pesquisaCodigoInput" placeholder="Código do produto"></div>
+                    </div>
+                    <div class="form-inline-flex" style="margin-bottom: 1rem;">
+                        <div class="form-group" style="flex:1;"><label for="filtroCategoriaSelect">Filtrar por Categoria:</label><select id="filtroCategoriaSelect"></select></div>
+                        <div class="form-group" style="flex:1;"><label for="filtroUnidadeSelect">Filtrar por Unidade:</label><select id="filtroUnidadeSelect"></select></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="inventoryTable">
+                            <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead>
+                            <tbody id="inventoryTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button class="btn btn-success" id="btnFinalizarContagem" disabled><i class="fas fa-check"></i> Finalizar e Salvar</button>
+                        <button class="btn btn-info" id="btnVerResumo"><i class="fas fa-list"></i> Ver Resumo</button>
+                        <button class="btn btn-primary" id="btnGerarPDFAvulso"><i class="fas fa-file-pdf"></i> Gerar PDF Avulso</button>
+                        <button class="btn btn-danger" id="btnLimparContagem"><i class="fas fa-trash"></i> Limpar Contagem</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="screenHistoricoContagens" class="screen">
-            <button class="btn btn-secondary back-button" id="historicoBackButton">&larr; Voltar ao Painel</button>
-            <h2 id="historicoTitle">Histórico de Contagens (<span id="historicoEmpresaNomeSpan"></span>)</h2>
-            <div id="adminHistoricoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
-                <label for="adminHistoricoEmpresaSelect">Ver Histórico Para Empresa:</label>
-                <select id="adminHistoricoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
-            </div>
-            <div id="historicoUnidadeFilterContainer" class="admin-context-selector">
-                <label for="historicoUnidadeFilter">Filtrar por Unidade:</label>
-                <select id="historicoUnidadeFilter"><option value="">Todas as Unidades</option></select>
-            </div>
-            <p id="historicoContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-            <div class="card"><div class="card-header"><h3>Registros de Contagem</h3></div><div class="card-body" style="padding:0;"><table id="historicoContagensTable"><thead><tr><th id="colEmpresaHistorico" style="display:none;">Empresa</th><th>Data</th><th>Colaborador</th><th>Unidade</th><th>Itens Contados</th><th>Ações</th></tr></thead><tbody id="historicoContagensTableBody"></tbody></table></div></div>
-        </div>
-
-        <div id="screenProductManagement" class="screen">
-            <button class="btn btn-secondary back-button" id="productManagementBackButton">&larr; Voltar</button>
-            <h2 id="productManagementTitle">Gerenciar Produtos</h2>
-            <div id="adminProdutoEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
-                <label for="adminProdutoEmpresaSelect">Gerenciar Produtos Para Empresa:</label>
-                <select id="adminProdutoEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
-            </div>
-            <p id="productManagementContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-            
+            <button class="btn btn-secondary back-button" id="historicoBackButton">&larr; Painel</button>
+            <h2 id="historicoTitleEl">Histórico de Contagens</h2>
+            <div id="adminHistoricoEmpresaSelectorContainer" style="display:none;"></div>
             <div class="card">
-                <div class="card-header"><h3>Adicionar Novo Produto</h3></div>
+                <div class="card-header"><h3>Filtros</h3></div>
                 <div class="card-body">
-                    <div class="product-management-form-fields">
-                        <div class="form-group"><label for="prodCodigo">Código:</label><input type="text" id="prodCodigo"></div>
-                        <div class="form-group"><label for="prodNome">Produto:</label><input type="text" id="prodNome"></div>
-                        <div class="form-group">
-                            <label>Categorias:</label>
-                            <div id="prodCategoriasMultiSelect" class="multi-select-container">
-                                <span class="empty-message">Nenhuma categoria disponível ou carregando...</span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Unidades:</label>
-                            <div id="prodUnidadesMultiSelect" class="multi-select-container">
-                                <span class="empty-message">Nenhuma unidade disponível ou carregando...</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-success" id="btnAddProduct" disabled>Adicionar Produto</button>
+                    <div class="form-group">
+                        <label for="historicoUnidadeFilter">Filtrar por Unidade:</label>
+                        <select id="historicoUnidadeFilter"></select>
                     </div>
                 </div>
-            <div class="card"><div class="card-header"><h3>Importar Produtos via XLSX</h3></div><div class="card-body xlsx-import-section"><input type="file" id="xlsxFile" accept=".xlsx, .xls"><button class="btn btn-info" id="btnImportXLSX" disabled>Importar</button><p>Colunas: 'codigo', 'produto', 'categoria'. Para múltiplas categorias, separe por vírgula (ex: 'Bebidas,Refrigerantes').</p></div></div>
+            </div>
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header"><h3>Registros de Contagem</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="historicoContagensTable">
+                            <thead><tr><th>Data/Hora</th><th>Contador</th><th>Unidade</th><th>Setor</th><th>Total Itens</th><th>Ações</th></tr></thead>
+                            <tbody id="historicoContagensTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenCountDetails" class="screen">
+            <button class="btn btn-secondary back-button" id="countDetailsBackButton">&larr; Histórico</button>
+            <h2 id="countDetailsTitleEl">Detalhes da Contagem</h2>
             <div class="card">
-                <div class="card-header"><h3>Produtos Cadastrados</h3></div>
-                <div class="card-body" style="padding:0;">
-                    <table id="productManagementTable">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Produto</th>
-                                <th>Categorias</th>
-                                <th>Unidades</th> <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productManagementTableBody">
-                        </tbody>
-                    </table>
+                <div class="card-header"><h3>Informações da Contagem</h3></div>
+                <div class="card-body">
+                    <p><strong>ID da Contagem:</strong> <span id="detailsCountId"></span></p>
+                    <p><strong>Data/Hora:</strong> <span id="detailsCountDateTime"></span></p>
+                    <p><strong>Contador:</strong> <span id="detailsCountContador"></span></p>
+                    <p><strong>Unidade:</strong> <span id="detailsCountUnidade"></span></p>
+                    <p><strong>Setor:</strong> <span id="detailsCountSetor"></span></p>
+                    <p><strong>Total de Itens Contados:</strong> <span id="detailsCountTotalItems"></span></p>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="btn btn-primary" id="btnDownloadDetailsPDF"><i class="fas fa-file-pdf"></i> Baixar PDF</button>
+                        <button class="btn btn-success" id="btnDownloadDetailsTXT"><i class="fas fa-file-alt"></i> Baixar TXT</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header"><h3>Itens Contados</h3></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="detailsCountItemsTable">
+                            <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead>
+                            <tbody id="detailsCountItemsTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="screenInventoryCount" class="screen">
-            <button class="btn btn-secondary back-button" id="inventoryCountBackButton">&larr; Voltar</button>
-            <h2 id="inventoryCountTitle">Balanço de Estoque</h2>
-            <div id="adminContagemEmpresaSelectorContainer" class="admin-context-selector" style="display:none;">
-                <label for="adminContagemEmpresaSelect">Realizar Contagem Para Empresa:</label>
-                <select id="adminContagemEmpresaSelect"><option value="">-- Selecione uma Empresa --</option></select>
-            </div>
-            <p id="inventoryCountContext" style="text-align:center; font-size:0.9em; color:var(--text-muted-color); margin-bottom: 1rem;"></p>
-            <div class="card card-body">
-                <div class="form-group">
-                    <label for="selectColaboradorContagem">Contagem realizada por:</label>
-                    <select id="selectColaboradorContagem" style="margin-bottom: 1rem;"></select>
-                </div>
-                <div class="form-group">
-                    <label for="selectUnidadeContagem">Unidade da Contagem:</label>
-                    <select id="selectUnidadeContagem" style="margin-bottom: 1rem;"></select>
-                </div>
-                <div class="actions-bar" style="border:none; padding-bottom:0;">
-                    <button class="btn btn-info" id="btnShowPreviewContagem">Ver Resumo</button>
-                    <button class="btn btn-primary" id="btnGerarPDF" disabled>Gerar PDF</button>
-                    <button class="btn btn-success" id="btnGerarTXT" disabled>Gerar TXT & Salvar Histórico</button>
-                    <button class="btn btn-warning" id="btnClearAllQuantities">Limpar Quantidades</button>
+        <div id="screenChangePassword" class="screen">
+            <button class="btn btn-secondary back-button" id="changePasswordBackButton">&larr; Voltar</button>
+            <h2>Trocar Senha</h2>
+            <div class="card">
+                <div class="card-header"><h3>Alterar Minha Senha</h3></div>
+                <div class="card-body">
+                    <form id="changePasswordForm">
+                        <p id="changingPasswordForUserDisplay"></p>
+                        <div class="form-group"><label for="currentPassword">Senha Atual:</label><input type="password" id="currentPassword" name="currentPassword" required></div>
+                        <div class="form-group"><label for="newPassword">Nova Senha:</label><input type="password" id="newPassword" name="newPassword" required></div>
+                        <div class="form-group"><label for="confirmNewPassword">Confirmar Nova Senha:</label><input type="password" id="confirmNewPassword" name="confirmNewPassword" required></div>
+                        <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                        <div id="changePasswordErrorMessage" class="text-danger"></div>
+                    </form>
                 </div>
             </div>
-            <div class="filter-controls card card-body" style="display: flex; flex-wrap: wrap; gap: 1rem;">
-                <div><label for="pesquisaProduto">Produto:</label><input type="text" id="pesquisaProduto" placeholder="Nome..."></div>
-                <div><label for="pesquisaCodigo">Código:</label><input type="text" id="pesquisaCodigo" placeholder="Código..."></div>
-                <div><label for="filtroCategoria">Categorias:</label><select id="filtroCategoria"><option value="">Todas</option></select></div>
-                <div><label for="filtroUnidade">Unidade:</label><select id="filtroUnidade"><option value="">Todas</option></select></div>
-            </div>
-            <table><thead><tr><th>Código</th><th>Produto</th><th>Categorias</th><th>Quantidade</th></tr></thead><tbody id="inventoryTableBody"></tbody></table>
         </div>
-
-       <div id="modalPreviewContagem" class="modal-overlay">
-            <div class="modal-content" style="max-width: 700px; text-align:left;">
-                <h4>Resumo da Contagem Atual</h4>
-                <div id="previewContagemTableContainer" style="max-height: 400px; overflow-y:auto;">
+    </div>
+    
+    <div id="modalPreviewContagem" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
+        <div class="card" style="width: 90%; max-width: 700px;">
+            <div class="card-header"><h3>Resumo da Contagem Atual</h3></div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 60vh;">
                     <table id="previewContagemTable">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Produto</th>
-                                <th>Categorias</th>
-                                <th>Unidades</th> <th>Qtd. Digitada</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
+                        <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Qtd. Contada</th></tr></thead>
+                        <tbody id="previewContagemTableBody"></tbody>
                     </table>
                 </div>
-                <div class="modal-actions" style="margin-top: 1.5rem;">
+                <div style="text-align: right; margin-top: 1rem;">
                     <button class="btn btn-secondary" id="btnClosePreviewModal">Fechar</button>
-                </div>
-            </div>
-        </div>
-        <div id="modalDetalhesContagem" class="modal-overlay">
-            <div class="modal-content" style="max-width: 600px; text-align:left;">
-                <h4>Detalhes da Contagem</h4>
-                <div id="detalhesContagemConteudo"></div>
-                <div class="modal-actions" style="margin-top:1.5rem;">
-                    <button class="btn btn-secondary" id="btnCloseDetalhesModal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
 
-<script type="module" src="js/main.js" defer></script>
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

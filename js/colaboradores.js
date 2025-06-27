@@ -1,459 +1,226 @@
-// js/colaboradores.js
+// js/colaboradores.js (Versão Final para Fazer Adição Funcionar e Limpeza)
 
-import { showLoader, hideLoader, showScreen } from './ui-manager.js';
+import { _supabaseClient } from './supabase-client.js';
+import { state } from './state.js';
+import { showLoader, hideLoader, showToast } from './ui-manager.js'; 
 import { 
-    colaboradoresEmpresaNomeSpan, colaboradorNomeInput, colaboradoresTableBody, colaboradorUnidadesMultiSelect
+    colaboradorNomeInputEl, colaboradoresTableBodyEl, 
+    colaboradorUnidadesMultiSelectEl, colaboradoresBackButtonEl,
+    addColaboradorFormEl 
 } from './dom-selectors.js';
-import { appState } from './state.js'; // Importa o appState
-import { unidadesCache } from './data-cache.js'; // Importa unidadesCache
-import { showAdminMasterDashboardScreen, showEmpresaDashboardScreen } from './auth.js'; // Para navegação de volta
-import { showManageEmpresasAndUsersScreen_Admin } from './admin/empresas.js'; // Para voltar do contexto admin
+import { unidadesCache } from './data-cache.js';
+import { showAdminDashboardScreen } from './auth.js'; 
 
-
-// Variáveis de estado para o modal de edição de unidades do colaborador (podem ser movidas para o state.js se necessário)
 let currentEditColaboradorId = null;
-let currentEditColaboradorEmpresaId = null;
 
-
-/**
- * Exibe a tela de gerenciamento de colaboradores para uma empresa específica.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string|null} empresaIdParaAdmin O ID da empresa (se chamado pelo admin).
- * @param {string|null} nomeEmpresaParaAdmin O nome da empresa (se chamado pelo admin).
- * @param {boolean} isAdminCalling Indica se a função foi chamada pelo Admin Master.
- */
-export async function showEmpresaColaboradoresScreen(_supabaseClient, empresaIdParaAdmin = null, nomeEmpresaParaAdmin = null, isAdminCalling = false) {
-    let targetEmpresaId = null;
-    let targetEmpresaNome = null;
-
-    if (isAdminCalling && appState.currentUser?.role === 'admin_master') {
-        if (!empresaIdParaAdmin) {
-            alert("Admin: ID da empresa não fornecido para gerenciar colaboradores.");
-            // Volta para a tela de gerenciamento de empresas do admin
-            showManageEmpresasAndUsersScreen_Admin(_supabaseClient); 
-            return;
-        }
-        targetEmpresaId = empresaIdParaAdmin;
-        targetEmpresaNome = nomeEmpresaParaAdmin || `Empresa ID: ${empresaIdParaAdmin}`;
-    } else if (!isAdminCalling && (appState.currentUser?.role === 'empresa_manager' || appState.currentUser?.role === 'empresa_login_principal')) {
-        targetEmpresaId = appState.currentUser.empresa_id;
-        targetEmpresaNome = appState.currentUser.empresa_nome;
-    } else {
-        alert("Acesso negado à gestão de colaboradores.");
-        showScreen('login', {}, appState.currentUser); // Fallback seguro
-        return;
-    }
-
-    console.log(`showEmpresaColaboradoresScreen for Company ID: ${targetEmpresaId}, Name: ${targetEmpresaNome}`);
+export async function showEmpresaColaboradoresScreen() {
+    console.log('[Colaboradores] showEmpresaColaboradoresScreen chamada.');
     showLoader();
     try {
-        if (colaboradoresEmpresaNomeSpan) colaboradoresEmpresaNomeSpan.textContent = targetEmpresaNome || 'Empresa';
+        // A linha que definia "da Empresa" foi removida, assumindo que o texto já está no HTML
+        // if (colaboradoresEmpresaNomeEl) colaboradoresEmpresaNomeEl.textContent = "Gerenciar Colaboradores"; 
         
-        // Carrega as unidades para o multi-select de adição/edição de colaboradores
-        await loadUnidadesForMultiSelect(_supabaseClient, targetEmpresaId);
-        // Busca e renderiza os colaboradores da empresa
-        await fetchAndRenderColaboradores(_supabaseClient, targetEmpresaId);
+        await loadUnidadesForMultiSelect();
+        await fetchAndRenderColaboradores();
         
-        showScreen('empresaColaboradores', {
-            title: `Gerenciar Colaboradores (${targetEmpresaNome || 'Sua Empresa'})`,
-            context: `Gerencie os colaboradores de ${targetEmpresaNome || 'sua empresa'}.`
-        }, appState.currentUser); // Passa appState.currentUser
+        window.showScreen('screenEmpresaColaboradores');
+        console.log('[Colaboradores] Tela de Gerenciar Colaboradores exibida.');
 
-        // Configura o botão de voltar dinamicamente
-        const backBtn = document.getElementById('colaboradoresBackButton');
-        if(backBtn) {
-            // Remove qualquer listener anterior para evitar duplicação
-            if(backBtn.currentListener) {
-                backBtn.removeEventListener('click', backBtn.currentListener);
-            }
-            if (isAdminCalling) {
-                backBtn.currentListener = () => showManageEmpresasAndUsersScreen_Admin(_supabaseClient);
-            } else {
-                backBtn.currentListener = () => showEmpresaDashboardScreen(appState.currentUser); // Passa appState.currentUser para showEmpresaDashboardScreen
-            }
-            backBtn.addEventListener('click', backBtn.currentListener);
+        if(colaboradoresBackButtonEl) {
+            colaboradoresBackButtonEl.onclick = showAdminDashboardScreen;
         }
 
     } catch (e) {
-        console.error("Erro em showEmpresaColaboradoresScreen:", e);
-        alert("Erro ao carregar tela de colaboradores.");
+        showToast(`Erro ao carregar tela de colaboradores: ${e.message}`, 'error');
+        console.error('[Colaboradores] Erro em showEmpresaColaboradoresScreen:', e);
     } finally {
         hideLoader();
     }
 }
 
-/**
- * Popula o multi-select de unidades para a tela de colaboradores.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} empresaId O ID da empresa para buscar as unidades.
- */
-async function loadUnidadesForMultiSelect(_supabaseClient, empresaId) {
-    if (!colaboradorUnidadesMultiSelect) {
-        console.warn("colaboradorUnidadesMultiSelect not found.");
+async function loadUnidadesForMultiSelect() {
+    console.log('[Colaboradores] Carregando unidades para o multi-select...');
+    if (!colaboradorUnidadesMultiSelectEl) {
+        console.warn('[Colaboradores] Elemento colaboradorUnidadesMultiSelectEl não encontrado.');
         return;
     }
-    colaboradorUnidadesMultiSelect.innerHTML = '<span class="empty-message">Carregando unidades...</span>';
-    unidadesCache.splice(0, unidadesCache.length); // Limpa o cache de unidades
-
-    if (!empresaId) {
-        colaboradorUnidadesMultiSelect.innerHTML = '<span class="empty-message">Nenhuma unidade disponível. Selecione uma empresa.</span>';
-        return;
-    }
-
+    colaboradorUnidadesMultiSelectEl.innerHTML = '<span class="empty-message">Carregando unidades...</span>';
+    
     try {
-        const { data, error } = await _supabaseClient.from('unidades')
-            .select('id, nome_unidade')
-            .eq('empresa_id', empresaId)
-            .order('nome_unidade');
-
+        const { data, error } = await _supabaseClient.from('unidades').select('id, nome_unidade').order('nome_unidade');
         if (error) throw error;
-        unidadesCache.splice(0, unidadesCache.length, ...(data || [])); // Preenche o cache
-        colaboradorUnidadesMultiSelect.innerHTML = ''; // Limpa a mensagem de carregamento
+        unidadesCache.splice(0, unidadesCache.length, ...data);
 
+        colaboradorUnidadesMultiSelectEl.innerHTML = '';
         if (unidadesCache.length === 0) {
-            colaboradorUnidadesMultiSelect.innerHTML = '<span class="empty-message">Nenhuma unidade cadastrada para esta empresa.</span>';
+            colaboradorUnidadesMultiSelectEl.innerHTML = '<span class="empty-message">Nenhuma unidade cadastrada.</span>';
         } else {
             unidadesCache.forEach(unit => {
                 const div = document.createElement('div');
                 div.className = 'checkbox-group';
-                div.innerHTML = `
-                    <input type="checkbox" id="colab-unit-${unit.id}" value="${unit.id}">
-                    <label for="colab-unit-${unit.id}">${unit.nome_unidade}</label>
-                `;
-                colaboradorUnidadesMultiSelect.appendChild(div);
+                div.innerHTML = `<input type="checkbox" id="colab-unit-${unit.id}" value="${unit.id}"><label for="colab-unit-${unit.id}">${unit.nome_unidade}</label>`;
+                colaboradorUnidadesMultiSelectEl.appendChild(div);
             });
         }
+        console.log('[Colaboradores] Multi-select de unidades populado.');
     } catch (e) {
-        console.error("Erro ao carregar unidades para multi-select de colaborador:", e);
-        colaboradorUnidadesMultiSelect.innerHTML = `<span class="empty-message" style="color:var(--danger-color);">Erro ao carregar unidades: ${e.message}</span>`;
+        colaboradorUnidadesMultiSelectEl.innerHTML = `<span class="empty-message" style="color:red;">Erro ao carregar unidades.</span>`;
+        console.error('[Colaboradores] Erro em loadUnidadesForMultiSelect:', e);
     }
 }
 
-/**
- * Busca e renderiza a lista de colaboradores para uma empresa específica.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} empresaId O ID da empresa para buscar colaboradores.
- */
-export async function fetchAndRenderColaboradores(_supabaseClient, empresaId) {
-    if (!colaboradoresTableBody) { console.error("colaboradoresTableBody not found"); return; }
-    colaboradoresTableBody.innerHTML = '<tr><td colspan="5">Carregando colaboradores...</td></tr>';
-    
-    if (!empresaId) {
-        colaboradoresTableBody.innerHTML = '<tr><td colspan="5">ID da empresa não fornecido.</td></tr>';
-        hideLoader();
+async function fetchAndRenderColaboradores() {
+    console.log('[Colaboradores] Buscando e renderizando colaboradores...');
+    if (!colaboradoresTableBodyEl) {
+        console.warn('[Colaboradores] Elemento colaboradoresTableBodyEl não encontrado.');
         return;
     }
-    showLoader();
+    // Colspan ajustado para 4: Nome, Unidades, Ativo, Ações (Criação foi removida da exibição)
+    colaboradoresTableBodyEl.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>'; 
     try {
-        // Busca colaboradores e suas unidades associadas através da tabela de junção
         const { data, error } = await _supabaseClient.from('colaboradores')
-            .select('id, nome_colaborador, created_at, ativo, colaboradores_unidades(unidade_id)')
-            .eq('empresa_id', empresaId)
+            .select('id, nome_colaborador, created_at, ativo, colaboradores_unidades(unidades(id, nome_unidade))')
             .order('nome_colaborador');
 
         if (error) throw error;
+        
+        colaboradoresTableBodyEl.innerHTML = "";
 
-        // Note: colaboradoresCache é um cache local para esta tela, não é global como empresasCache
-        // Se precisar de um cache global de colaboradores, mova essa let para data-cache.js
-        const colaboradoresCacheLocal = data || []; 
-        colaboradoresTableBody.innerHTML = "";
-
-        if (colaboradoresCacheLocal.length > 0) {
-            colaboradoresCacheLocal.forEach(colab => {
-                const row = colaboradoresTableBody.insertRow();
-                row.insertCell().textContent = colab.nome_colaborador;
-
-                // Mapeia os IDs das unidades associadas para seus nomes
-                const unitsCell = row.insertCell();
+        if (data.length > 0) {
+            data.forEach(colab => {
+                const row = colaboradoresTableBodyEl.insertRow();
                 const assignedUnitNames = (colab.colaboradores_unidades || [])
-                    .map(cu => unidadesCache.find(u => u.id === cu.unidade_id)?.nome_unidade)
-                    .filter(Boolean); // Remove null/undefined se a unidade não for encontrada no cache
-                unitsCell.textContent = assignedUnitNames.length > 0 ? assignedUnitNames.join(', ') : 'Nenhuma';
+                    .map(item => item.unidades ? item.unidades.nome_unidade : null) 
+                    .filter(Boolean); 
 
-                row.insertCell().textContent = colab.ativo ? 'Sim' : 'Não';
-                row.insertCell().textContent = new Date(colab.created_at).toLocaleDateString('pt-BR');
-
-                const actionsCell = row.insertCell();
-                const btnEditUnits = document.createElement('button');
-                btnEditUnits.textContent = 'Editar Unidades';
-                btnEditUnits.className = 'btn btn-info table-actions';
-                btnEditUnits.onclick = () => showEditColaboradorUnitsModal(_supabaseClient, colab.id, colab.nome_colaborador, colab.colaboradores_unidades.map(cu => cu.unidade_id), empresaId);
-                actionsCell.appendChild(btnEditUnits);
-
-                const btnToggleAtivo = document.createElement('button');
-                btnToggleAtivo.textContent = colab.ativo ? 'Desativar' : 'Ativar';
-                btnToggleAtivo.className = `btn ${colab.ativo ? 'btn-warning' : 'btn-success'} table-actions`;
-                btnToggleAtivo.onclick = () => handleToggleAtivoColaborador(_supabaseClient, colab.id, !colab.ativo, empresaId);
-                actionsCell.appendChild(btnToggleAtivo);
-
-                const btnDelete = document.createElement('button');
-                btnDelete.textContent = 'Excluir';
-                btnDelete.className = 'btn btn-danger table-actions';
-                btnDelete.onclick = () => handleDeleteColaborador(_supabaseClient, colab.id, colab.nome_colaborador, empresaId);
-                actionsCell.appendChild(btnDelete);
+                row.innerHTML = `
+                    <td>${colab.nome_colaborador}</td>
+                    <td>${assignedUnitNames.length > 0 ? assignedUnitNames.join(', ') : 'Nenhuma'}</td>
+                    <td>${colab.ativo ? 'Sim' : 'Não'}</td>
+                    <td>${new Date(colab.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-sm ${colab.ativo ? 'btn-warning' : 'btn-success'} btn-toggle-ativo" data-colab-id="${colab.id}" data-new-state="${!colab.ativo}">${colab.ativo ? 'Desativar' : 'Ativar'}</button>
+                        <button class="btn btn-sm btn-danger btn-delete-colab" data-colab-id="${colab.id}" data-colab-name="${colab.nome_colaborador}">Excluir</button>
+                    </td>
+                `;
             });
         } else {
-            colaboradoresTableBody.innerHTML = '<tr><td colspan="5">Nenhum colaborador cadastrado para esta empresa.</td></tr>';
+            colaboradoresTableBodyEl.innerHTML = '<tr><td colspan="4">Nenhum colaborador cadastrado.</td></tr>'; 
         }
+        console.log('[Colaboradores] Tabela de colaboradores renderizada.');
     } catch (e) {
-        console.error("Erro ao buscar/renderizar colaboradores:", e);
-        colaboradoresTableBody.innerHTML = `<tr><td colspan="5" style="color:var(--danger-color);">Erro ao carregar: ${e.message}</td></tr>`;
+        showToast(`Erro ao buscar colaboradores: ${e.message}`, 'error');
+        console.error('[Colaboradores] Erro em fetchAndRenderColaboradores:', e);
+        colaboradoresTableBodyEl.innerHTML = `<tr><td colspan="4" style="color:red;">Erro ao carregar colaboradores: ${e.message}</td></tr>`; 
     } finally {
         hideLoader();
     }
 }
 
-/**
- * Lida com a adição de um novo colaborador.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- */
-export async function handleAddColaborador(_supabaseClient) {
-    if (!colaboradorNomeInput || !colaboradorUnidadesMultiSelect) {
-        alert("Erro: Campos do formulário de colaborador não encontrados.");
-        return;
-    }
+export async function handleAddColaborador(event) {
+    event.preventDefault(); 
+    const nomeColaborador = colaboradorNomeInputEl.value.trim();
+    const selectedUnitIds = Array.from(colaboradorUnidadesMultiSelectEl.querySelectorAll('input:checked')).map(cb => cb.value);
 
-    const nomeColaborador = colaboradorNomeInput.value.trim();
-    // Colaboradores são sempre da empresa do usuário logado (gerente)
-    const empresaId = appState.currentUser?.empresa_id || appState.adminSelectedEmpresaContextId; 
-    const selectedUnitIds = Array.from(colaboradorUnidadesMultiSelect.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    console.log('[Colaboradores] Tentando adicionar colaborador. Dados:', { nomeColaborador, selectedUnitIds });
 
-    if (!empresaId) {
-        alert("Erro: ID da empresa não identificado para adicionar colaborador.");
-        return;
-    }
     if (!nomeColaborador) {
-        alert('Digite o nome do colaborador.');
+        showToast('Digite o nome do colaborador.', 'error'); 
         return;
     }
     if (selectedUnitIds.length === 0) {
-        alert('Selecione pelo menos uma unidade para o colaborador.');
+        showToast('Selecione pelo menos uma unidade para o colaborador.', 'error'); 
         return;
     }
 
     showLoader();
     try {
-        // Verifica se o colaborador já existe para a empresa
-        const { data: existing, error: checkError } = await _supabaseClient.from('colaboradores')
-            .select('id')
-            .eq('nome_colaborador', nomeColaborador)
-            .eq('empresa_id', empresaId)
-            .maybeSingle();
-
-        if (checkError) throw checkError;
+        const { data: existing } = await _supabaseClient.from('colaboradores').select('id').eq('nome_colaborador', nomeColaborador).maybeSingle();
         if (existing) {
-            alert('Um colaborador com este nome já existe nesta empresa.');
-            hideLoader();
-            return;
+            throw new Error('Um colaborador com este nome já existe.');
         }
 
-        // Insere o colaborador
-        const { data: newColaborador, error } = await _supabaseClient.from('colaboradores')
-            .insert([{ nome_colaborador: nomeColaborador, empresa_id: empresaId, ativo: true }])
-            .select('id')
-            .single();
-
+        const { data: newColab, error } = await _supabaseClient.from('colaboradores').insert({ nome_colaborador: nomeColaborador, ativo: true }).select('id').single();
         if (error) throw error;
+        console.log('[Colaboradores] Colaborador principal criado:', newColab);
 
-        // Insere na tabela de junção (colaboradores_unidades)
-        const linksToInsert = selectedUnitIds.map(unitId => ({
-            colaborador_id: newColaborador.id,
-            unidade_id: unitId
-        }));
+        const linksToInsert = selectedUnitIds.map(unitId => ({ colaborador_id: newColab.id, unidade_id: unitId }));
+        console.log('[Colaboradores] Inserindo links de unidade:', linksToInsert);
+        const { error: linkError } = await _supabaseClient.from('colaboradores_unidades').insert(linksToInsert);
+        if (linkError) throw linkError;
+        console.log('[Colaboradores] Links de unidade para colaborador inseridos.');
 
-        const { error: linkError } = await _supabaseClient.from('colaboradores_unidades')
-            .insert(linksToInsert);
-
-        if (linkError) {
-            // Se a vinculação falhar, tenta reverter a criação do colaborador
-            await _supabaseClient.from('colaboradores').delete().eq('id', newColaborador.id).catch(e => console.error("Erro ao reverter criação de colaborador:", e));
-            throw linkError;
-        }
-
-        alert('Colaborador adicionado com sucesso!');
-        colaboradorNomeInput.value = '';
-        // Desmarca todos os checkboxes no multi-select
-        colaboradorUnidadesMultiSelect.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-        await fetchAndRenderColaboradores(_supabaseClient, empresaId);
+        showToast('Colaborador adicionado com sucesso!', 'success');
+        colaboradorNomeInputEl.value = '';
+        colaboradorUnidadesMultiSelectEl.querySelectorAll('input:checked').forEach(cb => cb.checked = false);
+        await fetchAndRenderColaboradores(); 
     } catch (e) {
-        console.error("Erro ao adicionar colaborador:", e);
-        alert('Falha ao adicionar colaborador: ' + e.message);
+        showToast(`Falha ao adicionar colaborador: ${e.message}`, 'error');
+        console.error('[Colaboradores] Erro em handleAddColaborador:', e);
     } finally {
         hideLoader();
     }
 }
 
-/**
- * Lida com a exclusão de um colaborador.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} colaboradorId O ID do colaborador a ser excluído.
- * @param {string} nomeColaborador O nome do colaborador (para confirmação).
- * @param {string} empresaId O ID da empresa à qual o colaborador pertence.
- */
-export async function handleDeleteColaborador(_supabaseClient, colaboradorId, nomeColaborador, empresaId) {
-    if (!confirm(`Tem certeza que deseja excluir o colaborador "${nomeColaborador}"? Esta ação também removerá suas associações com unidades e registros de contagem.`)) {
-        return;
-    }
-    showLoader();
-    try {
-        // Verifica se o colaborador tem registros em 'contagens'
-        const { count: contagemCount, error: contagemCheckError } = await _supabaseClient
-            .from('contagens')
-            .select('id', { count: 'exact', head: true })
-            .eq('colaborador_id', colaboradorId);
+// Event listener para a tabela de colaboradores (para edição, ativação/desativação, exclusão)
+if (colaboradoresTableBodyEl) {
+    colaboradoresTableBodyEl.addEventListener('click', async (event) => {
+        const target = event.target;
 
-        if (contagemCheckError) throw contagemCheckError;
-        if (contagemCount && contagemCount > 0) {
-            alert(`Não é possível excluir o colaborador "${nomeColaborador}" pois ele possui ${contagemCount} registro(s) de contagem associado(s).`);
-            hideLoader(); return;
+        // Lógica para Excluir Colaborador
+        if (target.classList.contains('btn-delete-colab')) {
+            const colabIdToDelete = target.dataset.colabId;
+            const colabNameToDelete = target.dataset.colabName;
+
+            if (confirm(`Tem certeza que deseja remover o colaborador "${colabNameToDelete}"? Esta ação removerá todas as associações de unidades e não pode ser desfeita.`)) {
+                showLoader();
+                try {
+                    console.log('[Colaboradores] Excluindo associações de unidades do colaborador ID:', colabIdToDelete);
+                    const { error: assocError } = await _supabaseClient.from('colaboradores_unidades').delete().eq('colaborador_id', colabIdToDelete);
+                    if (assocError) throw assocError;
+                    console.log('[Colaboradores] Associações de unidades excluídas.');
+
+                    console.log('[Colaboradores] Excluindo colaborador principal ID:', colabIdToDelete);
+                    const { error: colabError } = await _supabaseClient.from('colaboradores').delete().eq('id', colabIdToDelete);
+                    if (colabError) throw colabError;
+                    console.log('[Colaboradores] Colaborador principal excluído.');
+                    
+                    showToast("Colaborador removido com sucesso.", "success");
+                    await fetchAndRenderColaboradores(); 
+                } catch (error) {
+                    showToast(`Erro ao remover colaborador: ${error.message}`, 'error');
+                    console.error('[Colaboradores] Erro na remoção do colaborador:', error);
+                } finally {
+                    hideLoader();
+                }
+            }
+        } 
+        // Lógica para Ativar/Desativar Colaborador
+        else if (target.classList.contains('btn-toggle-ativo')) {
+            const colabIdToToggle = target.dataset.colabId;
+            const newState = target.dataset.newState === 'true'; 
+
+            showLoader();
+            try {
+                const { error } = await _supabaseClient.from('colaboradores')
+                    .update({ ativo: newState })
+                    .eq('id', colabIdToToggle);
+                if (error) throw error;
+                
+                showToast(`Colaborador ${newState ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+                await fetchAndRenderColaboradores(); 
+            } catch (error) {
+                showToast(`Erro ao ${newState ? 'ativar' : 'desativar'} colaborador: ${error.message}`, 'error');
+                console.error('[Colaboradores] Erro ao ativar/desativar colaborador:', error);
+            } finally {
+                hideLoader();
+            }
         }
-
-        // Primeiro, remove as associações na tabela 'colaboradores_unidades'
-        const { error: linkDeleteError } = await _supabaseClient.from('colaboradores_unidades')
-            .delete()
-            .eq('colaborador_id', colaboradorId);
-        if (linkDeleteError) {
-            console.error("Erro ao deletar links de unidades do colaborador:", linkDeleteError);
-            throw new Error(`Falha ao remover associações de unidades para o colaborador: ${linkDeleteError.message}`);
-        }
-
-        // Em seguida, remove o colaborador da tabela 'colaboradores'
-        const { error: colabDeleteError } = await _supabaseClient.from('colaboradores')
-            .delete()
-            .eq('id', colaboradorId);
-        if (colabDeleteError) throw colabDeleteError;
-
-        alert(`Colaborador "${nomeColaborador}" excluído com sucesso!`);
-        await fetchAndRenderColaboradores(_supabaseClient, empresaId);
-    } catch (e) {
-        console.error("Erro ao excluir colaborador:", e);
-        alert('Falha ao excluir colaborador: ' + e.message);
-    } finally {
-        hideLoader();
-    }
-}
-
-/**
- * Altera o status 'ativo' de um colaborador.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} colaboradorId O ID do colaborador a ser alterado.
- * @param {boolean} novoEstadoAtivo O novo estado (true para ativo, false para inativo).
- * @param {string} empresaId O ID da empresa à qual o colaborador pertence.
- */
-export async function handleToggleAtivoColaborador(_supabaseClient, colaboradorId, novoEstadoAtivo, empresaId) {
-    if (!confirm(`Tem certeza que deseja ${novoEstadoAtivo ? 'ATIVAR' : 'DESATIVAR'} este colaborador?`)) return;
-    showLoader();
-    try {
-        const { error } = await _supabaseClient.from('colaboradores')
-            .update({ ativo: novoEstadoAtivo })
-            .eq('id', colaboradorId);
-        if (error) throw error;
-        alert(`Colaborador ${novoEstadoAtivo ? 'ativado' : 'desativado'} com sucesso!`);
-        await fetchAndRenderColaboradores(_supabaseClient, empresaId);
-    } catch (e) {
-        console.error(`Erro ao ${novoEstadoAtivo ? 'ativar' : 'desativar'} colaborador:`, e);
-        alert(`Falha: ${e.message}`);
-    } finally {
-        hideLoader();
-    }
-}
-
-
-// --- Funções para o Modal de Edição de Unidades de Colaborador ---
-/**
- * Exibe o modal para edição das unidades associadas a um colaborador.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} colaboradorId O ID do colaborador a ser editado.
- * @param {string} colaboradorNome O nome do colaborador.
- * @param {string[]} currentUnitIds Array de IDs das unidades atualmente associadas.
- * @param {string} empresaId O ID da empresa à qual o colaborador pertence.
- */
-export function showEditColaboradorUnitsModal(_supabaseClient, colaboradorId, colaboradorNome, currentUnitIds, empresaId) {
-    currentEditColaboradorId = colaboradorId; // Variáveis de estado local para o modal
-    currentEditColaboradorEmpresaId = empresaId; // Variáveis de estado local para o modal
-
-    // Cria o overlay e o conteúdo do modal dinamicamente
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay active'; // Começa ativo para exibir
-    modalOverlay.innerHTML = `
-        <div class="modal-content">
-            <h4>Editar Unidades para "${colaboradorNome}"</h4>
-            <div id="editColaboradorUnitsMultiSelect" class="multi-select-container">
-                <span class="empty-message">Carregando unidades...</span>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="btnCancelEditUnits">Cancelar</button>
-                <button class="btn btn-primary" id="btnSaveColaboradorUnits">Salvar</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modalOverlay);
-
-    const editSelectContainer = modalOverlay.querySelector('#editColaboradorUnitsMultiSelect');
-    if (editSelectContainer) {
-        editSelectContainer.innerHTML = '';
-        if (unidadesCache.length === 0) { // Usa o cache global de unidades
-            editSelectContainer.innerHTML = '<span class="empty-message">Nenhuma unidade disponível.</span>';
-        } else {
-            unidadesCache.forEach(unit => {
-                const div = document.createElement('div');
-                div.className = 'checkbox-group';
-                const isChecked = currentUnitIds.includes(unit.id); // Verifica se a unidade já está associada
-                div.innerHTML = `
-                    <input type="checkbox" id="edit-colab-unit-${unit.id}" value="${unit.id}" ${isChecked ? 'checked' : ''}>
-                    <label for="edit-colab-unit-${unit.id}">${unit.nome_unidade}</label>
-                `;
-                editSelectContainer.appendChild(div);
-            });
-        }
-    }
-
-    // Adiciona event listeners para os botões do modal
-    modalOverlay.querySelector('#btnCancelEditUnits')?.addEventListener('click', () => {
-        document.body.removeChild(modalOverlay); // Remove o modal do DOM
-    });
-    modalOverlay.querySelector('#btnSaveColaboradorUnits')?.addEventListener('click', () => {
-        handleSaveColaboradorUnits(_supabaseClient, colaboradorId, empresaId, modalOverlay); // Passa _supabaseClient
+        // O bloco para 'Editar Unidades' foi removido deste arquivo.
     });
 }
 
-/**
- * Lida com o salvamento das unidades selecionadas para um colaborador no modal de edição.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} colaboradorId O ID do colaborador a ser atualizado.
- * @param {string} empresaId O ID da empresa à qual o colaborador pertence.
- * @param {HTMLElement} modalOverlay A referência ao elemento modal overlay para fechá-lo.
- */
-async function handleSaveColaboradorUnits(_supabaseClient, colaboradorId, empresaId, modalOverlay) {
-    showLoader();
-    const selectedUnitIds = Array.from(modalOverlay.querySelectorAll('#editColaboradorUnitsMultiSelect input[type="checkbox"]:checked')).map(cb => cb.value);
-
-    try {
-        // 1. Deleta todas as associações existentes para este colaborador na tabela de junção
-        const { error: deleteError } = await _supabaseClient.from('colaboradores_unidades')
-            .delete()
-            .eq('colaborador_id', colaboradorId);
-        if (deleteError) throw deleteError;
-
-        // 2. Insere as novas associações (se houver unidades selecionadas)
-        if (selectedUnitIds.length > 0) {
-            const linksToInsert = selectedUnitIds.map(unitId => ({
-                colaborador_id: colaboradorId,
-                unidade_id: unitId
-            }));
-            const { error: insertError } = await _supabaseClient.from('colaboradores_unidades')
-                .insert(linksToInsert);
-            if (insertError) throw insertError;
-        }
-
-        alert('Unidades do colaborador atualizadas com sucesso!');
-        document.body.removeChild(modalOverlay); // Fecha o modal
-        await fetchAndRenderColaboradores(_supabaseClient, empresaId); // Re-renderiza a tabela de colaboradores
-    } catch (e) {
-        console.error("Erro ao salvar unidades do colaborador:", e);
-        alert('Falha ao atualizar unidades do colaborador: ' + e.message);
-    } finally {
-        hideLoader();
-    }
+// Event listener para o formulário de adicionar colaborador
+if (addColaboradorFormEl) {
+    addColaboradorFormEl.addEventListener('submit', handleAddColaborador);
 }

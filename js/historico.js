@@ -1,351 +1,224 @@
-// js/historico.js
+import { _supabaseClient } from './supabase-client.js';
+import { showLoader, hideLoader, showToast } from './ui-manager.js';
+import * as Dom from './dom-selectors.js';
+import { produtosCache, unidadesCache } from './data-cache.js'; 
+import { showAdminDashboardScreen } from './auth.js'; 
+import * as Auth from './auth.js'; 
+import { triggerDownload, generateTxtContentForDownload, generatePdfContent, generateCountFilename } from './utils.js'; 
 
-import { showLoader, hideLoader, showScreen } from './ui-manager.js';
-import { 
-    historicoEmpresaNomeSpan, historicoContagensTableBody, modalDetalhesContagem, detalhesContagemConteudo,
-    adminHistoricoEmpresaSelectorContainer, adminHistoricoEmpresaSelect, historicoBackButton, historicoTitle, historicoContext, colEmpresaHistorico,
-    historicoUnidadeFilterContainer, historicoUnidadeFilter
-} from './dom-selectors.js';
-import { appState, setAdminSelectedEmpresaContextId } from './state.js'; // Importa o appState e seus setters
-import { empresasCache, unidadesCache, produtosCache } from './data-cache.js'; // Importa caches globais
-import { populateEmpresasSelect } from './data-cache.js'; // Para popular o seletor de empresas no admin
-import { showAdminMasterDashboardScreen, showEmpresaDashboardScreen } from './auth.js'; // Para navegação de volta
+let historicoContagensCache = []; 
 
-
-/**
- * Exibe a tela de histórico de contagens para o Admin Master.
- * Permite que o admin selecione uma empresa para ver o histórico.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- */
-export async function showHistoricoContagensScreen_Admin(_supabaseClient) {
-    if (!appState.currentUser || appState.currentUser.role !== 'admin_master') {
-        alert("Acesso negado. Apenas Admin Master pode visualizar histórico globalmente.");
-        showScreen('login', {}, appState.currentUser); // Fallback seguro
-        return;
-    }
-    console.log("showHistoricoContagensScreen_Admin called");
+export async function showHistoricoContagensScreen() {
     showLoader();
     try {
-        // Reinicia o contexto de seleção para admin
-        setAdminSelectedEmpresaContextId(null); 
+        if(Dom.historicoBackButtonEl) Dom.historicoBackButtonEl.onclick = showAdminDashboardScreen;
+        
+        // CORREÇÃO: Força a atualização do cache de unidades sempre que a tela é carregada.
+        // Isso garante que o filtro sempre tenha os dados mais recentes.
+        unidadesCache.length = 0;
 
-        // Exibe o seletor de empresa e a coluna "Empresa" na tabela
-        if(adminHistoricoEmpresaSelectorContainer) adminHistoricoEmpresaSelectorContainer.style.display = 'block';
-        if(colEmpresaHistorico) colEmpresaHistorico.style.display = ''; // Exibe a coluna Empresa
-        if(historicoUnidadeFilterContainer) historicoUnidadeFilterContainer.style.display = 'block'; // Exibe o filtro de unidade
-
-        await populateEmpresasSelect(_supabaseClient, adminHistoricoEmpresaSelect, true, "-- Selecione uma Empresa --", "");
-        if(adminHistoricoEmpresaSelect) adminHistoricoEmpresaSelect.value = ""; // Garante que nenhum valor esteja selecionado inicialmente
-
-        // Adiciona/garante que o event listener esteja anexado uma única vez
-        if (adminHistoricoEmpresaSelect && !adminHistoricoEmpresaSelect.onchangeAttached_hist_admin) {
-            adminHistoricoEmpresaSelect.addEventListener('change', async () => {
-                const newEmpresaId = adminHistoricoEmpresaSelect.value === "" ? null : adminHistoricoEmpresaSelect.value;
-                setAdminSelectedEmpresaContextId(newEmpresaId); // Atualiza o contexto global de admin
-                const selectedEmpresa = empresasCache.find(e => e.id === newEmpresaId);
-                if(historicoContext) historicoContext.textContent = selectedEmpresa ? `Empresa: ${selectedEmpresa.nome_empresa}` : "Nenhuma empresa selecionada";
-                
-                // Popula o filtro de unidades com base na empresa selecionada
-                await populateUnidadesForHistoricoFilter(_supabaseClient, newEmpresaId, 'historicoUnidadeFilter');
-                await fetchAndRenderHistoricoContagens(_supabaseClient, newEmpresaId, true, historicoUnidadeFilter.value);
-            });
-            adminHistoricoEmpresaSelect.onchangeAttached_hist_admin = true;
-        }
-
-        // Event listener para o filtro de unidade (precisa ser anexado apenas uma vez)
-        if (historicoUnidadeFilter && !historicoUnidadeFilter.onchangeAttached_hist_unit) {
-            historicoUnidadeFilter.addEventListener('change', async () => {
-                // Usa o ID da empresa atualmente selecionada no adminHistoricoEmpresaSelect ou a empresa do usuário logado
-                const empresaIdParaFiltro = appState.adminSelectedEmpresaContextId || appState.currentUser.empresa_id;
-                await fetchAndRenderHistoricoContagens(_supabaseClient, empresaIdParaFiltro, appState.currentUser.role === 'admin_master', historicoUnidadeFilter.value);
-            });
-            historicoUnidadeFilter.onchangeAttached_hist_unit = true;
-        }
-
-        // Não faz o fetch inicial aqui, pois não há empresa selecionada por padrão
-        showScreen('historicoContagens', {
-            title: 'Histórico de Contagens (Admin)',
-            context: 'Selecione uma empresa para filtrar o histórico.',
-            showEmpresaSelector: true,
-            showEmpresaColumnInTable: true
-        }, appState.currentUser);
-
+        await loadProductsForHistoryDetails(); 
+        await populateHistoricoUnidadeFilter(); 
+        await filterAndRenderHistoricoContagens(); 
+        
+        window.showScreen('screenHistoricoContagens');
     } catch (e) {
-        console.error("Erro em showHistoricoContagensScreen_Admin:", e);
-        alert("Erro ao carregar histórico de admin.");
+        showToast(`Erro ao carregar histórico: ${e.message}`, 'error');
+        console.error('[Historico] Erro em showHistoricoContagensScreen:', e);
     } finally {
         hideLoader();
     }
 }
 
-
-/**
- * Exibe a tela de histórico de contagens para um Gerente ou Contador de Empresa.
- * O usuário só pode ver o histórico da sua própria empresa.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- */
-export async function showHistoricoContagensScreen(_supabaseClient) {
-    if (!appState.currentUser || !(appState.currentUser.role === 'empresa_manager' || appState.currentUser.role === 'empresa_counter' || appState.currentUser.role === 'empresa_login_principal')) {
-        alert("Acesso negado ao histórico de contagens.");
-        // Redireciona para o dashboard da empresa ou login
-        if(appState.currentUser?.role === 'empresa_manager' || appState.currentUser?.role === 'empresa_login_principal') showEmpresaDashboardScreen(appState.currentUser);
-        else showScreen('login', {}, appState.currentUser);
-        return;
-    }
-    if (!appState.currentUser.empresa_id) {
-        console.error("ID da empresa do usuário não encontrada para histórico.");
-        alert("Erro: ID da sua empresa não encontrado. Tente relogar.");
-        showScreen('login', {}, appState.currentUser); // Fallback para login
-        return;
-    }
-    console.log("showHistoricoContagensScreen (Empresa) called for company:", appState.currentUser.empresa_nome);
-    showLoader();
+async function loadProductsForHistoryDetails() {
+    if (produtosCache.length > 0) return;
     try {
-        setAdminSelectedEmpresaContextId(appState.currentUser.empresa_id); // Define o contexto da empresa para a empresa do usuário
-        if(historicoEmpresaNomeSpan) historicoEmpresaNomeSpan.textContent = appState.currentUser.empresa_nome || 'Sua Empresa';
-
-        // Esconde o seletor de empresa e a coluna "Empresa"
-        if(adminHistoricoEmpresaSelectorContainer) adminHistoricoEmpresaSelectorContainer.style.display = 'none';
-        if(colEmpresaHistorico) colEmpresaHistorico.style.display = 'none';
-        if(historicoUnidadeFilterContainer) historicoUnidadeFilterContainer.style.display = 'block'; // Exibe o filtro de unidade
-
-        if(historicoTitle) historicoTitle.textContent = `Meu Histórico de Contagens (${appState.currentUser.empresa_nome})`;
-        if(historicoContext) historicoContext.textContent = `Visualizando contagens para ${appState.currentUser.empresa_nome}.`;
-
-        await populateUnidadesForHistoricoFilter(_supabaseClient, appState.currentUser.empresa_id, 'historicoUnidadeFilter');
-        
-        // Garante que o event listener para o filtro de unidade esteja anexado uma única vez
-        if (historicoUnidadeFilter && !historicoUnidadeFilter.onchangeAttached_hist_unit) {
-            historicoUnidadeFilter.addEventListener('change', async () => {
-                await fetchAndRenderHistoricoContagens(_supabaseClient, appState.currentUser.empresa_id, false, historicoUnidadeFilter.value);
-            });
-            historicoUnidadeFilter.onchangeAttached_hist_unit = true;
-        }
-        
-        await fetchAndRenderHistoricoContagens(_supabaseClient, appState.currentUser.empresa_id, false, historicoUnidadeFilter.value); // Busca histórico inicial
-
-        showScreen('historicoContagens', {
-            title: historicoTitle.textContent,
-            context: historicoContext.textContent,
-            showEmpresaSelector: false,
-            showEmpresaColumnInTable: false
-        }, appState.currentUser);
-
-    } catch (e) {
-        console.error("Erro em showHistoricoContagensScreen (Empresa):", e);
-        alert("Erro ao carregar histórico.");
-    } finally {
-        hideLoader();
+        const { data, error } = await _supabaseClient.rpc('get_produtos_com_categorias_e_unidades');
+        if (error) throw error; 
+        produtosCache.splice(0, produtosCache.length, ...(data || []));
+    } catch (e) { 
+        showToast(`Erro ao carregar produtos para detalhes do histórico: ${e.message}`, 'error'); 
+        console.error('[Historico] Erro em loadProductsForHistoryDetails:', e); 
+        throw e;
     }
 }
 
-
-/**
- * Popula o filtro de unidades para a tela de histórico.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} empresaId O ID da empresa para buscar unidades.
- * @param {string} selectElementId O ID do elemento select.
- */
-async function populateUnidadesForHistoricoFilter(_supabaseClient, empresaId, selectElementId) {
-    const selectEl = document.getElementById(selectElementId);
-    if (!selectEl) { console.warn(`Unit filter select '${selectElementId}' not found.`); return; }
+async function populateHistoricoUnidadeFilter() {
+    if (!Dom.historicoUnidadeFilterEl) return;
+    Dom.historicoUnidadeFilterEl.innerHTML = '<option value="">Todas as Unidades</option>';
     
-    selectEl.innerHTML = '<option value="">Todas as Unidades</option>'; // Opção padrão
-    if (!empresaId) return; // Não carrega unidades se nenhuma empresa estiver selecionada
+    // O cache é forçado a recarregar pela chamada em showHistoricoContagensScreen.
+    if (unidadesCache.length === 0) {
+        try {
+            const { data, error } = await _supabaseClient.from('unidades').select('id, nome_unidade').order('nome_unidade');
+            if (error) throw error;
+            unidadesCache.splice(0, unidadesCache.length, ...(data || []));
+        } catch (e) {
+            console.error('[Historico] Erro ao carregar unidades para o filtro de histórico (fallback):', e);
+            showToast('Erro ao carregar unidades para o filtro.', 'error');
+            Dom.historicoUnidadeFilterEl.innerHTML = '<option value="">Erro ao carregar unidades</option>';
+            return;
+        }
+    }
 
-    try {
-        const { data, error } = await _supabaseClient.from('unidades')
-            .select('id, nome_unidade')
-            .eq('empresa_id', empresaId)
-            .order('nome_unidade');
+    unidadesCache.forEach(unit => {
+        Dom.historicoUnidadeFilterEl.add(new Option(unit.nome_unidade, unit.id));
+    });
 
-        if (error) throw error;
-        // Não atualiza o cache global de unidades aqui, pois ele é gerenciado em data-cache ou produtos/contagens.
-        // Apenas usa os dados para preencher o filtro.
-        const unidadesDoFiltro = data || []; 
-
-        unidadesDoFiltro.forEach(unit => {
-            const option = document.createElement('option');
-            option.value = unit.id;
-            option.textContent = unit.nome_unidade;
-            selectEl.appendChild(option);
-        });
-    } catch (e) {
-        console.error("Erro ao carregar unidades para filtro de histórico:", e);
+    // CORREÇÃO: Garante que o event listener seja adicionado apenas uma vez.
+    if (!Dom.historicoUnidadeFilterEl.onchange) {
+        Dom.historicoUnidadeFilterEl.onchange = filterAndRenderHistoricoContagens;
     }
 }
 
+async function filterAndRenderHistoricoContagens() {
+    if (!Dom.historicoContagensTableBodyEl) return;
+    // CORREÇÃO: Ajustado o colspan para a nova coluna "Setor"
+    Dom.historicoContagensTableBodyEl.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+    const filterUnidadeId = Dom.historicoUnidadeFilterEl ? Dom.historicoUnidadeFilterEl.value : '';
 
-/**
- * Busca e renderiza o histórico de contagens.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string|null} empresaIdFiltro O ID da empresa para filtrar o histórico.
- * @param {boolean} isAdminView Indica se é a visão de admin (para exibir coluna Empresa).
- * @param {string|null} unidadeIdFiltro O ID da unidade para filtrar o histórico.
- */
-export async function fetchAndRenderHistoricoContagens(_supabaseClient, empresaIdFiltro = null, isAdminView = false, unidadeIdFiltro = null) {
-    if (!historicoContagensTableBody) { console.error("historicoContagensTableBody not found."); return; }
-
-    const initialColspan = isAdminView ? 6 : 5; // Empresa, Data, Colab, Unidade, Itens, Ações
-    historicoContagensTableBody.innerHTML = `<tr><td colspan="${initialColspan}">Carregando histórico...</td></tr>`;
-
-    if (isAdminView && !empresaIdFiltro) {
-        historicoContagensTableBody.innerHTML = `<tr><td colspan="${initialColspan}">Selecione uma empresa para ver o histórico.</td></tr>`;
-        hideLoader(); return;
-    }
-
-    showLoader();
     try {
         let query = _supabaseClient.from('contagens')
-            .select(`
-                id,
-                created_at,
-                colaborador_id,
-                colaborador_nome_display,
-                unidade_id,
-                unidade_nome_display,
-                total_itens,
-                empresa_id,
-                empresas(nome_empresa)
-            `)
+            .select('id, created_at, colaborador_nome_display, unidade_nome_display, setor_contagem, total_itens, detalhes_contagem, unidade_id') 
             .order('created_at', { ascending: false });
 
-        // Aplica filtro por empresa
-        if (empresaIdFiltro) {
-            query = query.eq('empresa_id', empresaIdFiltro);
-        } else if (!isAdminView && appState.currentUser?.empresa_id) { // Caso de gerente/contador vendo seu próprio histórico
-            query = query.eq('empresa_id', appState.currentUser.empresa_id);
-        }
-        
-        // Aplica filtro por unidade
-        if (unidadeIdFiltro) {
-            query = query.eq('unidade_id', unidadeIdFiltro);
+        if (filterUnidadeId) {
+            query = query.eq('unidade_id', filterUnidadeId);
         }
 
         const { data, error } = await query;
         if (error) throw error;
 
-        historicoContagensTableBody.innerHTML = "";
-        if (data && data.length > 0) {
-            data.forEach(reg => {
-                const row = historicoContagensTableBody.insertRow();
-                // Coluna da empresa (visível apenas para admin master)
-                if (isAdminView && colEmpresaHistorico.style.display !== 'none') {
-                    row.insertCell().textContent = reg.empresas?.nome_empresa || (reg.empresa_id ? `ID: ${reg.empresa_id}`: 'N/A');
-                }
-                row.insertCell().textContent = new Date(reg.created_at).toLocaleString('pt-BR');
-                row.insertCell().textContent = reg.colaborador_nome_display || "N/A";
-                row.insertCell().textContent = reg.unidade_nome_display || "N/A";
-                row.insertCell().textContent = reg.total_itens;
+        historicoContagensCache.splice(0, historicoContagensCache.length, ...(data || []));
+        Dom.historicoContagensTableBodyEl.innerHTML = '';
 
-                const actionsCell = row.insertCell();
-                const btnDetalhes = document.createElement('button');
-                btnDetalhes.textContent = 'Detalhes';
-                btnDetalhes.className = 'btn btn-info table-actions';
-                btnDetalhes.onclick = () => showDetalhesContagem(_supabaseClient, reg.id); // Passa _supabaseClient e ID da contagem
-                actionsCell.appendChild(btnDetalhes);
-            });
+        if (historicoContagensCache.length === 0) {
+            Dom.historicoContagensTableBodyEl.innerHTML = '<tr><td colspan="6">Nenhum registro de contagem encontrado para os filtros selecionados.</td></tr>';
         } else {
-            historicoContagensTableBody.innerHTML = `<tr><td colspan="${initialColspan}">Nenhum registro de contagem encontrado para a seleção.</td></tr>`;
+            // Atualiza o cabeçalho da tabela para incluir a nova coluna
+            const tableHead = Dom.historicoContagensTableBodyEl.parentElement.querySelector('thead tr');
+            if (tableHead) {
+                tableHead.innerHTML = `<th>Data/Hora</th><th>Contador</th><th>Unidade</th><th>Setor</th><th>Total Itens</th><th>Ações</th>`;
+            }
+
+            historicoContagensCache.forEach(contagem => {
+                const row = Dom.historicoContagensTableBodyEl.insertRow();
+                const dateTime = new Date(contagem.created_at).toLocaleString('pt-BR');
+                // CORREÇÃO: Adicionada a coluna "Setor" na tabela
+                row.innerHTML = `
+                    <td>${dateTime}</td>
+                    <td>${contagem.colaborador_nome_display}</td>
+                    <td>${contagem.unidade_nome_display}</td>
+                    <td>${contagem.setor_contagem || 'N/A'}</td>
+                    <td>${contagem.total_itens}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-sm btn-info btn-view-details" data-id="${contagem.id}">Detalhes</button>
+                    </td>
+                `;
+            });
         }
     } catch (e) {
-        console.error("Erro ao buscar/renderizar histórico de contagens:", e);
-        historicoContagensTableBody.innerHTML = `<tr><td colspan="${initialColspan}" style="color:var(--danger-color);">Erro: ${e.message}</td></tr>`;
+        showToast(`Erro ao buscar histórico: ${e.message}`, 'error');
+        console.error('[Historico] Erro em filterAndRenderHistoricoContagens:', e);
+        Dom.historicoContagensTableBodyEl.innerHTML = `<tr><td colspan="6" style="color:red;">Erro ao carregar histórico: ${e.message}</td></tr>`;
     } finally {
         hideLoader();
     }
 }
 
-/**
- * Exibe os detalhes de uma contagem específica em um modal.
- * @param {SupabaseClient} _supabaseClient A instância do cliente Supabase.
- * @param {string} contagemId O ID da contagem para buscar detalhes.
- */
-export async function showDetalhesContagem(_supabaseClient, contagemId) {
-    if (!modalDetalhesContagem || !detalhesContagemConteudo) { console.error("Details modal or content not found."); return;}
-    
+if (Dom.historicoContagensTableBodyEl) {
+    Dom.historicoContagensTableBodyEl.addEventListener('click', async (event) => {
+        if(event.target.classList.contains('btn-view-details')) {
+            const countId = event.target.dataset.id; 
+            await showCountDetailsScreen(countId); 
+        }
+    });
+}
+
+async function showCountDetailsScreen(countId) {
     showLoader();
-    detalhesContagemConteudo.innerHTML = '<p>Carregando detalhes...</p>'; // Mensagem de carregamento
-
     try {
-        const { data: contagem, error: contagemError } = await _supabaseClient
-            .from('contagens')
-            .select(`
-                id,
-                created_at,
-                colaborador_id,
-                colaborador_nome_display,
-                unidade_id,
-                unidade_nome_display,
-                total_itens,
-                contagem_itens_por_produto(
-                    quantidade_contada,
-                    produtos(codigo, nome_produto,
-                        produtos_categorias(nome_categoria),
-                        produtos_unidades(nome_unidade)
-                    )
-                )
-            `)
-            .eq('id', contagemId)
-            .single();
+        let countData = historicoContagensCache.find(c => String(c.id) === countId); 
 
-        if (contagemError) throw contagemError;
-        if (!contagem) {
-            detalhesContagemConteudo.innerHTML = '<p>Detalhes da contagem não encontrados.</p>';
-            return;
+        if (!countData) {
+            const { data, error } = await _supabaseClient.from('contagens')
+                .select('id, created_at, colaborador_nome_display, unidade_nome_display, setor_contagem, total_itens, detalhes_contagem')
+                .eq('id', countId)
+                .single();
+            if (error || !data) throw new Error("Contagem não encontrada ou erro ao buscar do banco de dados.");
+            countData = data;
         }
 
-        let htmlConteudo = '';
-        htmlConteudo += `<p><strong>Data:</strong> ${new Date(contagem.created_at).toLocaleString('pt-BR')}</p>`;
-        htmlConteudo += `<p><strong>Colaborador:</strong> ${contagem.colaborador_nome_display || 'N/A'}</p>`;
-        htmlConteudo += `<p><strong>Unidade:</strong> ${contagem.unidade_nome_display || 'N/A'}</p>`;
-        htmlConteudo += `<p><strong>Total de Itens Contados:</strong> ${contagem.total_itens}</p>`;
-        htmlConteudo += `<hr>`;
-        htmlConteudo += `<h5>Itens Detalhados:</h5>`;
+        if (Dom.detailsCountIdEl) Dom.detailsCountIdEl.textContent = countData.id;
+        if (Dom.detailsCountDateTimeEl) Dom.detailsCountDateTimeEl.textContent = new Date(countData.created_at).toLocaleString('pt-BR');
+        if (Dom.detailsCountContadorEl) Dom.detailsCountContadorEl.textContent = countData.colaborador_nome_display;
+        if (Dom.detailsCountUnidadeEl) Dom.detailsCountUnidadeEl.textContent = countData.unidade_nome_display;
+        if (Dom.detailsCountSetorEl) Dom.detailsCountSetorEl.textContent = countData.setor_contagem;
+        if (Dom.detailsCountTotalItemsEl) Dom.detailsCountTotalItemsEl.textContent = countData.total_itens;
 
-        if (contagem.contagem_itens_por_produto && contagem.contagem_itens_por_produto.length > 0) {
-            htmlConteudo += '<table class="table table-striped table-bordered" style="width:100%; font-size:0.9em;"><thead><tr><th>Cód.</th><th>Produto</th><th>Categorias</th><th>Unidades</th><th>Qtd.</th></tr></thead><tbody>';
-            
-            // Ordena os itens por nome do produto
-            contagem.contagem_itens_por_produto.sort((a,b) => (a.produtos?.nome_produto || "").localeCompare(b.produtos?.nome_produto || "")).forEach(item => {
-                const categoriasDisplay = (item.produtos?.produtos_categorias || [])
-                    .map(pc => pc.nome_categoria)
-                    .filter(Boolean).join(', ') || 'Sem Categoria';
-                
-                const unidadesDisplay = (item.produtos?.produtos_unidades || [])
-                    .map(pu => pu.nome_unidade)
-                    .filter(Boolean).join(', ') || 'N/A';
+        renderCountDetailsTable(countData.detalhes_contagem);
 
-                htmlConteudo += `<tr>
-                    <td>${item.produtos?.codigo || 'N/A'}</td>
-                    <td>${item.produtos?.nome_produto || 'N/A'}</td>
-                    <td>${categoriasDisplay}</td>
-                    <td>${unidadesDisplay}</td>
-                    <td style="text-align:right;">${item.quantidade_contada}</td>
-                </tr>`;
-            });
-            htmlConteudo += '</tbody></table>';
-        } else {
-            htmlConteudo += '<p>Nenhum item detalhado encontrado para esta contagem.</p>';
+        if(Dom.countDetailsBackButtonEl) Dom.countDetailsBackButtonEl.onclick = showHistoricoContagensScreen;
+
+        window.showScreen('screenCountDetails'); 
+
+        if (Dom.btnDownloadDetailsPDFEl) Dom.btnDownloadDetailsPDFEl.onclick = () => {
+            const pdfBlob = generatePdfContent(countData.detalhes_contagem, produtosCache, countData); 
+            triggerDownload(`contagem_${countData.id}.pdf`, pdfBlob, 'application/pdf'); 
+            showToast('PDF da contagem baixado!', 'success');
+        };
+
+        if (Dom.btnDownloadDetailsTXTEl) {
+            Dom.btnDownloadDetailsTXTEl.onclick = () => {
+                const txtContent = generateTxtContentForDownload(countData.detalhes_contagem, produtosCache);
+                const nomeArquivo = generateCountFilename({
+                    colaborador: countData.colaborador_nome_display,
+                    setor: countData.setor_contagem,
+                    unidade: countData.unidade_nome_display,
+                    data: countData.created_at
+                }, 'txt');
+                triggerDownload(nomeArquivo, txtContent, 'text/plain');
+                showToast('Arquivo TXT da contagem baixado!', 'success');
+            };
         }
-        detalhesContagemConteudo.innerHTML = htmlConteudo;
-        modalDetalhesContagem.classList.add('active'); // Exibe o modal
 
     } catch (e) {
-        console.error("Erro ao buscar detalhes da contagem:", e);
-        detalhesContagemConteudo.innerHTML = `<p style="color:var(--danger-color);">Erro ao carregar detalhes: ${e.message}</p>`;
+        showToast(`Erro ao exibir detalhes da contagem: ${e.message}`, 'error');
+        console.error('[Historico] Erro em showCountDetailsScreen:', e);
     } finally {
         hideLoader();
     }
 }
 
-/**
- * Fecha o modal de detalhes da contagem.
- */
-export function closeModalDetalhesContagem() {
-    if(modalDetalhesContagem) {
-        modalDetalhesContagem.classList.remove('active');
-        // Limpa o conteúdo do modal ao fechar para garantir que dados antigos não apareçam em uma nova abertura
-        detalhesContagemConteudo.innerHTML = '';
+function renderCountDetailsTable(detalhesContagem) {
+    if (!Dom.detailsCountItemsTableBodyEl) return;
+    Dom.detailsCountItemsTableBodyEl.innerHTML = '';
+
+    if (!detalhesContagem || Object.keys(detalhesContagem).length === 0) {
+        Dom.detailsCountItemsTableBodyEl.innerHTML = '<tr><td colspan="4">Nenhum item contado para esta contagem.</td></tr>';
+        return;
     }
+
+    const itemsArray = Object.entries(detalhesContagem)
+        .map(([produtoId, quantidade]) => {
+            const produto = produtosCache.find(p => String(p.id) === String(produtoId));
+            return {
+                codigo: produto ? produto.codigo : 'N/A',
+                nome_produto: produto ? produto.nome_produto : 'Produto Desconhecido',
+                categoria: (produto && produto.produtos_categorias && produto.produtos_categorias.length > 0) 
+                            ? produto.produtos_categorias.map(pc => pc.nome_categoria).join(', ') : 'N/A',
+                quantidade: quantidade
+            };
+        })
+        .sort((a, b) => (a.codigo || '').localeCompare(b.codigo || '')); 
+
+    itemsArray.forEach(item => {
+        const row = Dom.detailsCountItemsTableBodyEl.insertRow();
+        row.innerHTML = `
+            <td>${item.codigo}</td>
+            <td>${item.nome_produto}</td>
+            <td>${item.categoria}</td>
+            <td>${item.quantidade}</td>
+        `; 
+    });
 }
