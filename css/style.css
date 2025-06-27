@@ -15,20 +15,19 @@
 body {
     font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
     margin: 0;
-    padding: 20px; /* Adicionado padding para ecrãs pequenos */
+    padding: 20px;
     background-color: var(--background-color);
     color: var(--text-color);
     display: flex;
     justify-content: center;
-    align-items: center; /* Centraliza verticalmente */
+    align-items: center;
     min-height: 100vh;
     font-size: 16px;
-    /* --- NOVO FUNDO PARA LOGIN --- */
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .container {
-    width: 100%; /* Ajustado para responsividade */
+    width: 100%;
     max-width: 800px;
     background-color: var(--container-bg-color);
     padding: 25px 30px;
@@ -102,19 +101,27 @@ button:disabled, .btn:disabled {
     padding: 0;
 }
 
+#screenLogin h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+#screenLogin .login-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted-color);
+    margin-top: 0;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
 .login-form {
     max-width: 400px;
     margin: 1rem auto;
-    padding: 2.5rem; /* Aumenta o espaçamento interno */
+    padding: 2.5rem;
     background-color: var(--container-bg-color);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.login-form h1 {
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
 }
 
 .login-form .form-group label {
@@ -193,17 +200,8 @@ button:disabled, .btn:disabled {
 .dashboard-card.dashboard-card-secondary span { color: #fff; }
 
 /* --- GENERIC STYLES --- */
-.card {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    margin-bottom: 1.5rem;
-    background-color: var(--card-bg-color);
-}
-.card-header {
-    padding: .75rem 1.25rem;
-    background-color: var(--header-bg-color);
-    border-bottom: 1px solid var(--border-color);
-}
+.card { border: 1px solid var(--border-color); border-radius: var(--border-radius); margin-bottom: 1.5rem; background-color: var(--card-bg-color); }
+.card-header { padding: .75rem 1.25rem; background-color: var(--header-bg-color); border-bottom: 1px solid var(--border-color); }
 .card-header h3 { margin: 0; font-size: 1.25rem; text-align: left; }
 .card-body { padding: 1.25rem; }
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Balanço de Estoque</title>
+    <title>Inventário Pro</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -14,7 +14,8 @@
 
         <!-- Tela de Login -->
         <div id="screenLogin" class="screen active">
-            <h1>Login no Sistema de Balanço</h1>
+            <h1>Inventário Pro</h1>
+            <p class="login-subtitle">Controle de estoque simplificado.</p>
             <form id="login-form" class="login-form card card-body">
                 <div class="form-group"><label for="loginEmail">Email:</label><input type="email" id="loginEmail" name="email" required></div>
                 <div class="form-group"><label for="loginPassword">Senha:</label><input type="password" id="loginPassword" name="password" required></div>
@@ -23,7 +24,7 @@
             </form>
         </div>
 
-        <!-- Painel de Administração (NOVO VISUAL CORRIGIDO) -->
+        <!-- Painel de Administração -->
         <div id="screenAdminDashboard" class="screen">
             <h2>Painel de Administração</h2>
             <p style="text-align: center; margin-bottom: 2rem;">Bem-vindo, <span id="adminNameDisplay"></span>!</p>
@@ -86,7 +87,6 @@
             </div>
         </div>
 
-        <!-- OUTRAS TELAS (CÓDIGO COMPLETO) -->
         <div id="screenManageUsers" class="screen">
             <button class="btn btn-secondary back-button" id="btnUsersBack">&larr; Painel</button>
             <h2>Gerenciar Usuários</h2>
