@@ -8,25 +8,27 @@
     --input-bg-color: #ffffff; --input-border-color: #ced4da;
     --text-color: #212529; --text-muted-color: #6c757d;
     --border-color: #dee2e6; --hover-row-background: #e9ecef;
-    --border-radius: 0.5rem; /* Aumentei um pouco o raio da borda */
+    --border-radius: 0.5rem;
     --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
 body {
     font-family: system-ui, -apple-system, Roboto, Arial, sans-serif;
     margin: 0;
-    padding: 20px 0;
+    padding: 20px; /* Adicionado padding para ecrãs pequenos */
     background-color: var(--background-color);
     color: var(--text-color);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center; /* Centraliza verticalmente */
     min-height: 100vh;
     font-size: 16px;
+    /* --- NOVO FUNDO PARA LOGIN --- */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .container {
-    width: 95%;
+    width: 100%; /* Ajustado para responsividade */
     max-width: 800px;
     background-color: var(--container-bg-color);
     padding: 25px 30px;
@@ -53,8 +55,8 @@ h1, h2, h3 {
 }
 
 @keyframes fadeInView {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 button, .btn {
@@ -92,34 +94,70 @@ button:disabled, .btn:disabled {
 .btn-info { background-color: #0dcaf0; border-color: #0dcaf0; color: #fff; } 
 .btn-info:hover:not(:disabled) { background-color: #31d2f2; }
 
-/* --- NOVO LAYOUT DO DASHBOARD (VERSÃO REFINADA E CORRIGIDA) --- */
+/* --- LOGIN SCREEN REFINEMENT --- */
+#screenLogin .container {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.login-form {
+    max-width: 400px;
+    margin: 1rem auto;
+    padding: 2.5rem; /* Aumenta o espaçamento interno */
+    background-color: var(--container-bg-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.login-form h1 {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.login-form .form-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-muted-color);
+}
+
+.login-form input {
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-width: 2px;
+}
+
+.login-form .btn-primary {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* --- DASHBOARD LAYOUT --- */
 .dashboard-grid {
     display: grid;
-    /* Grid responsivo com cartões de no mínimo 130px */
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 1.25rem;
     padding: 1rem 0;
 }
 
 .dashboard-card {
-    /* Reset de estilos de botão para parecer um card */
     background: var(--card-bg-color);
     border: 1px solid var(--border-color);
-    font: inherit; /* Usa a fonte padrão do body */
-    
-    /* Estilo do Card */
+    font: inherit;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
     padding: 1rem;
-    
-    aspect-ratio: 1 / 1; /* Força o formato quadrado */
-    
-    /* Remove a margem padrão do botão */
+    aspect-ratio: 1 / 1;
     margin: 0; 
-    
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
 }
 
@@ -129,9 +167,7 @@ button:disabled, .btn:disabled {
     border-color: var(--primary-color);
 }
 
-.dashboard-card-icon {
-    pointer-events: none; /* Garante que o clique vá para o botão pai */
-}
+.dashboard-card-icon { pointer-events: none; }
 
 .dashboard-card-icon svg {
     width: 44px;
@@ -151,277 +187,72 @@ button:disabled, .btn:disabled {
     pointer-events: none;
 }
 
-.dashboard-card.dashboard-card-secondary {
-    background-color: var(--secondary-color);
-}
-
-.dashboard-card.dashboard-card-secondary:hover {
-    background-color: var(--secondary-color-darker);
-    border-color: var(--secondary-color-darker);
-}
-
+.dashboard-card.dashboard-card-secondary { background-color: var(--secondary-color); }
+.dashboard-card.dashboard-card-secondary:hover { background-color: var(--secondary-color-darker); border-color: var(--secondary-color-darker); }
 .dashboard-card.dashboard-card-secondary svg,
-.dashboard-card.dashboard-card-secondary span {
-    color: #fff;
-}
-/* --- FIM DO NOVO LAYOUT DO DASHBOARD --- */
+.dashboard-card.dashboard-card-secondary span { color: #fff; }
 
-
+/* --- GENERIC STYLES --- */
 .card {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     margin-bottom: 1.5rem;
     background-color: var(--card-bg-color);
 }
-
 .card-header {
     padding: .75rem 1.25rem;
     background-color: var(--header-bg-color);
     border-bottom: 1px solid var(--border-color);
 }
-
-.card-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    text-align: left;
-}
-
-.card-body {
-    padding: 1.25rem;
-}
-
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-}
-
-th, td {
-    border: 1px solid var(--border-color);
-    padding: .75rem;
-    text-align: left;
-    vertical-align: top;
-}
-
-th {
-    background-color: var(--header-bg-color);
-    font-weight: 600;
-}
-
-tbody tr:hover {
-    background-color: var(--hover-row-background);
-}
-
-input, select {
-    width: 100%;
-    padding: .5rem .75rem;
-    border: 1px solid var(--input-border-color);
-    border-radius: var(--border-radius);
-    box-sizing: border-box;
-    font-size: 1rem;
-}
-
-input:focus, select:focus {
-    border-color: var(--primary-color);
-    outline: 0;
-    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: .5rem;
-    font-weight: 500;
-}
-
-.form-inline-flex {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.form-inline-flex .form-group {
-    flex: 1;
-    min-width: 150px;
-    margin-bottom: 0;
-}
-.form-inline-flex button {
-    flex-shrink: 0;
-}
-
-.actions-cell {
-    text-align: right;
-    white-space: nowrap;
-}
-
-.actions-cell button {
-    margin-left: 5px;
-    padding: .3rem .6rem;
-    font-size: .875rem;
-}
-
-.back-button {
-    margin-bottom: 1rem;
-}
-
-.login-form {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-}
-
-#loginErrorMessage {
-    color: var(--danger-color);
-    margin-top: 1rem;
-    text-align: center;
-    min-height: 1.5em;
-    font-size: 0.9rem;
-}
-
-.generated-password-display {
-    margin-top: 1rem;
-    padding: 10px;
-    background-color: #e9ecef;
-    border-radius: var(--border-radius);
-    text-align: center;
-    word-break: break-all;
-    font-weight: bold;
-}
-
-.loader {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid var(--primary-color);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    transform: translate(-50%, -50%);
-    z-index: 1001;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-#toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    padding: 15px 20px;
-    color: white;
-    border-radius: var(--border-radius);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all .3s ease-out;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translateX(0);
-}
-
+.card-header h3 { margin: 0; font-size: 1.25rem; text-align: left; }
+.card-body { padding: 1.25rem; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border-color); padding: .75rem; text-align: left; vertical-align: top; }
+th { background-color: var(--header-bg-color); font-weight: 600; }
+tbody tr:hover { background-color: var(--hover-row-background); }
+input, select { width: 100%; padding: .5rem .75rem; border: 1px solid var(--input-border-color); border-radius: var(--border-radius); box-sizing: border-box; font-size: 1rem; }
+input:focus, select:focus { border-color: var(--primary-color); outline: 0; box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25); }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: .5rem; font-weight: 500; }
+.form-inline-flex { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 1rem; flex-wrap: wrap; }
+.form-inline-flex .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+.form-inline-flex button { flex-shrink: 0; }
+.actions-cell { text-align: right; white-space: nowrap; }
+.actions-cell button { margin-left: 5px; padding: .3rem .6rem; font-size: .875rem; }
+.back-button { margin-bottom: 1rem; }
+#loginErrorMessage { color: var(--danger-color); margin-top: 1rem; text-align: center; min-height: 1.5em; font-size: 0.9rem; }
+.generated-password-display { margin-top: 1rem; padding: 10px; background-color: #e9ecef; border-radius: var(--border-radius); text-align: center; word-break: break-all; font-weight: bold; }
+.loader { position: fixed; top: 50%; left: 50%; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; transform: translate(-50%, -50%); z-index: 1001; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
+.toast { padding: 15px 20px; color: white; border-radius: var(--border-radius); box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); opacity: 0; transform: translateX(100%); transition: all .3s ease-out; }
+.toast.show { opacity: 1; transform: translateX(0); }
 .toast-success { background-color: var(--success-color); }
 .toast-error { background-color: var(--danger-color); }
-
-.checkbox-container {
-    border: 1px solid var(--input-border-color);
-    border-radius: var(--border-radius);
-    padding: .5rem;
-    max-height: 150px;
-    overflow-y: auto;
-    background-color: var(--input-bg-color);
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: .25rem;
-}
-
-.checkbox-group input[type="checkbox"] {
-    width: auto;
-    margin-right: .5rem;
-}
+.checkbox-container { border: 1px solid var(--input-border-color); border-radius: var(--border-radius); padding: .5rem; max-height: 150px; overflow-y: auto; background-color: var(--input-bg-color); }
+.checkbox-group { display: flex; align-items: center; margin-bottom: .25rem; }
+.checkbox-group input[type="checkbox"] { width: auto; margin-right: .5rem; }
 
 @media (max-width: 600px) {
-    body {
-        padding: 10px 0;
-        font-size: 14px;
-    }
-
-    .container {
-        width: 100%;
-        margin-top: 0;
-        padding: 15px 15px;
-        border-radius: 0;
-        box-shadow: none;
-    }
-
+    body { padding: 10px 0; font-size: 14px; }
+    .container { width: 100%; margin-top: 0; padding: 15px 15px; border-radius: 0; box-shadow: none; }
     h1 { font-size: 1.8rem; }
     h2 { font-size: 1.5rem; }
     h3 { font-size: 1.1rem; }
-
-    button, .btn {
-        padding: .4rem .8rem;
-        font-size: 0.9rem;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-    }
-
-    .dashboard-card {
-        padding: 0.75rem 0.5rem;
-        gap: 0.25rem;
-    }
-
-    .dashboard-card svg {
-        width: 32px;
-        height: 32px;
-        margin-bottom: 0.25rem;
-    }
-
-    .dashboard-card span {
-        font-size: 0.75rem;
-    }
-
+    button, .btn { padding: .4rem .8rem; font-size: 0.9rem; }
+    .dashboard-grid { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .dashboard-card { padding: 0.75rem 0.5rem; gap: 0.25rem; }
+    .dashboard-card svg { width: 32px; height: 32px; margin-bottom: 0.25rem; }
+    .dashboard-card span { font-size: 0.75rem; }
     .form-group { margin-bottom: 0.75rem; }
     .form-group label { font-size: 0.9rem; }
     input, select { padding: .4rem .6rem; font-size: 0.9rem; }
     table, th, td { font-size: 0.9em; }
-
     .login-form { margin: 1rem auto; padding: 1.5rem; }
     #toast-container { top: 10px; right: 10px; left: 10px; }
     .toast { padding: 10px 15px; font-size: 0.9rem; }
-
-    .form-inline-flex {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-    }
+    .form-inline-flex { flex-direction: column; align-items: stretch; gap: 0.75rem; }
     .form-inline-flex .form-group { width: 100%; min-width: unset; }
     .form-inline-flex button { width: 100%; margin-top: 0.5rem; }
 }
